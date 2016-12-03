@@ -145,19 +145,22 @@ case class OrientableSurface(g: Int) {
 		else OrientableSurface(g-1).greekR ++ Vector(a(g),Inverse(b(g)),Inverse(a(g)),b(g))
 	}
 
+	def respectsR(xs: Vector[Generator], m: Int) : Boolean = xs(m) match {
+		/** This checks if 'm'th element of xs repsects greekR i.e. checks if the inverse of
+		* 'm'th element comes before 'm+1'th element in greekR.
+		*/
+		case Inverse(l) => greekR.indexOf(l) < greekR.indexOf(xs(m+1))
+		case l => greekR.indexOf(Inverse(l)) < greekR.indexOf(xs(m+1))
+	}
+
 	def countRespectingR(xs: Vector[Generator]) : Int = {
 	/** This returns all those elements which respets greekR i.e. which satisfy respectsR.
 		*/
-		val vecOfIndices = (0 to (xs.length-2)).toVector
-		def respectsR(m: Int) : Boolean = xs(m) match {
-		/** This checks if 'm'th element of xs repsects greekR i.e. checks if the inverse of
-			* 'm'th element comes before 'm+1'th element in greekR.
-			*/
-			case Inverse(l) => greekR.indexOf(l) < greekR.indexOf(xs(m+1))
-			case l => greekR.indexOf(Inverse(l)) < greekR.indexOf(xs(m+1))
-		}
+		val extended = xs :+ xs(0)
+		val vecOfIndices = (0 to (xs.length-1)).toVector
+
 		if (xs.length < 2) 0
-		else vecOfIndices.count(respectsR)
+		else vecOfIndices.count((x:Int) => respectsR(extended,x))
 	}
 
 	def windingT(w: Word) = {
@@ -166,11 +169,33 @@ case class OrientableSurface(g: Int) {
 		*	minus number of b(_) present in xs
 		*/
 		if (w.xs.length < 2) 0
-		else countRespectingR(w.xs)
-				-	w.xs.count((x:Generator) => vecInvA.contains(x))
-				- w.xs.count((x:Generator) => vecB.contains(x))
+		else ( countRespectingR(w.xs) - w.xs.count((x:Generator)=>vecInvA.contains(x)) - w.xs.count((x:Generator)=>vecB.contains(x)) )
 	}
 
+	def satisfyEquation(xs: Vector[Generator],i:Int,j:Int): Boolean = {
+		/** Idea: Given of a permutation of a word and its division u and v,
+		* one can calculate respective windingT.
+		*	'i' being a index in w++w defines a permutation of w. 0 <= i <= l/2
+		* 'j' is the last index of u and v is therefore the remaing elements. 0 <= j <= l-2
+		*
+		* This iterartes over every possible divisions of w and returns true if equation is satisfied by all.
+		*/
+		val l = xs.length
+
+		if (i <= l/2) {
+			if (j <= l-2 ) {
+				val permutated = (xs++xs).slice(i,i+l)
+				val u = permutated.slice(0,j+1)
+				val v = permutated.slice(j+1,l)
+
+				if ( windingT(Word(red1(u++inv(v)))) == ( windingT(Word(red1(u))) + windingT(Word(red1(inv(v)))) ) )
+				satisfyEquation(xs,i,j+1)
+				else false
+			}
+			else satisfyEquation(xs,i+1,0)
+		}
+		else true
+	}
 
 	def isSimple(w: Word): Boolean = {
 	/** This checks if all the possible divisions of w, u and v satisfy the following equation,
@@ -181,33 +206,9 @@ case class OrientableSurface(g: Int) {
 		*/
 		val reduced = reduce(w).xs
 
-		def satisfyEquation(i:Int,j:Int): Boolean = {
-		/** Idea: Given of a permutation of a word and its division u and v,
-			* one can calculate respective windingT.
-			*	'i' being a index in w++w defines a permutation of w. 0 <= i <= l/2
-			* 'j' is the last index of u and v is therefore the remaing elements. 0 <= j <= l-2
-			*
-			* This iterartes over every possible divisions of w and returns true if equation is satisfied by all.
-			*/
-			val l = reduced.length
-			val permutated = (reduced++reduced).slice(i,i+l)
-			val u = permutated.slice(0,j+1)
-			val v = permutated.slice(j+1,l)
-
-			if (i <= l/2) {
-				if (j <= l-2 ) {
-					if ( windingT(Word(red1(u++inv(v)))) - windingT(Word(red1(u))) - windingT(Word(red1(inv(v)))) == 0 )
-					satisfyEquation(i,j+1)
-					else false
-				}
-				else satisfyEquation(i+1,0)
-			}
-			else true
-		}
-
 		if (reduced.length < 2) true
 		else if ( reduced.forall((x:Generator) => x == reduced(0)) ) false
-		else satisfyEquation(0,0)
+		else satisfyEquation(reduced,0,0)
 
 	}
 
