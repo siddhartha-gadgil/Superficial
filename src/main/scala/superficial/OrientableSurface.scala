@@ -1,21 +1,23 @@
 /** This program basically abstracts :
- 	*		(i) OrientableSurface (i.e. a connected compact 2-manifold) parametrized by its genus g.
+ 	*		(i) OrientableSurface (i.e. a connected compact 2-manifold) parametrized by g and r.
+	*		    where, g is its genus and r is the number of components in its boundary.
 	*		(ii) Surfaces' fundamental group Generators along with the 'relation' over them,
 	*		(iii) Closed curves/Words (on the surfaces) in terms of Generators,
 	*	And, verifies whether a given word is homotopic to a simple closed curve.
 	*
-	* 	NOTE: As of now, program is only valid for surfaces without boundary.
-	*					Its extension for surfaces with boundary, is yet to complete.
+	*  NOTE: This program works for surfaces which are not sphere(where g = 0 as well as r = 0).
 	*
-	* 	Reference:: "Simple Closed Curves on Surfaces" by D.R.J. Chillingworth
+	*  Reference:: "Simple Closed Curves on Surfaces" by D.R.J. Chillingworth
 	*/
 package superficial
 
 sealed trait Generator
 case class a(index: Int) extends Generator
 case class b(index: Int) extends Generator
+case class s(index: Int) extends Generator
 case class Inverse(gen: Generator) extends Generator
 /** 'a' and 'b' are the two Generators of a OrientableSurface, parametrized by the genus number.
+	* And 's' is the generator corressponding to surface's boundary, parametrized by r, the number of components.
 	*	Because their inverse can also generate the fundamental group;
 	* therefore they are also being considered as Generators.
 	*/
@@ -26,12 +28,12 @@ case class Word(xs: Vector[Generator])
 	* empty list represents the null element or precisely, a closed curve homotopic to a point.
 	*/
 
-case class OrientableSurface(g: Int) {
+case class OrientableSurface(g: Int, r: Int) {
 
-	val relation: Vector[Generator] = {
-		if (g < 1) Vector()
-		else OrientableSurface(g-1).relation ++ Vector(a(g),b(g),Inverse(a(g)),Inverse(b(g)))
-	}
+	val relation = (1 to g).toVector.map((x:Int) => Vector(a(x),b(x),Inverse(a(x)),Inverse(b(x)))).flatten ++
+			(1 to r).toVector.map((x:Int) => s(x))
+
+	val relationInv = inv(relation)
 	val d = relation.length
 
 	def reduce(w: Word): Word = {
@@ -82,8 +84,16 @@ case class OrientableSurface(g: Int) {
 		inv((relation++relation).slice(j+xs.length,j+d))
 	}
 
+	def invRelInv(xs: Vector[Generator]): Vector[Generator] = {
+	/** This returns the inverse of xs in "relation-inverse".
+		*	NOTE: This assumes xs to be a subword of "relation-inverse".
+		*/
+		val j = (relationInv++relationInv).indexOfSlice(xs)
+		inv((relationInv++relationInv).slice(j+xs.length,j+d))
+	}
+
 	def subred2(xs:Vector[Generator], i:Int, n:Int): Vector[Generator] = {
-	/** Idea: Given a subword of relation, one can look for its presence in the given word,
+	/** Idea: Given a subword of relation or its inverse, one can look for its presence in the given word,
 		* 			and therefore can replace it with its relInv.
 		*
 		* Here, subword is taken from relation++relation (instead of relation) and
@@ -94,12 +104,17 @@ case class OrientableSurface(g: Int) {
 		*	This looks for all the subwords (of relation with length more than half of relation's) in xs and
 		* replaces it with its relInv.
 		*/
+		val l = xs.length
+
 		if (n > d/2) {
 			if (i < d) {
 				if ( (xs++xs).containsSlice((relation++relation).slice(i,i+n)) ) {
 					val j = (xs++xs).indexOfSlice((relation++relation).slice(i,i+n))
-					val l = xs.length
 					subred2( relInv((xs++xs).slice(j,j+n)) ++ (xs++xs).slice(j+n,j+l), i,n)
+				}
+				else if ( (xs++xs).containsSlice((relationInv++relationInv).slice(i,i+n)) ) {
+					val j = (xs++xs).indexOfSlice((relationInv++relationInv).slice(i,i+n))
+					subred2( invRelInv((xs++xs).slice(j,j+n)) ++ (xs++xs).slice(j+n,j+l), i,n)
 				}
 				else { subred2(xs,i+1,n) }
 			}
@@ -110,40 +125,56 @@ case class OrientableSurface(g: Int) {
 
 
 
-	def red3(xs: Vector[Generator]): Vector[Generator] = subred3(xs,3)
+	def red3(xs: Vector[Generator]): Vector[Generator] = subred3(xs,0)
 
 	def subred3(xs: Vector[Generator], i: Int): Vector[Generator] = {
 	/** Similar to subred2, this looks for all the subwords (of relation with lenght exactly half of relation)
 		* in xs, which do not contain a(1) or its inverse, and replaces them with their relInv.
 		*
-		* 'i' is the starting index of the subword in relation. 3 <= i <= d/2
+		* 'i' is the starting index of the subword in relation. 0 <= i < d
 		*/
-		if (i <= d/2 )
-		{
-			val j = (xs++xs).indexOfSlice((relation).slice(i,i+(d/2)))
-			if ((xs++xs).containsSlice((relation).slice(i,i+(d/2)))
-			&& !(xs++xs).slice(j,j+(d/2)).containsSlice(Vector(a(1)))
-			&& !(xs++xs).slice(j,j+(d/2)).containsSlice(Vector(Inverse(a(1)))))
-				subred3(relInv((xs++xs).slice(j,j+(d/2))) ++ (xs++xs).slice(j+(d/2),j+(xs.length)), i)
-			else subred3(xs, i+1)
+		if (i < d) {
+			if ( (xs++xs).containsSlice((relation++relation).slice(i,i+(d/2))) )
+			{
+				val j = (xs++xs).indexOfSlice((relation++relation).slice(i,i+(d/2)))
+				if ( !(relation++relation).slice(i,i+(d/2)).contains(a(1)) && !(relation++relation).slice(i,i+(d/2)).contains(Inverse(a(1))) )
+						subred3(relInv((xs++xs).slice(j,j+(d/2))) ++ (xs++xs).slice(j+(d/2),j+(xs.length)), i)
+				else if ( g==0 && !(relation++relation).slice(i,i+(d/2)).contains(s(1)) && !(relation++relation).slice(i,i+(d/2)).contains(Inverse(s(1))) )
+						subred3(relInv((xs++xs).slice(j,j+(d/2))) ++ (xs++xs).slice(j+(d/2),j+(xs.length)), i)
+				else subred3(xs,i+1)
+			}
+			else if ( (xs++xs).containsSlice((relationInv++relationInv).slice(i,i+(d/2))) )
+			{
+				val j = (xs++xs).indexOfSlice((relationInv++relationInv).slice(i,i+(d/2)))
+				if ( !(relationInv++relationInv).slice(i,i+(d/2)).contains(a(1)) && !(relationInv++relationInv).slice(i,i+(d/2)).contains(Inverse(a(1))) )
+						subred3(invRelInv((xs++xs).slice(j,j+(d/2))) ++ (xs++xs).slice(j+(d/2),j+(xs.length)), i)
+				else if ( g==0 && !(relationInv++relationInv).slice(i,i+(d/2)).contains(s(1)) && !(relationInv++relationInv).slice(i,i+(d/2)).contains(Inverse(s(1))) )
+						subred3(invRelInv((xs++xs).slice(j,j+(d/2))) ++ (xs++xs).slice(j+(d/2),j+(xs.length)), i)
+				else subred3(xs,i+1)
+			}
+			else subred3(xs,i+1)
 		}
 		else xs
 	}
 
 
-	val vecInvA = (1 to g).map((x:Int) => Inverse(a(x)))
+
+
+
+	val vecInvA = (1 to g).toVector.map((x:Int) => Inverse(a(x)))
 	// list of all Inverse(a(_))
 
-	val vecB = (1 to g).map((x:Int) => b(x))
+	val vecB = (1 to g).toVector.map((x:Int) => b(x))
 	// list of all b(_)
 
-	val greekR: Vector[Generator] = {
-	/** This is a specific ordering of all the genrators and all their inverses, which
-		*	helps in calculating the winding number of a word.
-		*/
-		if (g < 1) Vector()
-		else OrientableSurface(g-1).greekR ++ Vector(a(g),Inverse(b(g)),Inverse(a(g)),b(g))
-	}
+	val vecInvS = (1 to r).toVector.map((x:Int) => Inverse(s(x)))
+	// list of all Inverse(s(_))
+
+	val greekR = (1 to g).toVector.map((x:Int) => Vector(a(x),Inverse(b(x)),Inverse(a(x)),b(x))).flatten ++
+			(1 to r).map((x:Int) => Vector(s(x),Inverse(s(x)))).flatten
+	// This is a specific ordering of all the genrators and all their inverses, which
+	// helps in calculating the winding number of a word.
+
 
 	def respectsR(xs: Vector[Generator], m: Int) : Boolean = xs(m) match {
 		/** This checks if 'm'th element of xs repsects greekR i.e. checks if the inverse of
@@ -169,7 +200,8 @@ case class OrientableSurface(g: Int) {
 		*	minus number of b(_) present in xs
 		*/
 		if (w.xs.length < 2) 0
-		else ( countRespectingR(w.xs) - w.xs.count((x:Generator)=>vecInvA.contains(x)) - w.xs.count((x:Generator)=>vecB.contains(x)) )
+		else ( countRespectingR(w.xs) - w.xs.count((x:Generator)=>vecInvA.contains(x)) -
+			w.xs.count((x:Generator)=>vecB.contains(x)) - w.xs.count((x:Generator)=>vecInvS.contains(x)) )
 	}
 
 	def satisfyEquation(xs: Vector[Generator],i:Int,j:Int): Boolean = {
