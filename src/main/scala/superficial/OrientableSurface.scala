@@ -1,3 +1,4 @@
+package superficial
 /** This program basically abstracts :
  	*		(i) OrientableSurface (i.e. a connected compact 2-manifold) parametrized by g and r.
 	*		    where, g is its genus and r is the number of components in its boundary.
@@ -9,7 +10,6 @@
 	*
 	*  Reference:: "Simple Closed Curves on Surfaces" by D.R.J. Chillingworth
 	*/
-package superficial
 
 sealed trait Generator
 case class a(index: Int) extends Generator
@@ -22,29 +22,30 @@ case class Inverse(gen: Generator) extends Generator
 	* therefore they are also being considered as Generators.
 	*/
 
-case class Word(xs: Vector[Generator])
-/** Here, word/closed curve is simply a list of genrators.
+
+case class OrientableSurface(g: Int, r: Int) {
+
+	type Word = Vector[Generator]
+	/** Here, word/closed curve is simply a list of genrators.
 	*	List with one element represents Simple closed curve, and
 	* empty list represents the null element or precisely, a closed curve homotopic to a point.
 	*/
 
-case class OrientableSurface(g: Int, r: Int) {
-
-	val relation = (1 to g).toVector.map((x:Int) => Vector(a(x),b(x),Inverse(a(x)),Inverse(b(x)))).flatten ++
+	val relation: Word = (1 to g).toVector.map((x:Int) => Vector(a(x),b(x),Inverse(a(x)),Inverse(b(x)))).flatten ++
 			(1 to r).toVector.map((x:Int) => s(x))
 
 	val relationInv = inv(relation)
 	val d = relation.length
 
-	def reduce(w: Word): Word = {
+	def reduce(xs: Word): Word = {
 	/** This keeps on reducing w by red1,red2,red3 in order,
 		*	until it starts producing the same result.
 		*/
-		val nxt = red3(red2(red1(w.xs)))
-		if (nxt == w.xs) Word(nxt) else reduce(Word(nxt))
+		val nxt = red3(red2(red1(xs)))
+		if (nxt == xs) nxt else reduce(nxt)
 	}
 
-	def red1(xs : Vector[Generator]): Vector[Generator] = {
+	def red1(xs : Word): Word = {
 	/** This removes all consecutive pairs (consisting element and its inverse) from the word,
 	 	* by the help of subred1 and by further removing first and last element if they are forming the pair.
 		* red1 is identical to cyclic reduction of a word.
@@ -56,7 +57,7 @@ case class OrientableSurface(g: Int, r: Int) {
 		else  rw
 	}
 
-	def subred1(xs: Vector[Generator]): Vector[Generator] = {
+	def subred1(xs: Word): Word = {
 	/** This removes first two element if they form such pair and calls itself over the remaining.
 		* Otherwise joins the first element with its result over xs minus first element.
 		*/
@@ -66,9 +67,9 @@ case class OrientableSurface(g: Int, r: Int) {
 		else xs(0) +: subred1(xs.drop(1))
 	}
 
-	def red2(xs: Vector[Generator]) = subred2(xs,0,d)
+	def red2(xs: Word) = subred2(xs,0,d)
 
-	def inv(xs: Vector[Generator]) : Vector[Generator] = xs match {
+	def inv(xs: Word) : Word = xs match {
 	/** This replaces elements of xs with their inverse.
 		*/
 		case Vector() => Vector()
@@ -76,7 +77,7 @@ case class OrientableSurface(g: Int, r: Int) {
 		case l +: rest => inv(rest) :+ Inverse(l)
 	 }
 
-	def relInv(xs: Vector[Generator]): Vector[Generator] = {
+	def relInv(xs: Word): Word = {
 	/** This returns the inverse of xs in "relation".
 		*	NOTE: This assumes xs to be a subword of "relation".
 		*/
@@ -84,7 +85,7 @@ case class OrientableSurface(g: Int, r: Int) {
 		inv((relation++relation).slice(j+xs.length,j+d))
 	}
 
-	def invRelInv(xs: Vector[Generator]): Vector[Generator] = {
+	def invRelInv(xs: Word): Word = {
 	/** This returns the inverse of xs in "relation-inverse".
 		*	NOTE: This assumes xs to be a subword of "relation-inverse".
 		*/
@@ -92,7 +93,7 @@ case class OrientableSurface(g: Int, r: Int) {
 		inv((relationInv++relationInv).slice(j+xs.length,j+d))
 	}
 
-	def subred2(xs:Vector[Generator], i:Int, n:Int): Vector[Generator] = {
+	def subred2(xs:Word, i:Int, n:Int): Word = {
 	/** Idea: Given a subword of relation or its inverse, one can look for its presence in the given word,
 		* 			and therefore can replace it with its relInv.
 		*
@@ -125,9 +126,9 @@ case class OrientableSurface(g: Int, r: Int) {
 
 
 
-	def red3(xs: Vector[Generator]): Vector[Generator] = subred3(xs,0)
+	def red3(xs: Word): Word = subred3(xs,0)
 
-	def subred3(xs: Vector[Generator], i: Int): Vector[Generator] = {
+	def subred3(xs: Word, i: Int): Word = {
 	/** Similar to subred2, this looks for all the subwords (of relation with lenght exactly half of relation)
 		* in xs, which do not contain a(1) or its inverse, and replaces them with their relInv.
 		*
@@ -137,7 +138,7 @@ case class OrientableSurface(g: Int, r: Int) {
 			if ( (xs++xs).containsSlice((relation++relation).slice(i,i+(d/2))) )
 			{
 				val j = (xs++xs).indexOfSlice((relation++relation).slice(i,i+(d/2)))
-				if ( !(relation++relation).slice(i,i+(d/2)).contains(a(1)) && !(relation++relation).slice(i,i+(d/2)).contains(Inverse(a(1))) )
+				if ( g>0 && !(relation++relation).slice(i,i+(d/2)).contains(a(1)) && !(relation++relation).slice(i,i+(d/2)).contains(Inverse(a(1))) )
 						subred3(relInv((xs++xs).slice(j,j+(d/2))) ++ (xs++xs).slice(j+(d/2),j+(xs.length)), i)
 				else if ( g==0 && !(relation++relation).slice(i,i+(d/2)).contains(s(1)) && !(relation++relation).slice(i,i+(d/2)).contains(Inverse(s(1))) )
 						subred3(relInv((xs++xs).slice(j,j+(d/2))) ++ (xs++xs).slice(j+(d/2),j+(xs.length)), i)
@@ -176,7 +177,7 @@ case class OrientableSurface(g: Int, r: Int) {
 	// helps in calculating the winding number of a word.
 
 
-	def respectsR(xs: Vector[Generator], m: Int) : Boolean = xs(m) match {
+	def respectsR(xs: Word, m: Int) : Boolean = xs(m) match {
 		/** This checks if 'm'th element of xs repsects greekR i.e. checks if the inverse of
 		* 'm'th element comes before 'm+1'th element in greekR.
 		*/
@@ -184,7 +185,7 @@ case class OrientableSurface(g: Int, r: Int) {
 		case l => greekR.indexOf(Inverse(l)) < greekR.indexOf(xs(m+1))
 	}
 
-	def countRespectingR(xs: Vector[Generator]) : Int = {
+	def countRespectingR(xs: Word) : Int = {
 	/** This returns all those elements which respets greekR i.e. which satisfy respectsR.
 		*/
 		val extended = xs :+ xs(0)
@@ -194,17 +195,17 @@ case class OrientableSurface(g: Int, r: Int) {
 		else vecOfIndices.count((x:Int) => respectsR(extended,x))
 	}
 
-	def windingT(w: Word) = {
+	def windingT(xs: Word) = {
 	/** This returns number of elements in xs repecting greekR
 		* minus number of Inverse(a(_)) present in xs
 		*	minus number of b(_) present in xs
 		*/
-		if (w.xs.length < 2) 0
-		else ( countRespectingR(w.xs) - w.xs.count((x:Generator)=>vecInvA.contains(x)) -
-			w.xs.count((x:Generator)=>vecB.contains(x)) - w.xs.count((x:Generator)=>vecInvS.contains(x)) )
+		if (xs.length < 2) 0
+		else ( countRespectingR(xs) - xs.count((x:Generator)=>vecInvA.contains(x)) -
+			xs.count((x:Generator)=>vecB.contains(x)) - xs.count((x:Generator)=>vecInvS.contains(x)) )
 	}
 
-	def satisfyEquation(xs: Vector[Generator],i:Int,j:Int): Boolean = {
+	def satisfyEquation(xs: Word,i:Int,j:Int): Boolean = {
 		/** Idea: Given of a permutation of a word and its division u and v,
 		* one can calculate respective windingT.
 		*	'i' being a index in w++w defines a permutation of w. 0 <= i <= l/2
@@ -220,7 +221,7 @@ case class OrientableSurface(g: Int, r: Int) {
 				val u = permutated.slice(0,j+1)
 				val v = permutated.slice(j+1,l)
 
-				if ( windingT(Word(red1(u++inv(v)))) == ( windingT(Word(red1(u))) + windingT(Word(red1(inv(v)))) ) )
+				if ( windingT(red1(u++inv(v))) == ( windingT(red1(u)) + windingT(red1(inv(v))) ) )
 				satisfyEquation(xs,i,j+1)
 				else false
 			}
@@ -229,14 +230,14 @@ case class OrientableSurface(g: Int, r: Int) {
 		else true
 	}
 
-	def isSimple(w: Word): Boolean = {
+	def isSimple(xs: Word): Boolean = {
 	/** This checks if all the possible divisions of w, u and v satisfy the following equation,
 		* windingT(u++inv(v)) - windingT(u) - windingT(inverse(v)) = 0
 		* by calling satisfyEquation(0,0)
 		*
 		* for details over divisions of a word, see the Reference
 		*/
-		val reduced = reduce(w).xs
+		val reduced = reduce(xs)
 
 		if (reduced.length < 2) true
 		else if ( reduced.forall((x:Generator) => x == reduced(0)) ) false
