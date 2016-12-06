@@ -147,7 +147,7 @@ case class OrientableSurface(g: Int, r: Int) {
 			else if ( (xs++xs).containsSlice((relationInv++relationInv).slice(i,i+(d/2))) )
 			{
 				val j = (xs++xs).indexOfSlice((relationInv++relationInv).slice(i,i+(d/2)))
-				if ( !(relationInv++relationInv).slice(i,i+(d/2)).contains(a(1)) && !(relationInv++relationInv).slice(i,i+(d/2)).contains(Inverse(a(1))) )
+				if ( g>0 && !(relationInv++relationInv).slice(i,i+(d/2)).contains(a(1)) && !(relationInv++relationInv).slice(i,i+(d/2)).contains(Inverse(a(1))) )
 						subred3(invRelInv((xs++xs).slice(j,j+(d/2))) ++ (xs++xs).slice(j+(d/2),j+(xs.length)), i)
 				else if ( g==0 && !(relationInv++relationInv).slice(i,i+(d/2)).contains(s(1)) && !(relationInv++relationInv).slice(i,i+(d/2)).contains(Inverse(s(1))) )
 						subred3(invRelInv((xs++xs).slice(j,j+(d/2))) ++ (xs++xs).slice(j+(d/2),j+(xs.length)), i)
