@@ -30,7 +30,7 @@ object LinearNormProofs{
                   for {
                     a <-normProofTask(ta)
                     b <- normProofTask(tb)
-                  } yield  (x *: a)  ++ b 
+                  } yield  (x *: a)  ++ b
                 }
                 )
             for {
@@ -45,7 +45,7 @@ object LinearNormProofs{
 
   def scaledNormProof(word: Vector[Int], n: Int) =
     normProofTask(Vector.fill(n)(word).reduce(_ ++ _)).map{(x) =>
-      val res = PowerBound(word, n, x)
+      val res = PowerBound(Word(word), n, x)
       memoNormProof.get(word).foreach{
         (p) => if (p.bound > res.bound) memoNormProof += (word -> res)
       }
