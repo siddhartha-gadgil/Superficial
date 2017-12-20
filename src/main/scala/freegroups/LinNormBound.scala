@@ -18,6 +18,59 @@ def letterUnic(n: Int) =
   if (n > 0) ('a' + n - 1).toChar.toString
   else ('a' - n - 1).toChar.toString + '\u0305'.toString
 
+
+
+      /**
+        * sanity checker for VectorFromChars.
+        * to add further checks later.
+        */
+      def isParsable(s: Vector[Char]): Boolean = {
+        if (s.isEmpty) true
+        else if ((s.head == '\u0305') || (s.head == '!')) false
+        else true
+      }
+
+      /**
+        * helper for fromString
+        */
+      def vectorFromChars(s: Vector[Char]): Vector[Int] = {
+        require(
+          isParsable(s),
+          "The Vector of characters is not well formed and should not be parsed.")
+        s match {
+          case Vector() => Vector()
+          case x +: '\u0305' +: tail =>
+            (-(x - 'a' + 1)) +: vectorFromChars(tail)
+          case x +: '!' +: tail =>
+            (-(x - 'a' + 1)) +: vectorFromChars(tail)
+          case x +: tail =>
+            (x - 'a' + 1) +: vectorFromChars(tail)
+        }
+      }
+
+      /**
+        * word from a string.
+        */
+      def fromString(s: String): Word =
+        if (s == "1") Word(Vector())
+        else
+          Word(
+            vectorFromChars(
+              s.replace("!", "\u0305")
+                .replace(" ", "")
+                .replace(".", "")
+                .toVector))
+
+      /**
+        * word from a string.
+        */
+      def apply(w: String) = fromString(w)
+
+      /**
+        * the identity
+        */
+      val e = Word(Vector())
+
 }
 
 /**
