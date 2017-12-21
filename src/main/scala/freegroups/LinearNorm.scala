@@ -6,6 +6,8 @@ import scala.collection.mutable.{Map => mMap}
 
 import monix.execution.Scheduler.Implicits.global
 
+import spire.math._
+
 
 object amm{
   val initCommands =
@@ -14,7 +16,7 @@ object amm{
 }
 
 object LinearNorm{
-  val memoNorm: mMap[Vector[Int], Double] = mMap()
+  val memoNorm: mMap[Vector[Int], Rational] = mMap()
 
   def norm(word: Vector[Int]): Int = word match {
     case Vector() => 0
@@ -26,7 +28,7 @@ object LinearNorm{
         ((1 + norm(ys)) +: recNorms).min
   }
 
-  def normTask(word: Vector[Int]): Task[Double] =
+  def normTask(word: Vector[Int]): Task[Rational] =
     memoNorm.get(word).map(Task(_)).
     getOrElse{
     Task(word). flatMap {
@@ -66,7 +68,7 @@ object LinearNorm{
       res}
 
   def scaledTask(word: Vector[Int], start: Int, stop: Int) = {
-    val it = Iterant.range[Task](start, stop).scanEval[Vector[Double]](Task.pure(Vector())){
+    val it = Iterant.range[Task](start, stop).scanEval[Vector[Rational]](Task.pure(Vector())){
         case (v, n) =>
         for {
           res <- scaledNorm(word, n)

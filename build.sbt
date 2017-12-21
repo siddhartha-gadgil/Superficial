@@ -11,5 +11,6 @@ lazy val root = (project in file(".")).
   settings(
     name := "superficial",
     libraryDependencies += "io.monix" %% "monix" % "3.0.0-M2",
-    libraryDependencies += "com.lihaoyi" % "ammonite" % "1.0.3" cross CrossVersion.full
+    libraryDependencies += "com.lihaoyi" % "ammonite" % "1.0.3" cross CrossVersion.full,
+    libraryDependencies += "org.typelevel" %% "spire" % "0.14.1"
   )

@@ -2,9 +2,11 @@ package freegroups
 
 import LinNormBound._
 
+import spire.math._
+import spire.implicits._
 
 
-sealed abstract class LinNormBound(val word: Word, val bound: Double){
+sealed abstract class LinNormBound(val word: Word, val bound: Rational){
   def ++(that: LinNormBound) = Triang(this, that)
 
   def *:(n: Int) = ConjGen(n, this)
