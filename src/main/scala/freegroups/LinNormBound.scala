@@ -15,9 +15,17 @@ sealed abstract class LinNormBound(val word: Word, val bound: Double){
 object LinNormBound{
   def inverse: LinNormBound => LinNormBound = {
     case Gen(n) => Gen(-n)
-    case ConjGen(n, pf) => ConjGen(-n, inverse(pf))
+    case ConjGen(n, pf) => ConjGen(n, inverse(pf))
     case Triang(a, b) => Triang(inverse(b), inverse(a))
     case PowerBound(baseword, n, pf) => PowerBound(baseword.inv, n, inverse(pf))
+    case Empty => Empty
+  }
+
+  def symm(f: Int => Int): LinNormBound => LinNormBound = {
+    case Gen(n) => Gen(f(n))
+    case ConjGen(n, pf) => ConjGen(f(n), symm(f)(pf))
+    case Triang(a, b) => Triang(symm(f)(a), symm(f)(b))
+    case PowerBound(baseword, n, pf) => PowerBound(Word(baseword.ls.map(f)), n, symm(f)(pf))
     case Empty => Empty
   }
 
@@ -34,4 +42,14 @@ object LinNormBound{
   }
 
   case object Empty extends LinNormBound(Word(Vector()), 0)
+
+  def flip: Int => Int = (x) => (-x)
+  def flipOdd(n: Int) = if (math.abs(n) % 2 == 1) -n else n
+  def flipEven(n: Int) = if (n % 2 == 0) -n else n
+  val id = identity[Int](_)
+
+  val symmGens: Vector[Int => Int] = Vector(id, flip, flipOdd, flipEven)
+
+  val symmProofs : Vector[LinNormBound => LinNormBound] =
+    symmGens.flatMap((f) => Vector(symm(f) , (w: LinNormBound) => symm(f)(inverse(w))))
 }

@@ -13,35 +13,46 @@ import annotation.tailrec
 object LinearNormProofs{
   val memoNormProof: mMap[Word, LinNormBound] = mMap()
 
-  def update(pf: LinNormBound) =
-    memoNormProof.get(pf.word).foreach{
-      (mpf) => if (mpf.bound > pf.bound) memoNormProof += (pf.word -> pf)
+  def justSave(w: Word, pf: LinNormBound) =
+    {
+      memoNormProof += (w -> pf)
     }
 
-  def updated(pf: LinNormBound) =
+  def save(w: Word, pf: LinNormBound, noSym: Boolean) =
+    if (noSym) justSave(w, pf)
+    else symmProofs.map(_(pf)).foreach(savePf)
+
+  def savePf(pf: LinNormBound) = justSave(pf.word, pf)
+
+  def update(pf: LinNormBound, noSym: Boolean) =
+    memoNormProof.get(pf.word).foreach{
+      (mpf) => if (mpf.bound > pf.bound) save(pf.word, pf, noSym)
+    }
+
+  def updated(pf: LinNormBound, noSym: Boolean) =
     {
-      update(pf)
+      update(pf, noSym)
       pf
     }
 
   def memOnly(ws: Word*) = {
     val mem = ws.toVector.map((w) => (w, memoNormProof(w)))
     memoNormProof.clear
-    memoNormProof ++= mem
+    mem.foreach {case (w, pf) => save(w, pf, false)}
   }
 
-  def minWithMemo(pf: LinNormBound) =
+  def minWithMemo(pf: LinNormBound, noSym: Boolean) =
     memoNormProof.get(pf.word).map{
       (mpf) =>
         if (mpf.bound < pf.bound) mpf
-        else updated(pf)
+        else updated(pf, noSym)
     }.getOrElse(pf)
 
-  def tighten(pf: LinNormBound) : LinNormBound = pf match {
-    case ConjGen(n, pf) => minWithMemo(ConjGen(n, tighten(pf)))
-    case Triang(a, b) => minWithMemo(tighten(a) ++ tighten(b))
-    case PowerBound(baseword, n, pf) => minWithMemo(PowerBound(baseword, n, tighten(pf)))
-    case p => minWithMemo(p)
+  def tighten(pf: LinNormBound, noSym: Boolean = true) : LinNormBound = pf match {
+    case ConjGen(n, pf) => minWithMemo(ConjGen(n, tighten(pf)), noSym)
+    case Triang(a, b) => minWithMemo(tighten(a) ++ tighten(b), noSym)
+    case PowerBound(baseword, n, pf) => minWithMemo(PowerBound(baseword, n, tighten(pf)), noSym)
+    case p => minWithMemo(p, noSym)
   }
 
   def leq(pf: LinNormBound) =
@@ -85,14 +96,14 @@ object LinearNormProofs{
 
   import LinNormBound._
 
-  def normProofTask(word: Word): Task[LinNormBound] =
+  def normProofTask(word: Word, noSym: Boolean): Task[LinNormBound] =
     memoNormProof.get(word).map(Task(_)).
     getOrElse{
     Task(word.ls). flatMap {
       case Vector() => Task.pure(Empty)
       case x +: Vector() => Task.pure(Gen(x))
       case x +: ys =>
-        if (x == - ys.last) normProofTask(Word(ys.init)).map((pf) => x *: pf)
+        if (x == - ys.last) normProofTask(Word(ys.init), noSym).map((pf) => x *: pf)
         else
           {
             val matchedIndices = ys.zipWithIndex.filter(_._1 == -x).map(_._2)
@@ -101,34 +112,34 @@ object LinearNormProofs{
               afterSplits.map{
                 case (ta, tb) =>
                   for {
-                    a <-normProofTask(Word(ta))
-                    b <- normProofTask(Word(tb))
+                    a <-normProofTask(Word(ta), noSym)
+                    b <- normProofTask(Word(tb), noSym)
                   } yield  (x *: a)  ++ b
                 }
                 )
             for {
               recNorms <- recNormsTask
-              ynorm <- normProofTask(Word(ys))
+              ynorm <- normProofTask(Word(ys), noSym)
               res = ((x +: ynorm) +: recNorms).minBy(_.bound)
-              _ = memoNormProof += word -> res
+              _ = save(word, res, noSym)
             } yield res
         }
       }
   }
 
-  def scaledNormProof(word: Word, n: Int) =
-    normProofTask(word.pow(n)).map{(x) =>
+  def scaledNormProof(word: Word, n: Int, noSym: Boolean) =
+    normProofTask(word.pow(n), noSym).map{(x) =>
       val res = PowerBound(word, n, x)
       memoNormProof.get(word).foreach{
-        (p) => if (p.bound > res.bound) memoNormProof += (word -> res)
+        (p) => if (p.bound > res.bound) save(word, res, noSym)
       }
       res}
 
-  def scaledTaskProofs(word: Word, start: Int, stop: Int) = {
+  def scaledTaskProofs(word: Word, start: Int, stop: Int, noSym: Boolean) = {
     val it = Iterant.range[Task](start, stop).scanEval[Vector[LinNormBound]](Task.pure(Vector())){
         case (v, n) =>
         for {
-          res <- scaledNormProof(word, n)
+          res <- scaledNormProof(word, n, noSym)
          } yield v :+ res
        }
 
@@ -143,5 +154,20 @@ object LinearNormProofs{
     task
 
   }
+
+
+    val c = Word("aba!b!")
+    def cna(n: Int) = c.pow(n) ++ Word("a")
+    def cnab(n: Int) = c.pow(n) ++ Word("ab")
+    def cnB(n: Int) = Word("b!") ++ c.pow(n)
+
+    def cpf = memoNormProof(c)
+    def cbound = cpf.bound
+
+    def fc(n: Int = 10, noSym: Boolean = true) = scaledTaskProofs(c, 1, n, noSym).runAsync
+    def fcna(k: Int, n: Int = 10, noSym: Boolean = true) = scaledTaskProofs(cna(k), 1, n, noSym).runAsync
+    def fcnab(k: Int, n: Int = 10, noSym: Boolean = true) = scaledTaskProofs(cnab(k), 1, n, noSym).runAsync
+    def fcnB(k: Int, n: Int = 10, noSym: Boolean = true) = scaledTaskProofs(cnB(k), 1, n, noSym).runAsync
+
 
 }

@@ -9,7 +9,7 @@ import monix.execution.Scheduler.Implicits.global
 
 object amm{
   val initCommands =
-    """import superficial._, freegroups._, LinearNorm._, LinearNormProofs._"""
+    """import superficial._, freegroups._, LinNormBound._, LinearNormProofs._"""
   def apply() = ammonite.Main(s"$initCommands").run()
 }
 
