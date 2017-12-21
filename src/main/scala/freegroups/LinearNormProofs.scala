@@ -66,14 +66,14 @@ object LinearNormProofs{
 
   def proofLines : LinNormBound => Vector[String] = {
     case Gen(n) => Vector(leq(Gen(n)))
-    case ConjGen(n, pf) => leqUse(ConjGen(-n, pf), pf) +: proofLines(pf)
-    case Triang(a, b) => leqUse(a ++ b, a, b) +: (proofLines(a) ++ proofLines(b))
+    case ConjGen(n, pf) => proofLines(pf) :+ leqUse(ConjGen(-n, pf), pf)
+    case Triang(a, b) => (proofLines(a) ++ proofLines(b)) :+ leqUse(a ++ b, a, b)
     case PowerBound(baseword, n, pf) =>
-      (leqUse(PowerBound(baseword, n, pf)) + s" by taking ${n}th power") +: proofLines(pf)
+      proofLines(pf) :+ (leqUse(PowerBound(baseword, n, pf)) + s" by taking ${n}th power")
     case Empty => Vector()
   }
 
-  def proofOut(pf: LinNormBound) = proofLines(pf).distinct.reverse
+  def proofOut(pf: LinNormBound) = proofLines(pf).distinct
 
   @tailrec def proofPowers(pf: LinNormBound, n: Int, accum: Vector[LinNormBound] = Vector()): Vector[LinNormBound] =
     if (n <= accum.size) accum.take(n)
@@ -86,6 +86,30 @@ object LinearNormProofs{
       invPf <- memoNormProof.get(w.inv)
     } if (invPf.bound < pf.bound) memoNormProof += (w -> LinNormBound.inverse(invPf))
 
+  def updateSymm() =
+    for {
+      (w, pf) <- memoNormProof
+      sy <- symmProofs
+      spf = sy(pf)
+      oldpf <- memoNormProof.get(spf.word)
+    } if (oldpf.bound > spf.bound) savePf(spf)
+
+  def propagate(pf: LinNormBound) =
+    {
+      val gains =
+        memoNormProof.filter{
+          case (w, p) =>
+            (memoNormProof.get(w ++ pf.word).map(_.bound).getOrElse(0.0) > (pf.bound + p.bound))
+        }.map {case (w, p) => (w ++ pf.word, p ++ pf)}
+      gains.foreach{
+        case (w, p) => save(w, p, false)
+      }
+      gains.toVector.distinct
+    }
+
+  def propagateAll(pfs: Vector[LinNormBound]) = pfs.flatMap(propagate).distinct
+
+  // Better to propagate
   def updateTriang() =
     for {
       (w1, pf1) <- memoNormProof

@@ -21,6 +21,15 @@ object LinNormBound{
     case Empty => Empty
   }
 
+  def subProofs: LinNormBound => Set[LinNormBound] = {
+    case Gen(n) => Set(Gen(n))
+    case ConjGen(n, pf) => subProofs(pf) + ConjGen(-n, pf)
+    case Triang(a, b) => (subProofs(a) union subProofs(b)) + Triang(a, b)
+    case PowerBound(baseword, n, pf) =>
+      subProofs(pf) + PowerBound(baseword, n, pf)
+    case Empty => Set(Empty)
+  }
+
   def symm(f: Int => Int): LinNormBound => LinNormBound = {
     case Gen(n) => Gen(f(n))
     case ConjGen(n, pf) => ConjGen(f(n), symm(f)(pf))
