@@ -13,6 +13,21 @@ sealed abstract class LinNormBound(val word: Word, val bound: Double){
 }
 
 object LinNormBound{
+  case class Gen(n: Int) extends LinNormBound(Word(Vector(n)), 1){
+    override val toString = Word(Vector(n)).toString
+  }
+
+  case class ConjGen(n: Int,pf: LinNormBound) extends LinNormBound(n +: pf.word :+ (-n), pf.bound)
+
+  case class Triang(pf1: LinNormBound, pf2: LinNormBound) extends LinNormBound(pf1.word ++ pf2.word, pf1.bound + pf2.bound)
+
+  case class PowerBound(baseword: Word, n: Int, pf: LinNormBound) extends LinNormBound(baseword, pf.bound/n){
+    assert(pf.word == Word(Vector.fill(n)(baseword.ls).reduce(_ ++ _)), s"power bound failed, ${pf.word}, $baseword, $n")
+  }
+
+  case object Empty extends LinNormBound(Word(Vector()), 0)
+
+
   def inverse: LinNormBound => LinNormBound = {
     case Gen(n) => Gen(-n)
     case ConjGen(n, pf) => ConjGen(n, inverse(pf))
@@ -38,19 +53,7 @@ object LinNormBound{
     case Empty => Empty
   }
 
-  case class Gen(n: Int) extends LinNormBound(Word(Vector(n)), 1){
-    override val toString = Word(Vector(n)).toString
-  }
 
-  case class ConjGen(n: Int,pf: LinNormBound) extends LinNormBound(n +: pf.word :+ (-n), pf.bound)
-
-  case class Triang(pf1: LinNormBound, pf2: LinNormBound) extends LinNormBound(pf1.word ++ pf2.word, pf1.bound + pf2.bound)
-
-  case class PowerBound(baseword: Word, n: Int, pf: LinNormBound) extends LinNormBound(baseword, pf.bound/n){
-    assert(pf.word == Word(Vector.fill(n)(baseword.ls).reduce(_ ++ _)), s"power bound failed, ${pf.word}, $baseword, $n")
-  }
-
-  case object Empty extends LinNormBound(Word(Vector()), 0)
 
   def flip: Int => Int = (x) => (-x)
   def flipOdd(n: Int) = if (math.abs(n) % 2 == 1) -n else n
