@@ -14,15 +14,19 @@ sealed abstract class LinNormBound(val word: Word, val bound: Double){
 
 object LinNormBound{
   case class Gen(n: Int) extends LinNormBound(Word(Vector(n)), 1){
+    require(n != 0, "No generator with index 0")
+
     override val toString = Word(Vector(n)).toString
   }
 
-  case class ConjGen(n: Int,pf: LinNormBound) extends LinNormBound(n +: pf.word :+ (-n), pf.bound)
+  case class ConjGen(n: Int,pf: LinNormBound) extends LinNormBound(n +: pf.word :+ (-n), pf.bound){
+    require(n != 0, "No generator with index 0")
+  }
 
   case class Triang(pf1: LinNormBound, pf2: LinNormBound) extends LinNormBound(pf1.word ++ pf2.word, pf1.bound + pf2.bound)
 
   case class PowerBound(baseword: Word, n: Int, pf: LinNormBound) extends LinNormBound(baseword, pf.bound/n){
-    assert(pf.word == Word(Vector.fill(n)(baseword.ls).reduce(_ ++ _)), s"power bound failed, ${pf.word}, $baseword, $n")
+    require(pf.word == baseword.pow(n), s"The element ${pf.word} is not the ${n}th power of $baseword")
   }
 
   case object Empty extends LinNormBound(Word(Vector()), 0)
