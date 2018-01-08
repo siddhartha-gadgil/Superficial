@@ -130,7 +130,7 @@ def letterUnic(n: Int) =
       */
     def pow: Int => Word = {
       case 0          => Word(Vector())
-      case k if k > 0 => Word(Vector.fill(k)(ls).flatten)
+      case k if k > 0 => Word(Vector.fill(k)(ls).flatten).reduce
       case k if k < 0 => this.inv.pow(-k)
     }
 
