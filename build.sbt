@@ -13,3 +13,6 @@ lazy val root = (project in file(".")).
     libraryDependencies += "io.monix" %% "monix" % "3.0.0-M2",
     libraryDependencies += "com.lihaoyi" % "ammonite" % "1.0.3" cross CrossVersion.full
   )
+
+  libraryDependencies += compilerPlugin("org.scalameta" % "semanticdb-scalac" % "2.1.2" cross CrossVersion.full)
+  scalacOptions += "-Yrangepos"
