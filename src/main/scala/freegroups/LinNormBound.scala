@@ -6,16 +6,13 @@ import LinNormBound._
 
 sealed abstract class LinNormBound(val word: Word, val bound: Double){
   def ++(that: LinNormBound) = Triang(this, that)
-
   def *:(n: Int) = ConjGen(n, this)
-
   def +:(n: Int) = Gen(n) ++ this
 }
 
 object LinNormBound{
   case class Gen(n: Int) extends LinNormBound(Word(Vector(n)), 1){
     require(n != 0, "No generator with index 0")
-
     override val toString = Word(Vector(n)).toString
   }
 
