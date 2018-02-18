@@ -7,12 +7,6 @@ import scala.collection.mutable.{Map => mMap}
 import monix.execution.Scheduler.Implicits.global
 
 
-object amm{
-  val initCommands =
-    """import superficial._, freegroups._, LinNormBound._, LinearNormProofs._"""
-  def apply() = ammonite.Main(s"$initCommands").run()
-}
-
 object LinearNorm{
   val memoNorm: mMap[Vector[Int], Double] = mMap()
 
