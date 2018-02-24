@@ -2,6 +2,15 @@ package freegroups
 
 import Word._
 
+object Hello extends App {
+  import monix.eval._
+  val t = Task(println("Hello Monix"))
+  import monix.execution.Scheduler.Implicits.global
+  t.runAsync
+  println("Hello World")
+  ammonite.Main(predefCode = "println(\"Starting Ammonite!\"); import  freegroups._").run()
+}
+
 object Word{
   /**
   * String for a letter, e.g. a, a! (for a inverse)
