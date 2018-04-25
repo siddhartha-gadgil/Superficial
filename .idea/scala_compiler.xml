@@ -1,0 +1,8 @@
+<project version="4">
+    <component name="ScalaCompilerConfiguration">
+        <profile name="mill 1" modules="superficial,freegroups">
+            <parameters> </parameters>
+            <plugins> </plugins>
+        </profile>
+    </component>
+</project>

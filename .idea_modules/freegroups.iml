@@ -1,0 +1,43 @@
+<module type="JAVA_MODULE" version="4">
+    <component name="NewModuleRootManager">
+        <output url="file://$MODULE_DIR$/../out/freegroups/compile/dest/classes"/>
+        <exclude-output/>
+        <content url="file://$MODULE_DIR$/../out/freegroups/generatedSources/dest"/>
+        <content url="file://$MODULE_DIR$/../freegroups">
+            <sourceFolder url="file://$MODULE_DIR$/../freegroups/src" isTestSource="false"/>
+            <sourceFolder url="file://$MODULE_DIR$/../freegroups/resources" isTestSource="false" type="java-resource"/>
+            <excludeFolder url="file://$MODULE_DIR$/../freegroups/target"/>
+        </content>
+        <orderEntry type="inheritedJdk"/>
+        <orderEntry type="sourceFolder" forTests="false"/>
+        <orderEntry type="library" name="scala-sdk-2.12.4" level="application"/>
+        <orderEntry type="library" name="cats-core_2.12-1.0.1-sources.jar" level="project"/>
+        <orderEntry type="library" name="cats-core_2.12-1.0.1.jar" level="project"/>
+        <orderEntry type="library" name="cats-effect_2.12-0.8-sources.jar" level="project"/>
+        <orderEntry type="library" name="cats-effect_2.12-0.8.jar" level="project"/>
+        <orderEntry type="library" name="cats-kernel_2.12-1.0.1-sources.jar" level="project"/>
+        <orderEntry type="library" name="cats-kernel_2.12-1.0.1.jar" level="project"/>
+        <orderEntry type="library" name="cats-macros_2.12-1.0.1-sources.jar" level="project"/>
+        <orderEntry type="library" name="cats-macros_2.12-1.0.1.jar" level="project"/>
+        <orderEntry type="library" name="jctools-core-2.1.1-sources.jar" level="project"/>
+        <orderEntry type="library" name="jctools-core-2.1.1.jar" level="project"/>
+        <orderEntry type="library" name="machinist_2.12-0.6.2-sources.jar" level="project"/>
+        <orderEntry type="library" name="machinist_2.12-0.6.2.jar" level="project"/>
+        <orderEntry type="library" name="monix-eval_2.12-3.0.0-M3-sources.jar" level="project"/>
+        <orderEntry type="library" name="monix-eval_2.12-3.0.0-M3.jar" level="project"/>
+        <orderEntry type="library" name="monix-execution_2.12-3.0.0-M3-sources.jar" level="project"/>
+        <orderEntry type="library" name="monix-execution_2.12-3.0.0-M3.jar" level="project"/>
+        <orderEntry type="library" name="monix-reactive_2.12-3.0.0-M3-sources.jar" level="project"/>
+        <orderEntry type="library" name="monix-reactive_2.12-3.0.0-M3.jar" level="project"/>
+        <orderEntry type="library" name="monix-tail_2.12-3.0.0-M3-sources.jar" level="project"/>
+        <orderEntry type="library" name="monix-tail_2.12-3.0.0-M3.jar" level="project"/>
+        <orderEntry type="library" name="monix_2.12-3.0.0-M3-sources.jar" level="project"/>
+        <orderEntry type="library" name="monix_2.12-3.0.0-M3.jar" level="project"/>
+        <orderEntry type="library" name="reactive-streams-1.0.2-sources.jar" level="project"/>
+        <orderEntry type="library" name="reactive-streams-1.0.2.jar" level="project"/>
+        <orderEntry type="library" name="scala-library-2.12.4-sources.jar" level="project"/>
+        <orderEntry type="library" name="scala-library-2.12.4.jar" level="project"/>
+        <orderEntry type="library" name="scala-reflect-2.12.0-sources.jar" level="project"/>
+        <orderEntry type="library" name="scala-reflect-2.12.0.jar" level="project"/>
+    </component>
+</module>
