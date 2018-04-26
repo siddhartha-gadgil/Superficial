@@ -11,33 +11,91 @@
         <orderEntry type="inheritedJdk"/>
         <orderEntry type="sourceFolder" forTests="false"/>
         <orderEntry type="library" name="scala-sdk-2.12.4" level="application"/>
+        <orderEntry type="library" name="ammonite-compiler_2.12.4-1.0.3-21-05b5d32-sources.jar" level="project"/>
+        <orderEntry type="library" name="ammonite-compiler_2.12.4-1.0.3-21-05b5d32.jar" level="project"/>
+        <orderEntry type="library" name="ammonite-ops_2.12-1.0.3-21-05b5d32-sources.jar" level="project"/>
+        <orderEntry type="library" name="ammonite-ops_2.12-1.0.3-21-05b5d32.jar" level="project"/>
+        <orderEntry type="library" name="ammonite-repl_2.12.4-1.0.3-21-05b5d32-sources.jar" level="project"/>
+        <orderEntry type="library" name="ammonite-repl_2.12.4-1.0.3-21-05b5d32.jar" level="project"/>
+        <orderEntry type="library" name="ammonite-runtime_2.12-1.0.3-21-05b5d32-sources.jar" level="project"/>
+        <orderEntry type="library" name="ammonite-runtime_2.12-1.0.3-21-05b5d32.jar" level="project"/>
+        <orderEntry type="library" name="ammonite-terminal_2.12-1.0.3-21-05b5d32-sources.jar" level="project"/>
+        <orderEntry type="library" name="ammonite-terminal_2.12-1.0.3-21-05b5d32.jar" level="project"/>
+        <orderEntry type="library" name="ammonite-util_2.12-1.0.3-21-05b5d32-sources.jar" level="project"/>
+        <orderEntry type="library" name="ammonite-util_2.12-1.0.3-21-05b5d32.jar" level="project"/>
+        <orderEntry type="library" name="ammonite_2.12.4-1.0.3-21-05b5d32-sources.jar" level="project"/>
+        <orderEntry type="library" name="ammonite_2.12.4-1.0.3-21-05b5d32.jar" level="project"/>
         <orderEntry type="library" name="cats-core_2.12-1.0.1-sources.jar" level="project"/>
         <orderEntry type="library" name="cats-core_2.12-1.0.1.jar" level="project"/>
-        <orderEntry type="library" name="cats-effect_2.12-0.8-sources.jar" level="project"/>
-        <orderEntry type="library" name="cats-effect_2.12-0.8.jar" level="project"/>
+        <orderEntry type="library" name="cats-effect_2.12-0.10-sources.jar" level="project"/>
+        <orderEntry type="library" name="cats-effect_2.12-0.10.jar" level="project"/>
         <orderEntry type="library" name="cats-kernel_2.12-1.0.1-sources.jar" level="project"/>
         <orderEntry type="library" name="cats-kernel_2.12-1.0.1.jar" level="project"/>
         <orderEntry type="library" name="cats-macros_2.12-1.0.1-sources.jar" level="project"/>
         <orderEntry type="library" name="cats-macros_2.12-1.0.1.jar" level="project"/>
+        <orderEntry type="library" name="coursier-cache_2.12-1.0.0-sources.jar" level="project"/>
+        <orderEntry type="library" name="coursier-cache_2.12-1.0.0.jar" level="project"/>
+        <orderEntry type="library" name="coursier_2.12-1.0.0-sources.jar" level="project"/>
+        <orderEntry type="library" name="coursier_2.12-1.0.0.jar" level="project"/>
+        <orderEntry type="library" name="fansi_2.12-0.2.4-sources.jar" level="project"/>
+        <orderEntry type="library" name="fansi_2.12-0.2.4.jar" level="project"/>
+        <orderEntry type="library" name="fastparse-utils_2.12-1.0.0-sources.jar" level="project"/>
+        <orderEntry type="library" name="fastparse-utils_2.12-1.0.0.jar" level="project"/>
+        <orderEntry type="library" name="fastparse_2.12-1.0.0-sources.jar" level="project"/>
+        <orderEntry type="library" name="fastparse_2.12-1.0.0.jar" level="project"/>
+        <orderEntry type="library" name="geny_2.12-0.1.2-sources.jar" level="project"/>
+        <orderEntry type="library" name="geny_2.12-0.1.2.jar" level="project"/>
+        <orderEntry type="library" name="javaparser-core-3.2.5-sources.jar" level="project"/>
+        <orderEntry type="library" name="javaparser-core-3.2.5.jar" level="project"/>
+        <orderEntry type="library" name="javassist-3.21.0-GA-sources.jar" level="project"/>
+        <orderEntry type="library" name="javassist-3.21.0-GA.jar" level="project"/>
+        <orderEntry type="library" name="jawn-parser_2.12-0.11.0-sources.jar" level="project"/>
+        <orderEntry type="library" name="jawn-parser_2.12-0.11.0.jar" level="project"/>
         <orderEntry type="library" name="jctools-core-2.1.1-sources.jar" level="project"/>
         <orderEntry type="library" name="jctools-core-2.1.1.jar" level="project"/>
+        <orderEntry type="library" name="jline-2.14.3-sources.jar" level="project"/>
+        <orderEntry type="library" name="jline-2.14.3.jar" level="project"/>
         <orderEntry type="library" name="machinist_2.12-0.6.2-sources.jar" level="project"/>
         <orderEntry type="library" name="machinist_2.12-0.6.2.jar" level="project"/>
-        <orderEntry type="library" name="monix-eval_2.12-3.0.0-M3-sources.jar" level="project"/>
-        <orderEntry type="library" name="monix-eval_2.12-3.0.0-M3.jar" level="project"/>
-        <orderEntry type="library" name="monix-execution_2.12-3.0.0-M3-sources.jar" level="project"/>
-        <orderEntry type="library" name="monix-execution_2.12-3.0.0-M3.jar" level="project"/>
-        <orderEntry type="library" name="monix-reactive_2.12-3.0.0-M3-sources.jar" level="project"/>
-        <orderEntry type="library" name="monix-reactive_2.12-3.0.0-M3.jar" level="project"/>
-        <orderEntry type="library" name="monix-tail_2.12-3.0.0-M3-sources.jar" level="project"/>
-        <orderEntry type="library" name="monix-tail_2.12-3.0.0-M3.jar" level="project"/>
-        <orderEntry type="library" name="monix_2.12-3.0.0-M3-sources.jar" level="project"/>
-        <orderEntry type="library" name="monix_2.12-3.0.0-M3.jar" level="project"/>
+        <orderEntry type="library" name="monix-eval_2.12-3.0.0-RC1-sources.jar" level="project"/>
+        <orderEntry type="library" name="monix-eval_2.12-3.0.0-RC1.jar" level="project"/>
+        <orderEntry type="library" name="monix-execution_2.12-3.0.0-RC1-sources.jar" level="project"/>
+        <orderEntry type="library" name="monix-execution_2.12-3.0.0-RC1.jar" level="project"/>
+        <orderEntry type="library" name="monix-java_2.12-3.0.0-RC1-sources.jar" level="project"/>
+        <orderEntry type="library" name="monix-java_2.12-3.0.0-RC1.jar" level="project"/>
+        <orderEntry type="library" name="monix-reactive_2.12-3.0.0-RC1-sources.jar" level="project"/>
+        <orderEntry type="library" name="monix-reactive_2.12-3.0.0-RC1.jar" level="project"/>
+        <orderEntry type="library" name="monix-tail_2.12-3.0.0-RC1-sources.jar" level="project"/>
+        <orderEntry type="library" name="monix-tail_2.12-3.0.0-RC1.jar" level="project"/>
+        <orderEntry type="library" name="monix_2.12-3.0.0-RC1-sources.jar" level="project"/>
+        <orderEntry type="library" name="monix_2.12-3.0.0-RC1.jar" level="project"/>
+        <orderEntry type="library" name="pprint_2.12-0.5.2-sources.jar" level="project"/>
+        <orderEntry type="library" name="pprint_2.12-0.5.2.jar" level="project"/>
         <orderEntry type="library" name="reactive-streams-1.0.2-sources.jar" level="project"/>
         <orderEntry type="library" name="reactive-streams-1.0.2.jar" level="project"/>
+        <orderEntry type="library" name="scala-compiler-2.12.4-sources.jar" level="project"/>
+        <orderEntry type="library" name="scala-compiler-2.12.4.jar" level="project"/>
         <orderEntry type="library" name="scala-library-2.12.4-sources.jar" level="project"/>
         <orderEntry type="library" name="scala-library-2.12.4.jar" level="project"/>
-        <orderEntry type="library" name="scala-reflect-2.12.0-sources.jar" level="project"/>
-        <orderEntry type="library" name="scala-reflect-2.12.0.jar" level="project"/>
+        <orderEntry type="library" name="scala-reflect-2.12.4-sources.jar" level="project"/>
+        <orderEntry type="library" name="scala-reflect-2.12.4.jar" level="project"/>
+        <orderEntry type="library" name="scala-xml_2.12-1.0.6-sources.jar" level="project"/>
+        <orderEntry type="library" name="scala-xml_2.12-1.0.6.jar" level="project"/>
+        <orderEntry type="library" name="scalaj-http_2.12-2.3.0-sources.jar" level="project"/>
+        <orderEntry type="library" name="scalaj-http_2.12-2.3.0.jar" level="project"/>
+        <orderEntry type="library" name="scalaparse_2.12-1.0.0-sources.jar" level="project"/>
+        <orderEntry type="library" name="scalaparse_2.12-1.0.0.jar" level="project"/>
+        <orderEntry type="library" name="scalaz-concurrent_2.12-7.2.16-sources.jar" level="project"/>
+        <orderEntry type="library" name="scalaz-concurrent_2.12-7.2.16.jar" level="project"/>
+        <orderEntry type="library" name="scalaz-core_2.12-7.2.16-sources.jar" level="project"/>
+        <orderEntry type="library" name="scalaz-core_2.12-7.2.16.jar" level="project"/>
+        <orderEntry type="library" name="scalaz-effect_2.12-7.2.16-sources.jar" level="project"/>
+        <orderEntry type="library" name="scalaz-effect_2.12-7.2.16.jar" level="project"/>
+        <orderEntry type="library" name="scopt_2.12-3.5.0-sources.jar" level="project"/>
+        <orderEntry type="library" name="scopt_2.12-3.5.0.jar" level="project"/>
+        <orderEntry type="library" name="sourcecode_2.12-0.1.4-sources.jar" level="project"/>
+        <orderEntry type="library" name="sourcecode_2.12-0.1.4.jar" level="project"/>
+        <orderEntry type="library" name="upickle_2.12-0.5.1-sources.jar" level="project"/>
+        <orderEntry type="library" name="upickle_2.12-0.5.1.jar" level="project"/>
     </component>
 </module>

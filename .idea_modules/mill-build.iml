@@ -1,54 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <module type="JAVA_MODULE" version="4">
-    <component name="NewModuleRootManager">
-        <output url="file://$MODULE_DIR$/../out"/>
-        <content url="file://$MODULE_DIR$/..">
-            <excludeFolder url="file://$MODULE_DIR$/../project"/>
-            <excludeFolder url="file://$MODULE_DIR$/../target"/>
-        </content>
-        <exclude-output/>
-        <orderEntry type="inheritedJdk"/>
-        <orderEntry type="sourceFolder" forTests="false"/>
-        <orderEntry type="library" name="ammonite-compiler_2.12.4-1.1.0-14-037b8eb.jar" level="project"/>
-        <orderEntry type="library" name="ammonite-ops_2.12-1.1.0-14-037b8eb.jar" level="project"/>
-        <orderEntry type="library" name="ammonite-repl_2.12.4-1.1.0-14-037b8eb.jar" level="project"/>
-        <orderEntry type="library" name="ammonite-runtime_2.12-1.1.0-14-037b8eb.jar" level="project"/>
-        <orderEntry type="library" name="ammonite-terminal_2.12-1.1.0-14-037b8eb.jar" level="project"/>
-        <orderEntry type="library" name="ammonite-util_2.12-1.1.0-14-037b8eb.jar" level="project"/>
-        <orderEntry type="library" name="ammonite_2.12.4-1.1.0-14-037b8eb.jar" level="project"/>
-        <orderEntry type="library" name="coursier-cache_2.12-1.0.0.jar" level="project"/>
-        <orderEntry type="library" name="coursier_2.12-1.0.0.jar" level="project"/>
-        <orderEntry type="library" name="fansi_2.12-0.2.4.jar" level="project"/>
-        <orderEntry type="library" name="fastparse-utils_2.12-1.0.0.jar" level="project"/>
-        <orderEntry type="library" name="fastparse_2.12-1.0.0.jar" level="project"/>
-        <orderEntry type="library" name="geny_2.12-0.1.2.jar" level="project"/>
-        <orderEntry type="library" name="ipcsocket-1.0.0.jar" level="project"/>
-        <orderEntry type="library" name="javaparser-core-3.2.5.jar" level="project"/>
-        <orderEntry type="library" name="javassist-3.21.0-GA.jar" level="project"/>
-        <orderEntry type="library" name="jline-3.6.2.jar" level="project"/>
-        <orderEntry type="library" name="jline-terminal-3.6.2.jar" level="project"/>
-        <orderEntry type="library" name="jline-terminal-jna-3.6.2.jar" level="project"/>
-        <orderEntry type="library" name="jna-4.5.0.jar" level="project"/>
-        <orderEntry type="library" name="jna-platform-4.5.0.jar" level="project"/>
-        <orderEntry type="library" name="mill-client-0.2.0.jar" level="project"/>
-        <orderEntry type="library" name="mill-core_2.12-0.2.0.jar" level="project"/>
-        <orderEntry type="library" name="mill-main_2.12-0.2.0.jar" level="project"/>
-        <orderEntry type="library" name="mill-moduledefs_2.12-0.2.0.jar" level="project"/>
-        <orderEntry type="library" name="mill-scalajslib_2.12-0.2.0.jar" level="project"/>
-        <orderEntry type="library" name="mill-scalalib_2.12-0.2.0.jar" level="project"/>
-        <orderEntry type="library" name="pprint_2.12-0.5.2.jar" level="project"/>
-        <orderEntry type="library" name="scala-compiler-2.12.4.jar" level="project"/>
-        <orderEntry type="library" name="scala-library-2.12.4.jar" level="project"/>
-        <orderEntry type="library" name="scala-reflect-2.12.4.jar" level="project"/>
-        <orderEntry type="library" name="scala-xml_2.12-1.0.6.jar" level="project"/>
-        <orderEntry type="library" name="scalaj-http_2.12-2.3.0.jar" level="project"/>
-        <orderEntry type="library" name="scalaparse_2.12-1.0.0.jar" level="project"/>
-        <orderEntry type="library" name="scalaz-concurrent_2.12-7.2.16.jar" level="project"/>
-        <orderEntry type="library" name="scalaz-core_2.12-7.2.16.jar" level="project"/>
-        <orderEntry type="library" name="scalaz-effect_2.12-7.2.16.jar" level="project"/>
-        <orderEntry type="library" name="scopt_2.12-3.5.0.jar" level="project"/>
-        <orderEntry type="library" name="sourcecode_2.12-0.1.4.jar" level="project"/>
-        <orderEntry type="library" name="test-interface-1.0.jar" level="project"/>
-        <orderEntry type="library" name="ujson_2.12-0.6.5.jar" level="project"/>
-        <orderEntry type="library" name="upickle_2.12-0.6.5.jar" level="project"/>
-    </component>
+  <component name="NewModuleRootManager">
+    <output url="file://$MODULE_DIR$/../out" />
+    <exclude-output />
+    <content url="file://$MODULE_DIR$/..">
+      <excludeFolder url="file://$MODULE_DIR$/../project" />
+      <excludeFolder url="file://$MODULE_DIR$/../target" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="ammonite-compiler_2.12.4-1.1.0-14-037b8eb.jar" level="project" />
+    <orderEntry type="library" name="ammonite-ops_2.12-1.1.0-14-037b8eb.jar" level="project" />
+    <orderEntry type="library" name="ammonite-repl_2.12.4-1.1.0-14-037b8eb.jar" level="project" />
+    <orderEntry type="library" name="ammonite-runtime_2.12-1.1.0-14-037b8eb.jar" level="project" />
+    <orderEntry type="library" name="ammonite-terminal_2.12-1.1.0-14-037b8eb.jar" level="project" />
+    <orderEntry type="library" name="ammonite-util_2.12-1.1.0-14-037b8eb.jar" level="project" />
+    <orderEntry type="library" name="ammonite_2.12.4-1.1.0-14-037b8eb.jar" level="project" />
+    <orderEntry type="library" name="coursier-cache_2.12-1.0.0.jar" level="project" />
+    <orderEntry type="library" name="coursier_2.12-1.0.0.jar" level="project" />
+    <orderEntry type="library" name="fansi_2.12-0.2.4.jar" level="project" />
+    <orderEntry type="library" name="fastparse-utils_2.12-1.0.0.jar" level="project" />
+    <orderEntry type="library" name="fastparse_2.12-1.0.0.jar" level="project" />
+    <orderEntry type="library" name="geny_2.12-0.1.2.jar" level="project" />
+    <orderEntry type="library" name="ipcsocket-1.0.0.jar" level="project" />
+    <orderEntry type="library" name="javaparser-core-3.2.5.jar" level="project" />
+    <orderEntry type="library" name="javassist-3.21.0-GA.jar" level="project" />
+    <orderEntry type="library" name="jline-3.6.2.jar" level="project" />
+    <orderEntry type="library" name="jline-terminal-3.6.2.jar" level="project" />
+    <orderEntry type="library" name="jline-terminal-jna-3.6.2.jar" level="project" />
+    <orderEntry type="library" name="jna-4.5.0.jar" level="project" />
+    <orderEntry type="library" name="jna-platform-4.5.0.jar" level="project" />
+    <orderEntry type="library" name="mill-client-0.2.0.jar" level="project" />
+    <orderEntry type="library" name="mill-core_2.12-0.2.0.jar" level="project" />
+    <orderEntry type="library" name="mill-main_2.12-0.2.0.jar" level="project" />
+    <orderEntry type="library" name="mill-moduledefs_2.12-0.2.0.jar" level="project" />
+    <orderEntry type="library" name="mill-scalajslib_2.12-0.2.0.jar" level="project" />
+    <orderEntry type="library" name="mill-scalalib_2.12-0.2.0.jar" level="project" />
+    <orderEntry type="library" name="pprint_2.12-0.5.2.jar" level="project" />
+    <orderEntry type="library" name="scala-compiler-2.12.4.jar" level="project" />
+    <orderEntry type="library" name="scala-library-2.12.4.jar" level="project" />
+    <orderEntry type="library" name="scala-reflect-2.12.4.jar" level="project" />
+    <orderEntry type="library" name="scala-xml_2.12-1.0.6.jar" level="project" />
+    <orderEntry type="library" name="scalaj-http_2.12-2.3.0.jar" level="project" />
+    <orderEntry type="library" name="scalaparse_2.12-1.0.0.jar" level="project" />
+    <orderEntry type="library" name="scalaz-concurrent_2.12-7.2.16.jar" level="project" />
+    <orderEntry type="library" name="scalaz-core_2.12-7.2.16.jar" level="project" />
+    <orderEntry type="library" name="scalaz-effect_2.12-7.2.16.jar" level="project" />
+    <orderEntry type="library" name="scopt_2.12-3.5.0.jar" level="project" />
+    <orderEntry type="library" name="sourcecode_2.12-0.1.4.jar" level="project" />
+    <orderEntry type="library" name="test-interface-1.0.jar" level="project" />
+    <orderEntry type="library" name="ujson_2.12-0.6.5.jar" level="project" />
+    <orderEntry type="library" name="upickle_2.12-0.6.5.jar" level="project" />
+  </component>
 </module>

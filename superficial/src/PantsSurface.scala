@@ -16,8 +16,8 @@ object Z3 {
 
 /**
   * index for boundary of pants, may be in the curve system or the boundary of the surface
-  * @param pants
-  * @param direction
+  * @param pants the index of the pair of pants
+  * @param direction the prong of the pair of pants
   */
 case class PantsBoundary(pants: Index, direction: Z3)
 
@@ -79,7 +79,7 @@ case class PantsHexagon(pants: Index, top: Boolean, cs: Set[Curve])
   val edges: Set[Edge] = seams union (boundaryEdges)
 }
 
-class PantsSurface(numPants: Index, cs: Set[Curve]) extends PureTwoComplex {
+case class PantsSurface(numPants: Index, cs: Set[Curve]) extends PureTwoComplex {
   val faces =
     for {
       pants: Index <- (0 until numPants).toSet
