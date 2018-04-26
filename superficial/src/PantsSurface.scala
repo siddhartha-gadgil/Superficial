@@ -7,6 +7,8 @@ case class Z3(n: Int) {
   def next = Z3((n + 1) % 3)
   def prev = Z3((n + 2) % 3)
 
+  def <(that: Z3) = n < that.n
+
   def others: Set[Z3] = Z3.enum - this
 }
 
@@ -24,6 +26,9 @@ case class PantsBoundary(pants: Index, direction: Z3) {
   def prev = PantsBoundary(pants - 1, direction)
 
   def drop(n: Index): PantsBoundary = if (pants > n) prev else this
+
+  def <(that: PantsBoundary) =
+    (pants < that.pants) || ((pants == that.pants) && (direction < that.direction))
 }
 
 case class BoundaryVertex(pb: PantsBoundary, first: Boolean) extends Vertex
@@ -116,6 +121,8 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
 
   val boundaryIndices: Set[Index] = boundaryCurves.map(_.pants)
 
+  def isClosed = boundaryIndices.isEmpty
+
   def innerCurves(index: Index): Int =
     csSupp.count((p) => p.pants == index)
 
@@ -133,6 +140,17 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
         Curve(pb2, PantsBoundary(numPants, Z3(1)))
       )
     )
+
+  def glue3(pb1: PantsBoundary, pb2: PantsBoundary, pb3: PantsBoundary) =
+    PantsSurface(
+      numPants + 1,
+      cs union Set(
+        Curve(pb1, PantsBoundary(numPants, Z3(0))),
+        Curve(pb2, PantsBoundary(numPants, Z3(1))),
+        Curve(pb3, PantsBoundary(numPants, Z3(2)))
+      )
+    )
+
   def glueLoop(pb: PantsBoundary) =
     PantsSurface(
       numPants + 1,
@@ -150,11 +168,20 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
     for {
       pb1 <- boundaryCurves
       pb2 <- boundaryCurves
-      if pb2 != pb1
+      if pb2 < pb1
     } yield glue2(pb1, pb2)
 
-  def allGlued = allGlue1 union allGlue2 union allGlueLoop
+  def allGlue3 =
+    for {
+      pb1 <- boundaryCurves
+      pb2 <- boundaryCurves
+      if pb1 < pb2
+      pb3 <- boundaryCurves
+      if pb2 < pb3
+    } yield glue3(pb1, pb2, pb3)
 
+  def allGlued: Set[PantsSurface] =
+    allGlue1 union allGlue2 union allGlue3 union allGlueLoop
 
 }
 
@@ -186,19 +213,22 @@ object PantsSurface {
       case v => v
     }
 
-  def allPantsSurfaces(n: Int): Vector[PantsSurface] =
+  def all(n: Int): Vector[PantsSurface] =
     if (n == 1)
       Vector(
         PantsSurface(1, Set()),
-        PantsSurface(1,
-          Set(
-            Curve(PantsBoundary(0, Z3(0)),
-              PantsBoundary(0, Z3(1)))))
+        PantsSurface(
+          1,
+          Set(Curve(PantsBoundary(0, Z3(0)), PantsBoundary(0, Z3(1)))))
       )
     else
-      distinct(allPantsSurfaces(n-1).flatMap(
-        (s) => s.allGlued.toVector
-      ))
+      distinct(
+        all(n - 1).flatMap(
+          (s) => s.allGlued.toVector
+        ))
+
+  def allClosed(n: Int) = all(n).filter(_.isClosed)
+
 
   def getCurve(pb: PantsBoundary, cs: Set[Curve]): Option[Curve] =
     cs.find(

@@ -107,10 +107,10 @@ trait TwoComplex {
 trait PureTwoComplex extends TwoComplex {
   val faces: Set[Polygon]
 
-  val edges: Set[Edge] =
+  lazy val edges: Set[Edge] =
     faces.map(_.edges).foldLeft(Set.empty[Edge])(_ union _)
 
-  val vertices: Set[Vertex] =
+  lazy val vertices: Set[Vertex] =
     faces.map(_.vertices).foldLeft(Set.empty[Vertex])(_ union _)
 }
 
