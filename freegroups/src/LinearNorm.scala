@@ -10,7 +10,7 @@ object LinearNorm {
   val memoNorm: mMap[Vector[Int], Double] = mMap()
 
   def norm(word: Vector[Int]): Int = word match {
-    case Vector() => 0
+    case Vector()      => 0
     case x +: Vector() => 1
     case x +: ys =>
       val matchedIndices = ys.zipWithIndex.filter(_._1 == -x).map(_._2)
@@ -24,7 +24,7 @@ object LinearNorm {
   def normTask(word: Vector[Int]): Task[Double] =
     memoNorm.get(word).map(Task(_)).getOrElse {
       Task(word).flatMap {
-        case Vector() => Task.pure(0)
+        case Vector()      => Task.pure(0)
         case x +: Vector() => Task.pure(1)
         case x +: ys =>
           if (x == -ys.last) normTask(ys.init)

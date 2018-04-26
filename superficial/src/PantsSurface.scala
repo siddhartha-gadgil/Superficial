@@ -15,11 +15,16 @@ object Z3 {
 }
 
 /**
-  * index for boundary of pants, may be in the curve system or the boundary of the surface
+  * index for boundary of pants, may be in the curve system
+  * or the boundary of the surface
   * @param pants the index of the pair of pants
   * @param direction the prong of the pair of pants
   */
-case class PantsBoundary(pants: Index, direction: Z3)
+case class PantsBoundary(pants: Index, direction: Z3) {
+  def prev = PantsBoundary(pants - 1, direction)
+
+  def drop(n: Index): PantsBoundary = if (pants > n) prev else this
+}
 
 case class BoundaryVertex(pb: PantsBoundary, first: Boolean) extends Vertex
 
@@ -28,12 +33,11 @@ case class BoundaryEdge(pb: PantsBoundary,
                         positiveOriented: Boolean)
     extends Edge {
   lazy val flip = BoundaryEdge(pb, top, !positiveOriented)
-  lazy val head : BoundaryVertex =
-     BoundaryVertex(pb, positiveOriented)
-
+  lazy val head: BoundaryVertex =
+    BoundaryVertex(pb, positiveOriented)
 
   lazy val tail: BoundaryVertex =
-      BoundaryVertex(pb, !positiveOriented)
+    BoundaryVertex(pb, !positiveOriented)
 
 }
 
@@ -43,7 +47,13 @@ case class PantsSeam(pants: Index, head: Vertex, tail: Vertex) extends Edge {
   lazy val flip = PantsSeam(pants, tail, head)
 }
 
-case class Curve(left: PantsBoundary, right: PantsBoundary)
+case class Curve(left: PantsBoundary, right: PantsBoundary) {
+  val support: Set[PantsBoundary] = Set(left, right)
+
+  def contains(pb: PantsBoundary): Boolean = support.contains(pb)
+
+  def drop(n: Index) = Curve(left.drop(n), right.drop(n))
+}
 
 case class CurveVertex(curve: Curve, first: Boolean) extends Vertex
 
@@ -51,7 +61,7 @@ case class CurveEdge(curve: Curve, top: Boolean, positivelyOriented: Boolean)
     extends Edge {
   lazy val flip = CurveEdge(curve, top, !positivelyOriented)
 
-  lazy val head : Vertex =
+  lazy val head: Vertex =
     CurveVertex(curve, positivelyOriented ^ top)
 
   lazy val tail: Vertex =
@@ -81,16 +91,114 @@ case class PantsHexagon(pants: Index, top: Boolean, cs: Set[Curve])
   val edges: Set[Edge] = seams union boundaryEdges
 }
 
-case class PantsSurface(numPants: Index, cs: Set[Curve]) extends PureTwoComplex {
-  val faces : Set[Polygon] =
+case class PantsSurface(numPants: Index, cs: Set[Curve])
+    extends PureTwoComplex {
+  val faces: Set[Polygon] =
     for {
       pants: Index <- (0 until numPants).toSet
       top <- Set(true, false)
     } yield PantsHexagon(pants, top, cs)
+
+  val allCurves: Set[PantsBoundary] =
+    for {
+      direction <- Z3.enum
+      pants <- 0 until numPants
+    } yield PantsBoundary(pants, direction)
+
+  val csSupp: Set[PantsBoundary] = cs.flatMap(_.support)
+
+  val boundaryCurves: Set[PantsBoundary] = allCurves -- csSupp
+
+  val loopIndices: Set[Index] =
+    cs.collect {
+      case p if p.left.pants == p.right.pants => p.left.pants
+    }
+
+  val boundaryIndices: Set[Index] = boundaryCurves.map(_.pants)
+
+  def innerCurves(index: Index): Int =
+    csSupp.count((p) => p.pants == index)
+
+  def drop(n: Index): PantsSurface =
+    PantsSurface(numPants - 1, cs.map(_.drop(n)))
+
+  def glue1(pb: PantsBoundary) =
+    PantsSurface(numPants + 1, cs + Curve(pb, PantsBoundary(numPants, Z3(0))))
+
+  def glue2(pb1: PantsBoundary, pb2: PantsBoundary) =
+    PantsSurface(
+      numPants + 1,
+      cs union Set(
+        Curve(pb1, PantsBoundary(numPants, Z3(0))),
+        Curve(pb2, PantsBoundary(numPants, Z3(1)))
+      )
+    )
+  def glueLoop(pb: PantsBoundary) =
+    PantsSurface(
+      numPants + 1,
+      cs union Set(
+        Curve(pb, PantsBoundary(numPants, Z3(0))),
+        Curve(PantsBoundary(numPants, Z3(1)), PantsBoundary(numPants, Z3(2)))
+      )
+    )
+
+  def allGlue1: Set[PantsSurface] = boundaryCurves.map(glue1)
+
+  def allGlueLoop: Set[PantsSurface] = boundaryCurves.map(glueLoop)
+
+  def allGlue2 =
+    for {
+      pb1 <- boundaryCurves
+      pb2 <- boundaryCurves
+      if pb2 != pb1
+    } yield glue2(pb1, pb2)
+
+  def allGlued = allGlue1 union allGlue2 union allGlueLoop
+
+
 }
 
 object PantsSurface {
   type Index = Int
+
+  def isomorphic(first: PantsSurface, second: PantsSurface): Boolean = {
+    if (first.loopIndices.nonEmpty) {
+      val pruned = first.drop(first.loopIndices.head)
+      val loops = second.loopIndices
+      val secondPruned = loops.map((n) => second.drop(n))
+      secondPruned.exists((surf) => isomorphic(pruned, surf))
+    } else if (second.loopIndices.nonEmpty) false
+    else {
+      val ind = first.boundaryIndices.head
+      val pruned = first.drop(ind)
+      val secondIndices = second.boundaryIndices.filter((n) =>
+        second.innerCurves(n) == first.innerCurves(ind))
+      val secondPruned = secondIndices.map((n) => second.drop(n))
+      secondPruned.exists((surf) => isomorphic(pruned, surf))
+    }
+  }
+
+  def distinct(surfaces: Vector[PantsSurface]): Vector[PantsSurface] =
+    surfaces match {
+      case head +: tail =>
+        val newTail = distinct(tail)
+        if (newTail.exists(isomorphic(_, head))) newTail else head +: newTail
+      case v => v
+    }
+
+  def allPantsSurfaces(n: Int): Vector[PantsSurface] =
+    if (n == 1)
+      Vector(
+        PantsSurface(1, Set()),
+        PantsSurface(1,
+          Set(
+            Curve(PantsBoundary(0, Z3(0)),
+              PantsBoundary(0, Z3(1)))))
+      )
+    else
+      distinct(allPantsSurfaces(n-1).flatMap(
+        (s) => s.allGlued.toVector
+      ))
 
   def getCurve(pb: PantsBoundary, cs: Set[Curve]): Option[Curve] =
     cs.find(

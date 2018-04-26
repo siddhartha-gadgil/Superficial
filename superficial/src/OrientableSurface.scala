@@ -31,9 +31,9 @@ case class OrientableSurface(g: Int, r: Int) {
 	* empty list represents the null element or precisely, a closed curve homotopic to a point.
 	*/
   val relation: Word = (1 to g).toVector
-      .map((x: Int) => Vector(a(x), b(x), Inverse(a(x)), Inverse(b(x))))
-      .flatten ++
-      (1 to r).toVector.map((x: Int) => s(x))
+    .map((x: Int) => Vector(a(x), b(x), Inverse(a(x)), Inverse(b(x))))
+    .flatten ++
+    (1 to r).toVector.map((x: Int) => s(x))
 
   val relationInv = inv(relation)
   val d = relation.length
@@ -77,9 +77,9 @@ case class OrientableSurface(g: Int, r: Int) {
 
     /** This replaces elements of xs with their inverse.
 		*/
-    case Vector() => Vector()
+    case Vector()           => Vector()
     case Inverse(l) +: rest => inv(rest) :+ l
-    case l +: rest => inv(rest) :+ Inverse(l)
+    case l +: rest          => inv(rest) :+ Inverse(l)
   }
 
   def relInv(xs: Word): Word = {
@@ -120,11 +120,10 @@ case class OrientableSurface(g: Int, r: Int) {
         if ((xs ++ xs).containsSlice((relation ++ relation).slice(i, i + n))) {
           val j =
             (xs ++ xs).indexOfSlice((relation ++ relation).slice(i, i + n))
-          subred2(
-            relInv((xs ++ xs).slice(j, j + n)) ++ (xs ++ xs).slice(j + n,
-                                                                   j + l),
-            i,
-            n)
+          subred2(relInv((xs ++ xs).slice(j, j + n)) ++ (xs ++ xs).slice(j + n,
+                                                                         j + l),
+                  i,
+                  n)
         } else if ((xs ++ xs).containsSlice(
                      (relationInv ++ relationInv).slice(i, i + n))) {
           val j = (xs ++ xs).indexOfSlice(
@@ -205,9 +204,9 @@ case class OrientableSurface(g: Int, r: Int) {
   // list of all Inverse(s(_))
 
   val greekR = (1 to g).toVector
-      .map((x: Int) => Vector(a(x), Inverse(b(x)), Inverse(a(x)), b(x)))
-      .flatten ++
-      (1 to r).map((x: Int) => Vector(s(x), Inverse(s(x)))).flatten
+    .map((x: Int) => Vector(a(x), Inverse(b(x)), Inverse(a(x)), b(x)))
+    .flatten ++
+    (1 to r).map((x: Int) => Vector(s(x), Inverse(s(x)))).flatten
   // This is a specific ordering of all the genrators and all their inverses, which
   // helps in calculating the winding number of a word.
 
@@ -217,7 +216,7 @@ case class OrientableSurface(g: Int, r: Int) {
 		* 'm'th element comes before 'm+1'th element in greekR.
 		*/
     case Inverse(l) => greekR.indexOf(l) < greekR.indexOf(xs(m + 1))
-    case l => greekR.indexOf(Inverse(l)) < greekR.indexOf(xs(m + 1))
+    case l          => greekR.indexOf(Inverse(l)) < greekR.indexOf(xs(m + 1))
   }
 
   def countRespectingR(xs: Word): Int = {

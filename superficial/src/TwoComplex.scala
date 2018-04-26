@@ -34,7 +34,7 @@ object Polygon {
       extends Edge {
     lazy val flip: PolygonEdge = PolygonEdge(polygon, index, !positiveOriented)
 
-    lazy val head : PolygonVertex =
+    lazy val head: PolygonVertex =
       if (positiveOriented)
         PolygonVertex(polygon, (index + 1) % polygon.sides)
       else
@@ -85,7 +85,8 @@ case class QuotientVertex(vertices: Set[Vertex]) extends Vertex
 trait TwoComplex {
   def faces: Set[Polygon]
 
-  def edges: Set[Edge] // these come in pairs, related by flip (reversing orientation)
+  def edges
+    : Set[Edge] // these come in pairs, related by flip (reversing orientation)
 
   def vertices: Set[Vertex]
 
@@ -123,7 +124,7 @@ case class NormalArc(initial: Edge, terminal: Edge, face: Polygon) {
   val flip = NormalArc(initial.flip, terminal.flip, face)
 
   require(face.edges.contains(initial) && face.edges.contains(terminal),
-    s"the face $face should contain edges $initial and $terminal")
+          s"the face $face should contain edges $initial and $terminal")
 }
 
 case class NormalPath(edges: Vector[NormalArc]) {
@@ -140,7 +141,6 @@ case class NormalPath(edges: Vector[NormalArc]) {
   def appendOpt(arc: NormalArc): Option[NormalPath] =
     if (arc.initial == terminalEdge) Some(this :+ arc) else None
 
-
   val isClosed: Boolean = edges.last.terminal == edges.head.initial
 
   val initEdge: Edge = edges.head.initial
@@ -148,7 +148,8 @@ case class NormalPath(edges: Vector[NormalArc]) {
   val terminalEdge: Edge = edges.last.terminal
 }
 
-object NormalPath{
+object NormalPath {
+
   /**
     * recursively enumerate normal paths satisfying a hereditary condition with
     * optional bound on length;
@@ -160,8 +161,11 @@ object NormalPath{
     * @return
     */
   @annotation.tailrec
-  def enumerate(complex: TwoComplex, maxLength: Option[Int], p: NormalPath => Boolean,
-                latest: Set[NormalPath], accum: Set[NormalPath] = Set()) : Set[NormalPath] = {
+  def enumerate(complex: TwoComplex,
+                maxLength: Option[Int],
+                p: NormalPath => Boolean,
+                latest: Set[NormalPath],
+                accum: Set[NormalPath] = Set()): Set[NormalPath] = {
     if (maxLength.contains(0) || latest.isEmpty) accum
     else {
       val newPaths =
@@ -170,8 +174,12 @@ object NormalPath{
             path <- latest
             arc <- complex.normalArcs
           } yield path.appendOpt(arc)
-          ).flatten.filter(p)
-      enumerate(complex, maxLength.map(_ -1), p, newPaths, accum union newPaths)
+        ).flatten.filter(p)
+      enumerate(complex,
+                maxLength.map(_ - 1),
+                p,
+                newPaths,
+                accum union newPaths)
     }
   }
 }

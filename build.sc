@@ -8,7 +8,7 @@ trait CommonModule extends ScalaModule {
 object superficial extends CommonModule
 
 object freegroups extends CommonModule {
-  def ivyDeps=Agg(
+  def ivyDeps = Agg(
     ivy"io.monix::monix:3.0.0-RC1",
     ivy"com.lihaoyi:::ammonite:1.0.3-21-05b5d32"
   )

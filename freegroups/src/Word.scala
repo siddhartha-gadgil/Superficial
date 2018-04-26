@@ -139,7 +139,7 @@ case class Word(ls: Vector[Int]) extends AnyVal {
     * returns this to kth power.
     */
   def pow: Int => Word = {
-    case 0 => Word(Vector())
+    case 0          => Word(Vector())
     case k if k > 0 => Word(Vector.fill(k)(ls).flatten).reduce
     case k if k < 0 => this.inv.pow(-k)
   }

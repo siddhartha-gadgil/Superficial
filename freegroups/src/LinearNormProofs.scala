@@ -51,7 +51,7 @@ object LinearNormProofs {
   def tighten(pf: LinNormBound, noSym: Boolean = true): LinNormBound =
     pf match {
       case ConjGen(n, pf) => minWithMemo(ConjGen(n, tighten(pf)), noSym)
-      case Triang(a, b) => minWithMemo(tighten(a) ++ tighten(b), noSym)
+      case Triang(a, b)   => minWithMemo(tighten(a) ++ tighten(b), noSym)
       case PowerBound(baseword, n, pf) =>
         minWithMemo(PowerBound(baseword, n, tighten(pf)), noSym)
       case p => minWithMemo(p, noSym)
@@ -66,7 +66,7 @@ object LinearNormProofs {
   }
 
   def proofLines: LinNormBound => Vector[String] = {
-    case Gen(n) => Vector(leq(Gen(n)))
+    case Gen(n)         => Vector(leq(Gen(n)))
     case ConjGen(n, pf) => proofLines(pf) :+ leqUse(ConjGen(-n, pf), pf)
     case Triang(a, b) =>
       (proofLines(a) ++ proofLines(b)) :+ leqUse(a ++ b, a, b)
@@ -134,7 +134,7 @@ object LinearNormProofs {
   def normProofTask(word: Word, noSym: Boolean): Task[LinNormBound] =
     memoNormProof.get(word).map(Task(_)).getOrElse {
       Task(word.ls).flatMap {
-        case Vector() => Task.pure(Empty)
+        case Vector()      => Task.pure(Empty)
         case x +: Vector() => Task.pure(Gen(x))
         case x +: ys =>
           if (x == -ys.last)
