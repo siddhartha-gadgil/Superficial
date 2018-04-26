@@ -7,11 +7,11 @@ case class Z3(n: Int) {
   def next = Z3((n + 1) % 3)
   def prev = Z3((n + 2) % 3)
 
-  def others = Z3.enum - this
+  def others: Set[Z3] = Z3.enum - this
 }
 
 object Z3 {
-  val enum = Set(0, 1, 2).map(Z3(_))
+  val enum: Set[Z3] = Set(0, 1, 2).map(Z3(_))
 }
 
 /**
@@ -28,11 +28,13 @@ case class BoundaryEdge(pb: PantsBoundary,
                         positiveOriented: Boolean)
     extends Edge {
   lazy val flip = BoundaryEdge(pb, top, !positiveOriented)
-  lazy val (head, tail) =
-    if (positiveOriented)
-      (BoundaryVertex(pb, true), BoundaryVertex(pb, false))
-    else
-      (BoundaryVertex(pb, false), BoundaryVertex(pb, true))
+  lazy val head : BoundaryVertex =
+     BoundaryVertex(pb, positiveOriented)
+
+
+  lazy val tail: BoundaryVertex =
+      BoundaryVertex(pb, !positiveOriented)
+
 }
 
 abstract class Hexagon extends Polygon(6)
@@ -49,11 +51,11 @@ case class CurveEdge(curve: Curve, top: Boolean, positivelyOriented: Boolean)
     extends Edge {
   lazy val flip = CurveEdge(curve, top, !positivelyOriented)
 
-  lazy val (head, tail) =
-    if (positivelyOriented ^ top)
-      (CurveVertex(curve, true), CurveVertex(curve, false))
-    else
-      (CurveVertex(curve, false), CurveVertex(curve, true))
+  lazy val head : Vertex =
+    CurveVertex(curve, positivelyOriented ^ top)
+
+  lazy val tail: Vertex =
+    CurveVertex(curve, !(positivelyOriented ^ top))
 }
 
 case class PantsHexagon(pants: Index, top: Boolean, cs: Set[Curve])
@@ -76,11 +78,11 @@ case class PantsHexagon(pants: Index, top: Boolean, cs: Set[Curve])
       positivelyOriented <- Set(true, false)
     } yield edge(PantsBoundary(pants, direction), top, positivelyOriented, cs)
 
-  val edges: Set[Edge] = seams union (boundaryEdges)
+  val edges: Set[Edge] = seams union boundaryEdges
 }
 
 case class PantsSurface(numPants: Index, cs: Set[Curve]) extends PureTwoComplex {
-  val faces =
+  val faces : Set[Polygon] =
     for {
       pants: Index <- (0 until numPants).toSet
       top <- Set(true, false)
@@ -112,9 +114,9 @@ object PantsSurface {
       )
       .getOrElse(BoundaryVertex(pb, first))
 
-  def seam(pants: Index, direction: Z3, cs: Set[Curve]) = {
-    val head = vertex(PantsBoundary(pants, direction), true, cs)
-    val tail = vertex(PantsBoundary(pants, direction.next), false, cs)
+  def seam(pants: Index, direction: Z3, cs: Set[Curve]): PantsSeam = {
+    val head = vertex(PantsBoundary(pants, direction), first = true, cs)
+    val tail = vertex(PantsBoundary(pants, direction.next), first = false, cs)
     PantsSeam(pants, head, tail)
   }
 }

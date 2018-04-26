@@ -21,26 +21,30 @@ object Polygon {
     */
   def apply(n: Int): Polygon = new Polygon(n) { self =>
     lazy val edges: Set[Edge] =
-      (for (e <- 0 to (sides - 1); ori <- Set(true, false))
+      (for (e <- 0 until sides; ori <- Set(true, false))
         yield PolygonEdge(self, e, ori)).toSet
 
     lazy val vertices: Set[Vertex] =
-      ((0 to (sides - 1)) map (PolygonVertex(self, _))).toSet
+      ((0 until sides) map (PolygonVertex(self, _))).toSet
   }
 
   case class PolygonEdge(polygon: Polygon,
                          index: Int,
                          positiveOriented: Boolean)
       extends Edge {
-    lazy val flip: Edge = PolygonEdge(polygon, index, !(positiveOriented))
+    lazy val flip: PolygonEdge = PolygonEdge(polygon, index, !positiveOriented)
 
-    lazy val (head, tail) =
+    lazy val head : PolygonVertex =
       if (positiveOriented)
-        (PolygonVertex(polygon, (index + 1) % polygon.sides),
-         PolygonVertex(polygon, index))
+        PolygonVertex(polygon, (index + 1) % polygon.sides)
       else
-        (PolygonVertex(polygon, index),
-         PolygonVertex(polygon, (index + 1) % polygon.sides))
+        PolygonVertex(polygon, index)
+
+    lazy val tail: PolygonVertex =
+      if (!positiveOriented)
+        PolygonVertex(polygon, (index + 1) % polygon.sides)
+      else
+        PolygonVertex(polygon, index)
 
   }
 
@@ -134,14 +138,14 @@ case class NormalPath(edges: Vector[NormalArc]) {
   def :+(arc: NormalArc) = NormalPath(arc +: edges)
 
   def appendOpt(arc: NormalArc): Option[NormalPath] =
-    if (arc.initial == terminalEdge) Some(this :+(arc)) else None
+    if (arc.initial == terminalEdge) Some(this :+ arc) else None
 
 
-  val isClosed = edges.last.terminal == edges.head.initial
+  val isClosed: Boolean = edges.last.terminal == edges.head.initial
 
-  val initEdge = edges.head.initial
+  val initEdge: Edge = edges.head.initial
 
-  val terminalEdge = edges.last.terminal
+  val terminalEdge: Edge = edges.last.terminal
 }
 
 object NormalPath{
@@ -158,7 +162,7 @@ object NormalPath{
   @annotation.tailrec
   def enumerate(complex: TwoComplex, maxLength: Option[Int], p: NormalPath => Boolean,
                 latest: Set[NormalPath], accum: Set[NormalPath] = Set()) : Set[NormalPath] = {
-    if (maxLength == Some(0) || latest.size == 0) accum
+    if (maxLength.contains(0) || latest.isEmpty) accum
     else {
       val newPaths =
         (
