@@ -4,15 +4,14 @@ lazy val commonSettings = Seq(
   scalaVersion := "2.12.4"
 )
 
-
-
-lazy val root = (project in file(".")).
-  settings(commonSettings: _*).
-  settings(
+lazy val root = (project in file("."))
+  .settings(commonSettings: _*)
+  .settings(
     name := "superficial",
     libraryDependencies += "io.monix" %% "monix" % "3.0.0-M2",
     libraryDependencies += "com.lihaoyi" % "ammonite" % "1.0.3" cross CrossVersion.full
   )
 
-  libraryDependencies += compilerPlugin("org.scalameta" % "semanticdb-scalac" % "2.1.2" cross CrossVersion.full)
-  scalacOptions += "-Yrangepos"
+libraryDependencies += compilerPlugin(
+  "org.scalameta" % "semanticdb-scalac" % "2.1.2" cross CrossVersion.full)
+scalacOptions += "-Yrangepos"
