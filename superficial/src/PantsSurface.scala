@@ -4,10 +4,12 @@ import PantsSurface._
 
 case class Z3(n: Int) {
   require(0 <= n && n <= 2, s"$n not valid mod 3 representative")
+
   def next = Z3((n + 1) % 3)
+
   def prev = Z3((n + 2) % 3)
 
-  def <(that: Z3) = n < that.n
+  def <(that: Z3): Boolean = n < that.n
 
   def others: Set[Z3] = Z3.enum - this
 }
@@ -19,17 +21,19 @@ object Z3 {
 /**
   * index for boundary of pants, may be in the curve system
   * or the boundary of the surface
-  * @param pants the index of the pair of pants
+  *
+  * @param pants     the index of the pair of pants
   * @param direction the prong of the pair of pants
   */
 case class PantsBoundary(pants: Index, direction: Z3) {
   def prev = PantsBoundary(pants - 1, direction)
 
   def dropOpt(n: Index): Option[PantsBoundary] =
-    if (pants ==n) None
-    else if (pants > n) Some(prev) else Some(this)
+    if (pants == n) None
+    else if (pants > n) Some(prev)
+    else Some(this)
 
-  def <(that: PantsBoundary) =
+  def <(that: PantsBoundary): Boolean =
     (pants < that.pants) || ((pants == that.pants) && (direction < that.direction))
 }
 
@@ -59,7 +63,7 @@ case class Curve(left: PantsBoundary, right: PantsBoundary) {
 
   def contains(pb: PantsBoundary): Boolean = support.contains(pb)
 
-  def dropOpt(n: Index) =
+  def dropOpt(n: Index): Option[Curve] =
     for {
       newLeft <- left.dropOpt(n)
       newRight <- right.dropOpt(n)
@@ -99,7 +103,8 @@ case class PantsHexagon(pants: Index, top: Boolean, cs: Set[Curve])
       positivelyOriented <- Set(true, false)
     } yield edge(PantsBoundary(pants, direction), top, positivelyOriented, cs)
 
-  val edges: Set[Edge] = seams union boundaryEdges
+  val edges: Set[Edge] =
+    (seams union boundaryEdges).flatMap((e) => Set(e, e.flip))
 }
 
 case class PantsSurface(numPants: Index, cs: Set[Curve])
@@ -127,7 +132,7 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
 
   val boundaryIndices: Set[Index] = boundaryCurves.map(_.pants)
 
-  def isClosed = boundaryIndices.isEmpty
+  def isClosed: Boolean = boundaryIndices.isEmpty
 
   def innerCurves(index: Index): Int =
     csSupp.count((p) => p.pants == index)
@@ -170,14 +175,14 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
 
   def allGlueLoop: Set[PantsSurface] = boundaryCurves.map(glueLoop)
 
-  def allGlue2 =
+  def allGlue2: Set[PantsSurface] =
     for {
       pb1 <- boundaryCurves
       pb2 <- boundaryCurves
       if pb2 < pb1
     } yield glue2(pb1, pb2)
 
-  def allGlue3 =
+  def allGlue3: Set[PantsSurface] =
     for {
       pb1 <- boundaryCurves
       pb2 <- boundaryCurves
@@ -216,16 +221,16 @@ object PantsSurface {
 
   def distinct(surfaces: Vector[PantsSurface]): Vector[PantsSurface] =
     surfaces match {
-      case Vector() => Vector()
+      case Vector()         => Vector()
       case head +: Vector() => Vector(head)
       case head +: tail =>
         val newTail = distinct(tail)
-//        println(newTail.size)
+        //        println(newTail.size)
         if (newTail.exists(isomorphic(_, head))) newTail
         else head +: newTail
     }
 
-  val all = Stream.from(0).map(getAll)
+  val all: Stream[Vector[PantsSurface]] = Stream.from(0).map(getAll)
 
   def getAll(n: Int): Vector[PantsSurface] =
     if (n == 0) Vector()
@@ -243,7 +248,6 @@ object PantsSurface {
         ))
 
   def allClosed: Stream[Vector[PantsSurface]] = all.map(_.filter(_.isClosed))
-
 
   def getCurve(pb: PantsBoundary, cs: Set[Curve]): Option[Curve] =
     cs.find(

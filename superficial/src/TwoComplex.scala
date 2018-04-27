@@ -121,10 +121,19 @@ trait PureTwoComplex extends TwoComplex {
   * @param face the face containing the arc
   */
 case class NormalArc(initial: Edge, terminal: Edge, face: Polygon) {
-  val flip = NormalArc(initial.flip, terminal.flip, face)
+  lazy val flip = NormalArc(initial.flip, terminal.flip, face)
 
   require(face.edges.contains(initial) && face.edges.contains(terminal),
           s"the face $face should contain edges $initial and $terminal")
+}
+
+object NormalArc{
+  def enumerate(complex: TwoComplex): Set[NormalArc] =
+    for {
+      face <- complex.faces
+      initial <- face.edges
+      terminal <- face.edges - initial
+    } yield NormalArc(initial, terminal, face)
 }
 
 case class NormalPath(edges: Vector[NormalArc]) {
@@ -134,39 +143,32 @@ case class NormalPath(edges: Vector[NormalArc]) {
               s"terminal point of $e1 is not initial point of $e2")
   }
 
-  def +:(arc: NormalArc) = NormalPath(edges :+ arc)
+  def +:(arc: NormalArc) = NormalPath(arc +: edges)
 
-  def :+(arc: NormalArc) = NormalPath(arc +: edges)
+  def :+(arc: NormalArc) = NormalPath(edges :+ arc)
 
   def appendOpt(arc: NormalArc): Option[NormalPath] =
-    if (arc.initial == terminalEdge) Some(this :+ arc) else None
+    if (arc.initial == terminalEdge && arc != edges.last.flip) Some(this :+ arc) else None
 
   val isClosed: Boolean = edges.last.terminal == edges.head.initial
 
   val initEdge: Edge = edges.head.initial
 
   val terminalEdge: Edge = edges.last.terminal
+
+  def distinctFaces: Boolean = edges.map(_.face).distinct.size == edges.size
 }
 
 object NormalPath {
 
-  /**
-    * recursively enumerate normal paths satisfying a hereditary condition with
-    * optional bound on length;
-    * terminates if the length is reached or no new paths were generated in the last step.
-    * @param complex  the two-complex
-    * @param maxLength an optional maximum length
-    * @param p a hereditary condition
-    * @param accum accumulator
-    * @return
-    */
+
   @annotation.tailrec
-  def enumerate(complex: TwoComplex,
-                maxLength: Option[Int],
+  def enumerateRec(complex: TwoComplex,
+                maxAppendLength: Option[Int],
                 p: NormalPath => Boolean,
                 latest: Set[NormalPath],
-                accum: Set[NormalPath] = Set()): Set[NormalPath] = {
-    if (maxLength.contains(0) || latest.isEmpty) accum
+                accum: Set[NormalPath]): Set[NormalPath] = {
+    if (maxAppendLength.contains(0) || latest.isEmpty) accum
     else {
       val newPaths =
         (
@@ -175,11 +177,31 @@ object NormalPath {
             arc <- complex.normalArcs
           } yield path.appendOpt(arc)
         ).flatten.filter(p)
-      enumerate(complex,
-                maxLength.map(_ - 1),
+      enumerateRec(complex,
+                maxAppendLength.map(_ - 1),
                 p,
                 newPaths,
                 accum union newPaths)
     }
+  }
+
+  /**
+    * recursively enumerate normal paths satisfying a hereditary condition with
+    * optional bound on length;
+    * terminates if the length is reached or no new paths were generated in the last step.
+    * @param complex  the two-complex
+    * @param maxLength an optional maximum length
+    * @param p a hereditary condition
+    * @return set of patbs with bounded length satisfying the condition
+    */
+  def enumerate(complex: TwoComplex,
+                maxLength: Option[Int] = None,
+                p: NormalPath => Boolean = (_) => true): Set[NormalPath] =
+  if (maxLength.exists(_ < 1)) Set()
+  else {
+    val lengthOne =
+      NormalArc.enumerate(complex).map((arc) => NormalPath(Vector(arc))).filter(p)
+    enumerateRec(complex, maxLength.map(_ - 1), p,
+      lengthOne, lengthOne)
   }
 }
