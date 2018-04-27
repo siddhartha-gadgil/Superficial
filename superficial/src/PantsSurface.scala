@@ -25,7 +25,9 @@ object Z3 {
 case class PantsBoundary(pants: Index, direction: Z3) {
   def prev = PantsBoundary(pants - 1, direction)
 
-  def drop(n: Index): PantsBoundary = if (pants > n) prev else this
+  def dropOpt(n: Index): Option[PantsBoundary] =
+    if (pants ==n) None
+    else if (pants > n) Some(prev) else Some(this)
 
   def <(that: PantsBoundary) =
     (pants < that.pants) || ((pants == that.pants) && (direction < that.direction))
@@ -57,7 +59,11 @@ case class Curve(left: PantsBoundary, right: PantsBoundary) {
 
   def contains(pb: PantsBoundary): Boolean = support.contains(pb)
 
-  def drop(n: Index) = Curve(left.drop(n), right.drop(n))
+  def dropOpt(n: Index) =
+    for {
+      newLeft <- left.dropOpt(n)
+      newRight <- right.dropOpt(n)
+    } yield Curve(newLeft, newRight)
 }
 
 case class CurveVertex(curve: Curve, first: Boolean) extends Vertex
@@ -127,7 +133,7 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
     csSupp.count((p) => p.pants == index)
 
   def drop(n: Index): PantsSurface =
-    PantsSurface(numPants - 1, cs.map(_.drop(n)))
+    PantsSurface(numPants - 1, cs.flatMap(_.dropOpt(n)))
 
   def glue1(pb: PantsBoundary) =
     PantsSurface(numPants + 1, cs + Curve(pb, PantsBoundary(numPants, Z3(0))))
@@ -189,12 +195,15 @@ object PantsSurface {
   type Index = Int
 
   def isomorphic(first: PantsSurface, second: PantsSurface): Boolean = {
-    if (first.loopIndices.nonEmpty) {
+    if (first.numPants == 0) second.numPants == 0
+    else if (first == second) true
+    else if (first.loopIndices.nonEmpty) {
       val pruned = first.drop(first.loopIndices.head)
       val loops = second.loopIndices
       val secondPruned = loops.map((n) => second.drop(n))
       secondPruned.exists((surf) => isomorphic(pruned, surf))
     } else if (second.loopIndices.nonEmpty) false
+    else if (first.boundaryIndices.isEmpty) false
     else {
       val ind = first.boundaryIndices.head
       val pruned = first.drop(ind)
@@ -207,14 +216,20 @@ object PantsSurface {
 
   def distinct(surfaces: Vector[PantsSurface]): Vector[PantsSurface] =
     surfaces match {
+      case Vector() => Vector()
+      case head +: Vector() => Vector(head)
       case head +: tail =>
         val newTail = distinct(tail)
-        if (newTail.exists(isomorphic(_, head))) newTail else head +: newTail
-      case v => v
+//        println(newTail.size)
+        if (newTail.exists(isomorphic(_, head))) newTail
+        else head +: newTail
     }
 
-  def all(n: Int): Vector[PantsSurface] =
-    if (n == 1)
+  val all = Stream.from(0).map(getAll)
+
+  def getAll(n: Int): Vector[PantsSurface] =
+    if (n == 0) Vector()
+    else if (n == 1)
       Vector(
         PantsSurface(1, Set()),
         PantsSurface(
@@ -223,11 +238,11 @@ object PantsSurface {
       )
     else
       distinct(
-        all(n - 1).flatMap(
+        getAll(n - 1).flatMap(
           (s) => s.allGlued.toVector
         ))
 
-  def allClosed(n: Int) = all(n).filter(_.isClosed)
+  def allClosed: Stream[Vector[PantsSurface]] = all.map(_.filter(_.isClosed))
 
 
   def getCurve(pb: PantsBoundary, cs: Set[Curve]): Option[Curve] =
