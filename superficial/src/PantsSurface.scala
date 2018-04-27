@@ -61,6 +61,8 @@ case class PantsSeam(pants: Index, head: Vertex, tail: Vertex) extends Edge {
 case class Curve(left: PantsBoundary, right: PantsBoundary) {
   val support: Set[PantsBoundary] = Set(left, right)
 
+  val neighbours: Set[Index] = support.map(_.pants)
+
   def contains(pb: PantsBoundary): Boolean = support.contains(pb)
 
   def dropOpt(n: Index): Option[Curve] =
@@ -139,6 +141,25 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
 
   def drop(n: Index): PantsSurface =
     PantsSurface(numPants - 1, cs.flatMap(_.dropOpt(n)))
+
+  def neighbourhood(pantSet: Set[Index]) : Set[Index] =
+    (0 until numPants).filter((m) =>
+      cs.exists((curve) =>
+        curve.neighbours.contains(m)  && curve.neighbours.intersect(pantSet).nonEmpty)).toSet
+
+  @annotation.tailrec
+  final def component(pantSet: Set[Index]): Set[Index]  = {
+    val expand = neighbourhood(pantSet)
+    if (expand == pantSet) expand
+    else component(expand)
+  }
+
+  def isConnected : Boolean =
+    (numPants <= 1) || (component(Set(0)) == (0 until numPants).toSet)
+
+  val peripheral: Set[Index] = (0 until(numPants)).filter((m) => drop(m).isConnected).toSet
+
+//  assert(numPants ==0 || (loopIndices union boundaryIndices union peripheral).nonEmpty, s"strange $this")
 
   def glue1(pb: PantsBoundary) =
     PantsSurface(numPants + 1, cs + Curve(pb, PantsBoundary(numPants, Z3(0))))
