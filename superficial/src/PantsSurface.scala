@@ -142,22 +142,27 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
   def drop(n: Index): PantsSurface =
     PantsSurface(numPants - 1, cs.flatMap(_.dropOpt(n)))
 
-  def neighbourhood(pantSet: Set[Index]) : Set[Index] =
-    (0 until numPants).filter((m) =>
-      cs.exists((curve) =>
-        curve.neighbours.contains(m)  && curve.neighbours.intersect(pantSet).nonEmpty)).toSet
+  def neighbourhood(pantSet: Set[Index]): Set[Index] =
+    (0 until numPants)
+      .filter(
+        (m) =>
+          cs.exists((curve) =>
+            curve.neighbours
+              .contains(m) && curve.neighbours.intersect(pantSet).nonEmpty))
+      .toSet
 
   @annotation.tailrec
-  final def component(pantSet: Set[Index]): Set[Index]  = {
+  final def component(pantSet: Set[Index]): Set[Index] = {
     val expand = neighbourhood(pantSet)
     if (expand == pantSet) expand
     else component(expand)
   }
 
-  def isConnected : Boolean =
+  lazy val isConnected: Boolean =
     (numPants <= 1) || (component(Set(0)) == (0 until numPants).toSet)
 
-  val peripheral: Set[Index] = (0 until(numPants)).filter((m) => drop(m).isConnected).toSet
+  lazy val peripheral: Set[Index] =
+    (0 until (numPants)).filter((m) => drop(m).isConnected).toSet
 
 //  assert(numPants ==0 || (loopIndices union boundaryIndices union peripheral).nonEmpty, s"strange $this")
 
@@ -220,25 +225,34 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
 object PantsSurface {
   type Index = Int
 
-  def isomorphic(first: PantsSurface, second: PantsSurface): Boolean = {
+  def isomorphic(first: PantsSurface, second: PantsSurface): Boolean =
     if (first.numPants == 0) second.numPants == 0
-    else if (first == second) true
-    else if (first.loopIndices.nonEmpty) {
-      val pruned = first.drop(first.loopIndices.head)
-      val loops = second.loopIndices
-      val secondPruned = loops.map((n) => second.drop(n))
-      secondPruned.exists((surf) => isomorphic(pruned, surf))
-    } else if (second.loopIndices.nonEmpty) false
-    else if (first.boundaryIndices.isEmpty) false
-    else {
-      val ind = first.boundaryIndices.head
-      val pruned = first.drop(ind)
-      val secondIndices = second.boundaryIndices.filter((n) =>
-        second.innerCurves(n) == first.innerCurves(ind))
-      val secondPruned = secondIndices.map((n) => second.drop(n))
-      secondPruned.exists((surf) => isomorphic(pruned, surf))
-    }
-  }
+    else
+      (first == second) || { // quick checks first
+        first.boundaryIndices.size == second.boundaryIndices.size &&
+        first.loopIndices.size == second.loopIndices.size && {
+          if (first.loopIndices.nonEmpty) {
+            val pruned = first.drop(first.loopIndices.head)
+            val loops = second.loopIndices
+            val secondPruned = loops.map((n) => second.drop(n))
+            secondPruned.exists((surf) => isomorphic(pruned, surf))
+          } else if (first.boundaryIndices.nonEmpty) {
+            val ind = first.boundaryIndices.head
+            val pruned = first.drop(ind)
+            val secondIndices = second.boundaryIndices.filter((n) =>
+              second.innerCurves(n) == first.innerCurves(ind))
+            val secondPruned = secondIndices.map((n) => second.drop(n))
+            secondPruned.exists((surf) => isomorphic(pruned, surf))
+          } else { // peripheral ones must have no loops or boundaries
+            val ind = first.peripheral.head
+            val pruned = first.drop(ind)
+            val secondIndices = second.peripheral
+            val secondPruned = secondIndices.map((n) => second.drop(n))
+            (first.peripheral.size == second.peripheral.size) && secondPruned
+              .exists((surf) => isomorphic(pruned, surf))
+          }
+        }
+      }
 
   def distinct(surfaces: Vector[PantsSurface]): Vector[PantsSurface] =
     surfaces match {
@@ -246,7 +260,6 @@ object PantsSurface {
       case head +: Vector() => Vector(head)
       case head +: tail =>
         val newTail = distinct(tail)
-        //        println(newTail.size)
         if (newTail.exists(isomorphic(_, head))) newTail
         else head +: newTail
     }
