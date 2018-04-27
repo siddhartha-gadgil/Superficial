@@ -127,7 +127,7 @@ case class NormalArc(initial: Edge, terminal: Edge, face: Polygon) {
           s"the face $face should contain edges $initial and $terminal")
 }
 
-object NormalArc{
+object NormalArc {
   def enumerate(complex: TwoComplex): Set[NormalArc] =
     for {
       face <- complex.faces
@@ -148,7 +148,8 @@ case class NormalPath(edges: Vector[NormalArc]) {
   def :+(arc: NormalArc) = NormalPath(edges :+ arc)
 
   def appendOpt(arc: NormalArc): Option[NormalPath] =
-    if (arc.initial == terminalEdge && arc != edges.last.flip) Some(this :+ arc) else None
+    if (arc.initial == terminalEdge && arc != edges.last.flip) Some(this :+ arc)
+    else None
 
   val isClosed: Boolean = edges.last.terminal == edges.head.initial
 
@@ -161,13 +162,12 @@ case class NormalPath(edges: Vector[NormalArc]) {
 
 object NormalPath {
 
-
   @annotation.tailrec
   def enumerateRec(complex: TwoComplex,
-                maxAppendLength: Option[Int],
-                p: NormalPath => Boolean,
-                latest: Set[NormalPath],
-                accum: Set[NormalPath]): Set[NormalPath] = {
+                   maxAppendLength: Option[Int],
+                   p: NormalPath => Boolean,
+                   latest: Set[NormalPath],
+                   accum: Set[NormalPath]): Set[NormalPath] = {
     if (maxAppendLength.contains(0) || latest.isEmpty) accum
     else {
       val newPaths =
@@ -178,10 +178,10 @@ object NormalPath {
           } yield path.appendOpt(arc)
         ).flatten.filter(p)
       enumerateRec(complex,
-                maxAppendLength.map(_ - 1),
-                p,
-                newPaths,
-                accum union newPaths)
+                   maxAppendLength.map(_ - 1),
+                   p,
+                   newPaths,
+                   accum union newPaths)
     }
   }
 
@@ -197,11 +197,13 @@ object NormalPath {
   def enumerate(complex: TwoComplex,
                 maxLength: Option[Int] = None,
                 p: NormalPath => Boolean = (_) => true): Set[NormalPath] =
-  if (maxLength.exists(_ < 1)) Set()
-  else {
-    val lengthOne =
-      NormalArc.enumerate(complex).map((arc) => NormalPath(Vector(arc))).filter(p)
-    enumerateRec(complex, maxLength.map(_ - 1), p,
-      lengthOne, lengthOne)
-  }
+    if (maxLength.exists(_ < 1)) Set()
+    else {
+      val lengthOne =
+        NormalArc
+          .enumerate(complex)
+          .map((arc) => NormalPath(Vector(arc)))
+          .filter(p)
+      enumerateRec(complex, maxLength.map(_ - 1), p, lengthOne, lengthOne)
+    }
 }
