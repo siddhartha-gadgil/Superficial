@@ -7,7 +7,9 @@ package superficial
 abstract class Polygon(val sides: Int) extends TwoComplex {
   lazy val faces = Set(this)
 
-  val edges: Set[Edge]
+  val boundary: Vector[Edge]
+
+  lazy val edges: Set[Edge] = boundary.toSet.flatMap((s: Edge) => Set(s, s.flip))
 
   val vertices: Set[Vertex]
 }
@@ -20,9 +22,9 @@ object Polygon {
     * @return a polgon with n sides
     */
   def apply(n: Int): Polygon = new Polygon(n) { self =>
-    lazy val edges: Set[Edge] =
-      (for (e <- 0 until sides; ori <- Set(true, false))
-        yield PolygonEdge(self, e, ori)).toSet
+    lazy val boundary: Vector[Edge] =
+      (for (e <- 0 until sides)
+        yield PolygonEdge(self, e, true)).toVector
 
     lazy val vertices: Set[Vertex] =
       ((0 until sides) map (PolygonVertex(self, _))).toSet
@@ -34,13 +36,13 @@ object Polygon {
       extends Edge {
     lazy val flip: PolygonEdge = PolygonEdge(polygon, index, !positiveOriented)
 
-    lazy val head: PolygonVertex =
+    lazy val terminal: PolygonVertex =
       if (positiveOriented)
         PolygonVertex(polygon, (index + 1) % polygon.sides)
       else
         PolygonVertex(polygon, index)
 
-    lazy val tail: PolygonVertex =
+    lazy val initial: PolygonVertex =
       if (!positiveOriented)
         PolygonVertex(polygon, (index + 1) % polygon.sides)
       else
@@ -63,17 +65,17 @@ trait Vertex
 trait Edge {
   def flip: Edge
 
-  def head: Vertex
+  def terminal: Vertex
 
-  def tail: Vertex
+  def initial: Vertex
 }
 
 case class QuotientEdge(edges: Set[Edge]) extends Edge {
   def flip = QuotientEdge(edges map (_.flip))
 
-  def head = QuotientVertex(edges map (_.head))
+  def terminal = QuotientVertex(edges map (_.terminal))
 
-  def tail = QuotientVertex(edges map (_.tail))
+  def initial = QuotientVertex(edges map (_.initial))
 
 }
 
@@ -174,9 +176,12 @@ object NormalPath {
         (
           for {
             path <- latest
-            arc <- complex.normalArcs
-          } yield path.appendOpt(arc)
-        ).flatten.filter(p)
+            e1 = path.terminalEdge
+            face <- complex.facesWithEdge(e1) - path.edges.last.face
+            e2 <- face.boundary.toSet -- Set(e1, e1.flip)
+            arc = NormalArc(e1, e2, face)
+          } yield path :+ arc
+        ).filter(p)
       enumerateRec(complex,
                    maxAppendLength.map(_ - 1),
                    p,
