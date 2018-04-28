@@ -9,7 +9,8 @@ abstract class Polygon(val sides: Int) extends TwoComplex {
 
   val boundary: Vector[Edge]
 
-  lazy val edges: Set[Edge] = boundary.toSet.flatMap((s: Edge) => Set(s, s.flip))
+  lazy val edges: Set[Edge] =
+    boundary.toSet.flatMap((s: Edge) => Set(s, s.flip))
 
   val vertices: Set[Vertex]
 }
@@ -177,8 +178,11 @@ object NormalPath {
           for {
             path <- latest
             e1 = path.terminalEdge
-            face <- complex.facesWithEdge(e1) - path.edges.last.face
-            e2 <- face.boundary.toSet -- Set(e1, e1.flip)
+            face <- complex.facesWithEdge(e1)
+            e2 <- face.boundary.toSet -- Set(e1,
+                                             e1.flip,
+                                             path.edges.last.initial,
+                                             path.edges.last.initial.flip)
             arc = NormalArc(e1, e2, face)
           } yield path :+ arc
         ).filter(p)
