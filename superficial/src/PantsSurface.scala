@@ -1,6 +1,6 @@
 package superficial
 
-import PantsSurface._
+import PantsSurface._, Polygon.Index
 
 case class Z3(n: Int) {
   require(0 <= n && n <= 2, s"$n not valid mod 3 representative")
@@ -108,16 +108,18 @@ case class PantsHexagon(pants: Index, top: Boolean, cs: Set[Curve])
 
 case class PantsSurface(numPants: Index, cs: Set[Curve])
     extends PureTwoComplex {
+  val indices: Vector[Index] = (0 until numPants).toVector
+  
   val faces: Set[Polygon] =
     for {
-      pants: Index <- (0 until numPants).toSet
+      pants: Index <- (indices).toSet
       top <- Set(true, false)
     } yield PantsHexagon(pants, top, cs)
 
   val allCurves: Set[PantsBoundary] =
     for {
       direction: Z3 <- Z3.enum.toSet
-      pants <- 0 until numPants
+      pants <- indices
     } yield PantsBoundary(pants, direction)
 
   val csSupp: Set[PantsBoundary] = cs.flatMap(_.support)
@@ -140,7 +142,7 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
     PantsSurface(numPants - 1, cs.flatMap(_.dropOpt(n)))
 
   def neighbourhood(pantSet: Set[Index]): Set[Index] =
-    (0 until numPants)
+    indices
       .filter(
         (m) =>
           cs.exists((curve) =>
@@ -156,10 +158,10 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
   }
 
   lazy val isConnected: Boolean =
-    (numPants <= 1) || (component(Set(0)) == (0 until numPants).toSet)
+    (numPants <= 1) || (component(Set(0)) == indices.toSet)
 
   lazy val peripheral: Set[Index] =
-    (0 until numPants).filter((m) => drop(m).isConnected).toSet
+    indices.filter((m) => drop(m).isConnected).toSet
 
 //  assert(numPants ==0 || (loopIndices union boundaryIndices union peripheral).nonEmpty, s"strange $this")
 
@@ -220,7 +222,6 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
 }
 
 object PantsSurface {
-  type Index = Int
 
   def isomorphic(first: PantsSurface, second: PantsSurface): Boolean =
     if (first.numPants == 0) second.numPants == 0

@@ -1,11 +1,14 @@
 package superficial
 
+import Polygon.Index
 /**
   * Abstract polygon, with given edges and vertices
   * @param sides number of sides
   */
 abstract class Polygon(val sides: Int) extends TwoComplex {
   lazy val faces = Set(this)
+  
+  val indices : Vector[Index] = (0 until sides).toVector
 
   val boundary: Vector[Edge]
 
@@ -13,9 +16,15 @@ abstract class Polygon(val sides: Int) extends TwoComplex {
     boundary.toSet.flatMap((s: Edge) => Set(s, s.flip))
 
   val vertices: Set[Vertex]
+
+  def boundaryIndex(e: Edge): Set[Int] =
+    indices.toSet.filter{
+      (n) => e == boundary(n) || e.flip == boundary(n)
+    }
 }
 
 object Polygon {
+  type Index = Int
 
   /**
     * Construction of a polygon given number of sides
@@ -24,15 +33,15 @@ object Polygon {
     */
   def apply(n: Int): Polygon = new Polygon(n) { self =>
     lazy val boundary: Vector[Edge] =
-      (for (e <- 0 until sides)
-        yield PolygonEdge(self, e, true)).toVector
+      for (e <- indices)
+        yield PolygonEdge(self, e, positiveOriented = true)
 
     lazy val vertices: Set[Vertex] =
-      ((0 until sides) map (PolygonVertex(self, _))).toSet
+      (indices map (PolygonVertex(self, _))).toSet
   }
 
   case class PolygonEdge(polygon: Polygon,
-                         index: Int,
+                         index: Index,
                          positiveOriented: Boolean)
       extends Edge {
     lazy val flip: PolygonEdge = PolygonEdge(polygon, index, !positiveOriented)
@@ -51,7 +60,7 @@ object Polygon {
 
   }
 
-  case class PolygonVertex(polygon: Polygon, index: Int) extends Vertex
+  case class PolygonVertex(polygon: Polygon, index: Index) extends Vertex
 
 }
 
@@ -96,11 +105,16 @@ trait TwoComplex {
   def facesWithEdge(edge: Edge): Set[Polygon] =
     faces.filter((face) => face.edges.contains(edge))
 
+  def edgeIndices(edge: Edge): Set[(Polygon, Index)] =
+    faces.flatMap((f) =>
+      f.boundaryIndex(edge).map((n) => f -> n)
+    )
+
   def normalArcs: Set[NormalArc] =
     for {
       face <- faces
-      initial <- face.edges
-      terminal <- face.edges
+      initial <- face.indices
+      terminal <- face.indices
     } yield NormalArc(initial, terminal, face)
 }
 
@@ -123,42 +137,51 @@ trait PureTwoComplex extends TwoComplex {
   * @param terminal the edge containing the final point
   * @param face the face containing the arc
   */
-case class NormalArc(initial: Edge, terminal: Edge, face: Polygon) {
-  lazy val flip = NormalArc(initial.flip, terminal.flip, face)
+case class NormalArc(initial: Index, terminal: Index, face: Polygon) {
+  val terminalEdge = face.boundary(terminal)
 
-  require(face.edges.contains(initial) && face.edges.contains(terminal),
-          s"the face $face should contain edges $initial and $terminal")
+  val initialEdge = face.boundary(initial)
+
 }
 
 object NormalArc {
   def enumerate(complex: TwoComplex): Set[NormalArc] =
     for {
       face <- complex.faces
-      initial <- face.edges
-      terminal <- face.edges - initial
+      initial <- face.indices
+      terminal <- face.indices
+      if terminal != initial
     } yield NormalArc(initial, terminal, face)
 }
 
 case class NormalPath(edges: Vector[NormalArc]) {
   edges.zip(edges.tail).foreach {
     case (e1, e2) =>
-      require(e1.terminal == e2.initial,
+      require(e1.terminalEdge == e2.initialEdge,
               s"terminal point of $e1 is not initial point of $e2")
   }
 
   def +:(arc: NormalArc) = NormalPath(arc +: edges)
 
   def :+(arc: NormalArc) = NormalPath(edges :+ arc)
+//
+//  def appendOpt(arc: NormalArc): Option[NormalPath] =
+//    if (arc.initial == terminalEdge && arc != edges.last.flip) Some(this :+ arc)
+//    else None
 
-  def appendOpt(arc: NormalArc): Option[NormalPath] =
-    if (arc.initial == terminalEdge && arc != edges.last.flip) Some(this :+ arc)
-    else None
+  val isClosed: Boolean = edges.last.terminalEdge == edges.head.initialEdge
 
-  val isClosed: Boolean = edges.last.terminal == edges.head.initial
+//  val initEdge: Edge = edges.head.initial
+//
+  val (terminalFace, terminalIndex) = edges.last.face -> edges.last.terminal
 
-  val initEdge: Edge = edges.head.initial
+  val terminalEdge =
+     terminalFace.boundary(terminalIndex)
 
-  val terminalEdge: Edge = edges.last.terminal
+  val (initialFace, initialIndex) = edges.head.face -> edges.head.initial
+
+  val initialEdge =
+    initialFace.boundary(initialIndex)
 
   def distinctFaces: Boolean = edges.map(_.face).distinct.size == edges.size
 }
@@ -177,13 +200,12 @@ object NormalPath {
         (
           for {
             path <- latest
-            e1 = path.terminalEdge
-            face <- complex.facesWithEdge(e1)
-            e2 <- face.boundary.toSet -- Set(e1,
-                                             e1.flip,
-                                             path.edges.last.initial,
-                                             path.edges.last.initial.flip)
-            arc = NormalArc(e1, e2, face)
+            (face, i1) <- complex.edgeIndices(path.terminalEdge) -
+              (path.terminalFace -> path.terminalIndex) -
+              (path.edges.last.face -> path.edges.last.initial)
+            i2 <- face.indices
+            if i2 != i1
+            arc = NormalArc(i1, i2, face)
           } yield path :+ arc
         ).filter(p)
       enumerateRec(complex,
