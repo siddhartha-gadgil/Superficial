@@ -1,6 +1,7 @@
 package superficial
 
 import PantsSurface._, Polygon.Index
+import scala.math._
 
 case class Z3(n: Int) {
   require(0 <= n && n <= 2, s"$n not valid mod 3 representative")
@@ -53,6 +54,53 @@ case class BoundaryEdge(pb: PantsBoundary,
 }
 
 abstract class Hexagon extends Polygon(6)
+
+object Hexagon{
+  def arccosh(x: Double): Double = log(x + sqrt(x * x - 1))
+
+  def arcsinh(x: Double): Double = log(x + sqrt(x * x + 1))
+
+  def side(l1: Double, l2: Double, l3: Double): Double =
+    arccosh((cosh(l1) * cosh(l2)  + cosh(l3))/ (sinh(l1) * sinh(l2)))
+
+  def length2(a: Double, b: Double): Double = arccosh(cosh(a) * cosh(b))
+
+  def length3(a: Double, l: Double, b: Double): Double =
+    arccosh(cosh(a) * cosh(l) * cosh(b) - sinh(a) * sinh(b))
+
+  def length4(a: Double, l1: Double, l2: Double, b: Double): Double =
+    arccosh(cosh(a) * cosh(l1) * cosh(l2) * cosh(b) -
+      sinh(a) * sinh(l2) * cosh(b) - cosh(a) * sinh(l1) * sinh(b))
+
+  def mod6(n: Int): Index = {
+    val m = n % 6
+    if (m >= 0) m else m + 6
+  } ensuring((m) => 0 <= m && m < 6)
+
+  case class Hyperbolic(a: Double, b: Double, c: Double) {
+    def sideLength(n: Index) : Double =
+      if (n % 2 == 0) Vector(a, b, c)(n/2)
+      else side(length(n - 1), length(n + 1), length(n+3))
+
+    def length(n: Int): Double = sideLength(mod6(n))
+
+    def getArcLength(i: Int, j: Int, initShift: Double, lastShift: Double): Double = {
+      assert( i < j && j < i + 4, s"getArcLength called with $i, $j" )
+      val init = length(i) - initShift
+      val last = lastShift
+      j - i match {
+        case 1 => length2(init, last)
+        case 2 => length3(init, length(i + 1) ,last)
+        case 3 => length4(init, length(i + 1), length(i + 2), last)
+      }
+    }
+
+    def arcLength(i: Index, j: Index, initShift: Double, lastShift: Double): Double =
+      if (i > j) arcLength(j, i, lastShift, initShift)
+      else if (j - i <4) getArcLength(i, j, initShift, lastShift)
+      else getArcLength(j, i + 6, lastShift, initShift)
+  }
+}
 
 case class PantsSeam(pants: Index, initial: Vertex, terminal: Vertex)
     extends Edge {
@@ -112,7 +160,7 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
   
   val faces: Set[Polygon] =
     for {
-      pants: Index <- (indices).toSet
+      pants: Index <- indices.toSet
       top <- Set(true, false)
     } yield PantsHexagon(pants, top, cs)
 
@@ -222,6 +270,10 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
 }
 
 object PantsSurface {
+
+  def bers(g: Int)= 26 * (g - 1)
+
+  val margulis = Hexagon.arccosh(sqrt((2 * cos(2 * Pi/7) - 1)/(8 * cos(Pi/7) + 7)))
 
   def isomorphic(first: PantsSurface, second: PantsSurface): Boolean =
     if (first.numPants == 0) second.numPants == 0
