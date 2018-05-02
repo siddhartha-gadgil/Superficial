@@ -333,9 +333,13 @@ object PantsSurface {
 
   def allClosed: Stream[Vector[PantsSurface]] = all.map(_.filter(_.isClosed))
 
-  def getCurve(pb: PantsBoundary, cs: Set[Curve]): Option[Curve] =
+  def getCurve(pb: PantsBoundary, cs: Set[Curve]): Option[(Curve, Boolean)] =
     cs.find(
-      (c) => c.left == pb || c.right == pb
+      (c) => c.left == pb
+    ).map((c) => c -> true).orElse(
+      cs.find(
+        (c) => c.right == pb
+      ).map((c) => c -> false)
     )
 
   def edge(pb: PantsBoundary,
@@ -343,16 +347,16 @@ object PantsSurface {
            positivelyOriented: Boolean,
            cs: Set[Curve]): Edge =
     getCurve(pb, cs)
-      .map(
-        (curve) => CurveEdge(curve, top, positivelyOriented)
-      )
+      .map {
+        case (curve, positive) => CurveEdge(curve, top, positive)
+      }
       .getOrElse(BoundaryEdge(pb, top, positivelyOriented))
 
   def vertex(pb: PantsBoundary, first: Boolean, cs: Set[Curve]): Vertex =
     getCurve(pb, cs)
-      .map(
-        (curve) => CurveVertex(curve, first)
-      )
+      .map {
+        case (curve, positive) => CurveVertex(curve, !(first ^ positive))
+      }
       .getOrElse(BoundaryVertex(pb, first))
 
   def seam(pants: Index, direction: Z3, cs: Set[Curve]): PantsSeam = {
