@@ -1,4 +1,5 @@
-// run using mill freegroups.repl
+// run using mill -i freegroups.repl
+// cut and paste commands in sequence
 import freegroups._, LinearNorm._
 def vecn(n: Int) =
   Vector.fill(n)(Vector(1, 2, -1, -2)).foldRight(Vector(1))(_ ++ _)
