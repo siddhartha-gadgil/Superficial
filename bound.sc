@@ -1,3 +1,5 @@
+// run using mill freegroups.repl
+import freegroups._, LinearNorm._
 def vecn(n: Int) =
   Vector.fill(n)(Vector(1, 2, -1, -2)).foldRight(Vector(1))(_ ++ _)
 def taskn(n: Int) = scaledTask(vecn(n), 1, 20)
