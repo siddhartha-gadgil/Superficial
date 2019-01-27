@@ -19,8 +19,9 @@ object LinearNorm {
 
   def update(word: Vector[Int], res: Double) = {
     memoNorm += word -> res
-    lengthsMap(word.size) = lengthsMap.getOrElse(word.size, Vector.empty[Double]) :+ res
-    averages(word.size) = average(lengthsMap(word.size)) -> lengthsMap(word.size).size
+    val newVec = lengthsMap.getOrElse(word.size, Vector.empty[Double]) :+ res
+    lengthsMap(word.size) = newVec
+    averages(word.size) = average(newVec) -> newVec.size
   }
 
   val rnd = new Random()
