@@ -15,7 +15,7 @@ object LinearNorm {
 
   def average(v: Vector[Double]) = v.sum/v.size
 
-  def averages = lengthsMap.mapValues(average).toVector.sortBy(_._1)
+  def averages = lengthsMap.mapValues(v => average(v) -> v.size).toVector.sortBy(_._1)
 
   val rnd = new Random()
 

@@ -7,7 +7,7 @@ scalaVersion in ThisBuild := scalaV
 lazy val freegroups = project.settings(
   name := "freegroups",
   libraryDependencies ++= Seq(
-    "com.lihaoyi" %% "ammonite-ops" % ammV,
+    // "com.lihaoyi" %% "ammonite-ops" % ammV,
     "io.monix"      %% "monix"         % "3.0.0-RC2"
   )
 )

@@ -25,7 +25,7 @@ object superficial extends CommonModule with ScalaJSModule{
 
 object freegroups extends CommonModule with SbtModule {
   def ivyDeps = Agg(
-    ivy"io.monix::monix:3.0.0-RC2",
-    ivy"com.lihaoyi:::ammonite:1.6.0"
+    ivy"io.monix::monix:3.0.0-RC2"//,
+    // ivy"com.lihaoyi:::ammonite:1.6.0"
   )
 }
