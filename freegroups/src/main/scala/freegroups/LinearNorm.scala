@@ -11,11 +11,17 @@ import scala.util.Random
 object LinearNorm {
   val memoNorm: mMap[Vector[Int], Double] = mMap()
 
-  def lengthsMap : Map[Int, Vector[Double]] = memoNorm.toVector.groupBy(_._1.length).mapValues(_.map(_._2))
-
+  val lengthsMap : mMap[Int, Vector[Double]] = mMap()
+  
   def average(v: Vector[Double]) = v.sum/v.size
 
-  def averages = lengthsMap.mapValues(v => average(v) -> v.size).toVector.sortBy(_._1)
+  val  averages : mMap[Int, (Double, Int)] = mMap()
+
+  def update(word: Vector[Int], res: Double) = {
+    memoNorm += word -> res
+    lengthsMap(word.size) = lengthsMap.getOrElse(word.size, Vector.empty[Double]) :+ res
+    averages(word.size) = average(lengthsMap(word.size)) -> lengthsMap(word.size).size
+  }
 
   val rnd = new Random()
 
@@ -74,7 +80,7 @@ object LinearNorm {
               recNorms <- recNormsTask
               ynorm <- normTask(ys)
               res = ((1 + ynorm) +: recNorms).min
-              _ = memoNorm += word -> res
+              _ = update(word, res)
             } yield res
           }
       }
