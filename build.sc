@@ -3,11 +3,11 @@ import mill.scalalib._, mill.scalajslib._
 import ammonite.ops._
 
 trait CommonModule extends ScalaModule {
-  def scalaVersion = "2.12.4"
+  def scalaVersion = "2.12.8"
 }
 
 object superficial extends CommonModule with ScalaJSModule{
-  def scalaJSVersion = "0.6.22"
+  def scalaJSVersion = "0.6.25"
 
   def ivyDeps = Agg(
     ivy"org.scala-js::scalajs-dom::0.9.4",
@@ -23,9 +23,9 @@ object superficial extends CommonModule with ScalaJSModule{
   }
 }
 
-object freegroups extends CommonModule {
+object freegroups extends CommonModule with SbtModule {
   def ivyDeps = Agg(
-    ivy"io.monix::monix:3.0.0-RC1",
-    ivy"com.lihaoyi:::ammonite:1.0.3-21-05b5d32"
+    ivy"io.monix::monix:3.0.0-RC2",
+    ivy"com.lihaoyi:::ammonite:1.6.0"
   )
 }

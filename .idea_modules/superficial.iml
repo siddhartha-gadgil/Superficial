@@ -5,7 +5,7 @@
         <content url="file://$MODULE_DIR$/../out/superficial/generatedSources/dest"/>
         <content url="file://$MODULE_DIR$/../superficial">
             <sourceFolder url="file://$MODULE_DIR$/../superficial/src" isTestSource="false"/>
-            <sourceFolder url="file://$MODULE_DIR$/../superficial/resources" isTestSource="false" type="java-resource"/>
+            <sourceFolder url="file://$MODULE_DIR$/../superficial/resources" type="java-resource"/>
             <excludeFolder url="file://$MODULE_DIR$/../superficial/target"/>
         </content>
         <orderEntry type="inheritedJdk"/>
@@ -13,5 +13,13 @@
         <orderEntry type="library" name="scala-sdk-2.12.4" level="application"/>
         <orderEntry type="library" name="scala-library-2.12.4-sources.jar" level="project"/>
         <orderEntry type="library" name="scala-library-2.12.4.jar" level="project"/>
+        <orderEntry type="library" name="scalajs-dom_sjs0.6_2.12-0.9.4-sources.jar" level="project"/>
+        <orderEntry type="library" name="scalajs-dom_sjs0.6_2.12-0.9.4.jar" level="project"/>
+        <orderEntry type="library" name="scalajs-library_2.12-0.6.22-sources.jar" level="project"/>
+        <orderEntry type="library" name="scalajs-library_2.12-0.6.22.jar" level="project"/>
+        <orderEntry type="library" name="scalatags_sjs0.6_2.12-0.6.7-sources.jar" level="project"/>
+        <orderEntry type="library" name="scalatags_sjs0.6_2.12-0.6.7.jar" level="project"/>
+        <orderEntry type="library" name="sourcecode_sjs0.6_2.12-0.1.4-sources.jar" level="project"/>
+        <orderEntry type="library" name="sourcecode_sjs0.6_2.12-0.1.4.jar" level="project"/>
     </component>
 </module>
