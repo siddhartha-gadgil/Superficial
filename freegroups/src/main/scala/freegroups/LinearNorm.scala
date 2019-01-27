@@ -6,8 +6,36 @@ import scala.collection.mutable.{Map => mMap}
 
 import monix.execution.Scheduler.Implicits.global
 
+import scala.util.Random
+
 object LinearNorm {
   val memoNorm: mMap[Vector[Int], Double] = mMap()
+
+  def lengthsMap : Map[Int, Vector[Double]] = memoNorm.toVector.groupBy(_._1.length).mapValues(_.map(_._2))
+
+  def average(v: Vector[Double]) = v.sum/v.size
+
+  def averages = lengthsMap.mapValues(average).toVector.sortBy(_._1)
+
+  val rnd = new Random()
+
+  def randomLetter : Int = {
+    val n = rnd.nextInt(4)
+    if (n > 0) n else n - 1
+  }
+
+  def randomWord(l: Int) : Vector[Int] =
+    Vector.fill(l)(randomLetter)
+
+    def getRandomNorm(n: Int) = {
+      val w = randomWord(n)
+      println(Word(w))
+      val fut = normTask(randomWord(n)).materialize.runToFuture
+      fut.foreach((normTry) => normTry.fold((err) => println(err),
+        norm => println(s"length: $n -> norm: $norm")
+        ))
+      fut
+    }
 
   def norm(word: Vector[Int]): Int = word match {
     case Vector()      => 0

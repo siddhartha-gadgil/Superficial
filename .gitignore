@@ -32,3 +32,5 @@ project/plugins/project/
 .idea/**/tasks.xml
 .idea/**/dictionaries
 .idea/**/shelf
+.metals/
+.bloop/
