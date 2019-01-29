@@ -12,16 +12,23 @@ object LinearNorm {
   val memoNorm: mMap[Vector[Int], Double] = mMap()
 
   val lengthsMap : mMap[Int, Vector[Double]] = mMap()
+
+  val lengthsSumCount : mMap[Int, (Double, Int)] = mMap()
   
   def average(v: Vector[Double]) = v.sum/v.size
 
   val  averages : mMap[Int, (Double, Int)] = mMap()
 
+  val memoMaxLength = 10
+
   def update(word: Vector[Int], res: Double) = {
-    memoNorm += word -> res
-    val newVec = lengthsMap.getOrElse(word.size, Vector.empty[Double]) :+ res
-    lengthsMap(word.size) = newVec
-    averages(word.size) = average(newVec) -> newVec.size
+    val size = word.length
+    if (size <= memoMaxLength) memoNorm += word -> res
+    // val newVec = lengthsMap.getOrElse(word.size, Vector.empty[Double]) :+ res
+    // lengthsMap(word.size) = newVec
+    val (totalLength, count) = lengthsSumCount.getOrElse(size, (0.0, 0))
+    lengthsSumCount(size) = (totalLength + res, count + 1)
+    averages(size) = (totalLength + res)/(count + 1) -> (count + 1)
   }
 
   val rnd = new Random()
