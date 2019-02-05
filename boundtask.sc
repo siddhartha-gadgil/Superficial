@@ -9,13 +9,15 @@ import freegroups._, LinearNorm._
 import monix.execution.Scheduler.Implicits.global
 def vecn(n: Int) =
   Vector.fill(n)(Vector(1, 2, -1, -2)).foldRight(Vector(1))(_ ++ _)
-def taskn(n: Int) = scaledTask(vecn(n), 1, 20)
+def taskn(n: Int) = scaledTask(vecn(n), 1, 10)
+val commTask = scaledTask(Vector(1, 2, -1, -2), 1, 10)
 val task =
   for {
     _ <- taskn(1)
     _ <- taskn(2)
     _ <- taskn(3)
-    res <- taskn(6)
+    _ <- taskn(6)
+    res <- commTask
   } yield res
 def run() =
-  task.runAsync.foreach((res) => println(s"norm: ${res.min} for n: 6, giving bound ${(res.min.toDouble + 1) /  6} for the commutator"))
+  task.runToFuture.foreach((res) => println(s"norm: ${res.min}"))
