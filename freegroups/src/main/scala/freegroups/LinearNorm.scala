@@ -34,9 +34,50 @@ object LinearNorm {
   val rnd = new Random()
 
   def randomLetter : Int = {
-    val n = rnd.nextInt(4)
+    val n = rnd.nextInt(4) - 1
     if (n > 0) n else n - 1
   }
+
+  def letter(m: Int) = {
+    val n = m - 1
+    if (n > 0) n else n - 1
+  }
+
+  def allWords(n: Int) : Vector[Vector[Int]] =  
+  if (n == 0) Vector(Vector())
+  else {
+    val tail = allWords(n - 1)
+    for {
+      i<- (0 to 3).toVector
+      l = letter(i)
+      t <- tail 
+    } yield l +: t
+  }
+
+  def wordsUpto(n: Int) : Vector[Vector[Int]] = (0 to n).toVector.flatMap(allWords)
+
+  def power(v: Vector[Int], n: Int) : Vector[Int] = 
+    if (n == 0) Vector()
+    else v ++ power(v, n-1)
+
+  def normRatioTask(w: Vector[Int], n: Int) = 
+    for {
+      x <- normTask(w)
+      y <- normTask(power(w, n))
+    } yield (x * n)/ y
+
+  def aFamily(w: Vector[Int], exps : Vector[Int]) = 
+   exps.map(n => 1 +: power(w, n))
+
+  def aFamilyRatios(bound: Int, exps : Vector[Int], pows : Vector[Int]) =
+    {
+      val ws = wordsUpto(bound).flatMap(w => aFamily(w, exps))
+      val tasks = for {
+        w <- ws
+        n <- pows
+      } yield normRatioTask(w, n).map(r => (w, n, r))
+      tasks
+    }
 
   def randomWord(l: Int) : Vector[Int] =
     Vector.fill(l)(randomLetter)
