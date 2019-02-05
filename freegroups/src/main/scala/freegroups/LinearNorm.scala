@@ -152,7 +152,7 @@ object LinearNorm {
         case (v, n) =>
           for {
             res <- scaledNorm(word, n)
-            _ = println(res)
+            // _ = println(res)
           } yield v :+ res
       }
 

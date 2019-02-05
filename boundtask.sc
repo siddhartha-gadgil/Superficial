@@ -14,12 +14,11 @@ def commTask(k: Int) = scaledTask(Vector(1, 2, -1, -2), 1, k)
 def task(k: Int) =
   for {
     _ <- taskn(1, k)
-    _ = {println("1")}
+    // _ = {println("1")}
     _ <- taskn(2, k)
-    _ = {println("2")}
-    // _ <- taskn(3, k)
+    // _ = {println("2")}
     _ <- taskn(6, k)
-    _ = {println("6")}
+    // _ = {println("6")}
     res <- commTask(k)
   } yield res
 def run(k: Int) =
