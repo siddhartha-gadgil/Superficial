@@ -19,7 +19,7 @@ object LinearNorm {
 
   val  averages : mMap[Int, (Double, Int)] = mMap()
 
-  val memoMaxLength = 10
+  val memoMaxLength = 100
 
   def update(word: Vector[Int], res: Double) = {
     val size = word.length
