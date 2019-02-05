@@ -3,7 +3,7 @@
 // In the REPL session
 // ```
 // import $exec.boundtask, boundtask._
-// run()
+// run(20)
 // ```
 import freegroups._, LinearNorm._
 import monix.execution.Scheduler.Implicits.global
