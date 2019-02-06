@@ -9,6 +9,23 @@ import monix.execution.Scheduler.Implicits.global
 import LinearNorm._, LinearNormProofs.{c, cna}
 import LinNormBound._
 
+case class PowerMove(word: Word, exp: Int, normBeforeOpt: Option[Double], normAfter: Double)
+
+object PowerMove{
+  def historyMap(m: Map[Word, Double], moves: Vector[PowerMove]) = {
+    val moveMap = moves.groupBy(_.word).mapValues(v => v.map(_.normBeforeOpt).flatten.min)
+    m ++ moveMap
+  }
+}
+
+case class NormData(norms: Map[Word, Double], moves: Vector[PowerMove]){
+  def takeTill(word: Word, n: Int) = {
+    val head = moves.takeWhile(m => (m.word, m.exp) != (word, n))
+    val tail = moves.drop(head.size)
+    NormData(PowerMove.historyMap(norms, tail), head)
+  }
+}
+
 object ProofFinder {
   def memScaledNorm(word: Word, n: Int) =
     for {
@@ -16,7 +33,7 @@ object ProofFinder {
         println(s"word: $word, exponent: $n"); memoNorm.get(word.ls)
       }
       t2 <- scaledNorm(word.ls, n)
-    } yield (word, n, t1, t2)
+    } yield PowerMove(word, n, t1, t2)
 
   def homogeneityTask(seq: Vector[(Word, Int)]) =
     Task.sequence(
@@ -44,15 +61,14 @@ object ProofFinder {
 
   def quickProof(
       w: Word,
-      powers: Vector[(Word, Int)],
-      m: Map[Word, Double]
+      normData: NormData
   ): Option[LinNormBound] =
     w.ls match {
       case Vector() => Some(Empty)
       case x +: Vector() =>
         Some(Gen(x))
       case x +: ys =>
-        if (m(w) == 1 + m(Word(ys))) quickProof(Word(ys), powers, m).map { pf =>
+        if (normData.norms(w) == 1 + normData.norms(Word(ys))) quickProof(Word(ys),normData).map { pf =>
           Triang(Gen(x), pf)
         } else {
           val matchedIndices = ys.zipWithIndex.filter(_._1 == -x).map(_._2)
@@ -61,26 +77,26 @@ object ProofFinder {
           }
           val matchedNorms = afterSplits.filter {
             case (a, b) =>
-              println(Word(a))
-              println(Word(b))
-              m(Word(a)) + m(Word(b)) == m(w)
+              // println(Word(a))
+              // println(Word(b))
+              normData.norms(Word(a)) + normData.norms(Word(b)) == normData.norms(w)
           }
           matchedNorms.headOption.flatMap {
             case (a, b) =>
               for {
-                pfA <- quickProof(Word(a), powers, m)
-                pfB <- quickProof(Word(b), powers, m)
+                pfA <- quickProof(Word(a),normData)
+                pfB <- quickProof(Word(b),normData)
               } yield Triang(ConjGen(x, pfA), pfB)
           }
         }
       .orElse{
-          val exps = powers.filter(_._1 == w).map(_._2).filter(_ > 1)
-          val nOpt = exps.find(n => m(w.fastPow(n))/n ==m(w))
+          val exps = normData.moves.filter(_.word == w).map(_.exp).filter(_ > 1)
+          val nOpt = exps.find(n => normData.norms(w.fastPow(n))/n == normData.norms(w))
           for {
               n <- nOpt
               _ = println(n)
               _ = println(w)
-              pf <- quickProof(w, powers.takeWhile(_ != (w, n)), m)
+              pf <- quickProof(w, normData.takeTill(w, n))
           } yield PowerBound(w, n, pf)
       }
     }
