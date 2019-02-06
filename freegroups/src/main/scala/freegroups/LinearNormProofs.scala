@@ -172,6 +172,9 @@ object LinearNormProofs {
       res
     }
 
+  def computeScaledNormProof(word: Word, n: Int, noSym: Boolean = true) =
+    scaledNormProof(word, n, noSym).map(_ => ())
+
   def scaledTaskProofs(word: Word, start: Int, stop: Int, noSym: Boolean) = {
     val it = Iterant
       .range[Task](start, stop)

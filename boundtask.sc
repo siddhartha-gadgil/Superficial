@@ -24,3 +24,15 @@ def task(k: Int) =
   } yield res
 def run(k: Int) =
   task(k).runToFuture.foreach((res) => println(s"norm: ${res.min}"))
+
+import monix.eval._
+
+def preSeqN(n: Int, k: Int) = (1 to k).toVector.map(scaledNorm(vecn(n), _))
+
+def commSeq(k: Int) = (1 to k).toVector.map(scaledNorm(Vector(1, 2, -1, -2), _))
+
+def preTask(k: Int) = Task.sequence(preSeqN(1, k) ++ preSeqN(2, k) ++ preSeqN(6, k)) 
+
+def fullTask(k: Int) = Task.sequence(preSeqN(1, k) ++ preSeqN(2, k) ++ preSeqN(6, k) ++ commSeq(k))
+
+def fullRun(k: Int) = fullTask(k).runToFuture.foreach(_ => println(memoNorm(Vector(1, 2, -1, -2))))
