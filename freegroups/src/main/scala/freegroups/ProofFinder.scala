@@ -73,13 +73,15 @@ object ProofFinder {
               } yield Triang(ConjGen(x, pfA), pfB)
           }
         }
-      // .orElse{
-      //     val exps = powers.filter(_._1 == w).map(_._2)
-      //     val nOpt = exps.find(n => m(w.fastPow(n))/n ==m(w))
-      //     for {
-      //         n <- nOpt
-      //         pf <- quickProof(w, powers, m)
-      //     } yield PowerBound(w, n, pf)
-      // }
+      .orElse{
+          val exps = powers.filter(_._1 == w).map(_._2).filter(_ > 1)
+          val nOpt = exps.find(n => m(w.fastPow(n))/n ==m(w))
+          for {
+              n <- nOpt
+              _ = println(n)
+              _ = println(w)
+              pf <- quickProof(w, powers.takeWhile(_ != (w, n)), m)
+          } yield PowerBound(w, n, pf)
+      }
     }
 }
