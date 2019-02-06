@@ -134,6 +134,12 @@ case class Word(ls: Vector[Int]) extends AnyVal {
     case k if k < 0 => this.inv.pow(-k)
   }
 
+  def fastPow: Int => Word = {
+    case 0          => Word(Vector())
+    case k if k > 0 => Word(Vector.fill(k)(ls).flatten)
+    case k if k < 0 => this.inv.pow(-k)
+  }
+
   /**
     * raise to nth power.
     */
