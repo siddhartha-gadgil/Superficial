@@ -38,7 +38,11 @@ object LinearNorm {
         case Vector()      => Task.pure(0)
         case x +: Vector() => Task.pure(1)
         case x +: ys =>
-          if (x == -ys.last) normTask(ys.init)
+          if (x == -ys.last) normTask(ys.init).map{
+            res =>
+              update(word, res)
+              res
+          }
           else {
             val matchedIndices = ys.zipWithIndex.filter(_._1 == -x).map(_._2)
             val afterSplits = matchedIndices.map((i) => ys.splitAt(i)).map {
