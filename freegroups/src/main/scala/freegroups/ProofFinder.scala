@@ -4,9 +4,11 @@ import monix.eval._, monix.tail._, cats.implicits._
 
 import scala.collection.mutable.{Map => mMap}
 
-import monix.execution.Scheduler.Implicits.global
+// import monix.execution.Scheduler.Implicits.global
 
-import LinearNorm._, LinearNormProofs._
+import scala.concurrent._
+
+import LinearNorm._, LinearNormSyncProofs._
 import LinNormBound._
 
 case class PowerMove(
@@ -50,6 +52,17 @@ object ProofFinder {
         case (w, n) => memScaledNorm(w, n)
       }
     )
+
+    implicit val ec = ExecutionContext.global
+
+  def proofSync(seq: Vector[(Word, Int)]) : Unit =
+      seq.foreach {
+        case (w, n) =>
+            println(w)
+            println(n) 
+            computeScaledNormProof(w, n, true)
+      }
+
 
   def makeSeq(n: Int, target: Word, preCalcs: Word*): Vector[(Word, Int)] =
     preCalcs.toVector.flatMap(w => (1 to n).toVector.map(j => w -> j)) ++
