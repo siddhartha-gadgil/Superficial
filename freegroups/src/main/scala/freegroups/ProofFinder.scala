@@ -4,12 +4,32 @@ import monix.eval._, monix.tail._, cats.implicits._
 
 import scala.collection.mutable.{Map => mMap}
 
-// import monix.execution.Scheduler.Implicits.global
+import monix.execution.Scheduler.Implicits.global
 
 import scala.concurrent._
 
-import LinearNorm._, LinearNormSyncProofs._
+import LinearNorm._, LinearNormProofs._
 import LinNormBound._
+
+object ProofSript extends App{
+  var working = true
+  import ProofFinder._
+  val t20 = egTask(20)
+  val f20 = t20.runToFuture
+  f20.foreach{
+    norms =>
+      val normData = NormData(memMap, norms)
+      val proofOpt = quickProof(Word("aba!b!"), normData)
+      proofOpt.foreach{proof =>
+        println("## Proof output")
+        println(proofOut(proof).mkString("* ","\n* ","\n"))
+        working = false
+      }
+  }
+  while (working) {
+    Thread.sleep(1)
+  }
+}
 
 case class PowerMove(
     word: Word,
@@ -41,7 +61,7 @@ object ProofFinder {
   def memScaledNorm(word: Word, n: Int) =
     for {
       t1 <- Task {
-        println(s"word: $word, exponent: $n"); memoNorm.get(word.ls)
+        Console.err.println(s"word: $word, exponent: $n"); memoNorm.get(word.ls)
       }
       t2 <- scaledNorm(word.ls, n)
     } yield PowerMove(word, n, t1, t2)
@@ -58,8 +78,8 @@ object ProofFinder {
   def proofSync(seq: Vector[(Word, Int)]) : Unit =
       seq.foreach {
         case (w, n) =>
-            println(w)
-            println(n) 
+            // println(w)
+            // println(n) 
             computeScaledNormProof(w, n, true)
       }
 
@@ -95,7 +115,7 @@ object ProofFinder {
             Triang(Gen(x), pf)
           } else {
           if (normData.norms(w) > 1 + normData.norms(Word(ys)))
-            println(s"Wrong triangle inequality with ${Word(ys)} and $w")
+            Console.err.println(s"Wrong triangle inequality with ${Word(ys)} and $w")
           val matchedIndices = ys.zipWithIndex.filter(_._1 == -x).map(_._2)
           val afterSplits = matchedIndices.map((i) => ys.splitAt(i)).map {
             case (a, b) => (a, b.tail)
@@ -104,7 +124,7 @@ object ProofFinder {
             case (a, b) =>
               if (normData.norms(Word(a)) + normData.norms(Word(b)) < normData
                     .norms(w))
-                println(
+                    Console.err.println(
                   s"Wrong triangle inequality with ${Word(a)}, ${Word(b)} and $w"
                 )
               normData.norms(Word(a)) + normData.norms(Word(b)) == normData
@@ -112,6 +132,8 @@ object ProofFinder {
           }
           matchedNorms.headOption.flatMap {
             case (a, b) =>
+              // println(a)
+              // println(b)
               for {
                 pfA <- quickProof(Word(a), normData)
                 pfB <- quickProof(Word(b), normData)
@@ -125,8 +147,8 @@ object ProofFinder {
             )
             for {
               n <- nOpt
-              _ = println(n)
-              _ = println(w)
+              // _ = println(n)
+              // _ = println(w)
               pf <- quickProof(w.fastPow(n), normData.takeTill(w, n))
             } yield PowerBound(w, n, pf)
           }

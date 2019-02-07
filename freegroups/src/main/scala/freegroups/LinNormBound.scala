@@ -24,8 +24,13 @@ object LinNormBound {
 
   final case class PowerBound(baseword: Word, n: Int, pf: LinNormBound)
       extends LinNormBound(baseword, pf.bound / n) {
-    require(pf.word == baseword.pow(n),
+        def fullWord = baseword.pow(n)
+        // println(s"checking power $baseword, $n")
+        // println(pf.word)
+        // println(baseword.fastPow(n))
+    require((pf.word == baseword.fastPow(n)) || (pf.word == fullWord),
             s"The element ${pf.word} is not the ${n}th power of $baseword")
+            // println("checked power")
   }
 
   final case object Empty extends LinNormBound(Word(Vector()), 0)
