@@ -6,7 +6,7 @@ import scala.collection.mutable.{Map => mMap}
 
 import monix.execution.Scheduler.Implicits.global
 
-import LinearNorm._, LinearNormProofs.{c, cna}
+import LinearNorm._, LinearNormProofs._
 import LinNormBound._
 
 case class PowerMove(

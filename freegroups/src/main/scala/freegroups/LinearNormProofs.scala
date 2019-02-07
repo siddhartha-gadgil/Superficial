@@ -144,7 +144,7 @@ object LinearNormProofs {
             val afterSplits = matchedIndices.map((i) => ys.splitAt(i)).map {
               case (a, b) => (a, b.tail)
             }
-            val recNormsTask = Task.gather(
+            val recNormsTask = Task.sequence(
               afterSplits.map {
                 case (ta, tb) =>
                   for {
