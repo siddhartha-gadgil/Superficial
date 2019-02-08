@@ -73,3 +73,36 @@ object LinNormBound {
     symmGens.flatMap((f) =>
       Vector(symm(f), (w: LinNormBound) => symm(f)(inverse(w))))
 }
+
+import spire.implicits._
+import spire.math._
+object RationalProofs{
+  def bound(pf: LinNormBound) : Rational = pf match {
+    case Gen(n)         => 1
+    case ConjGen(n, pf) => bound(pf)
+    case Triang(a, b)   => bound(a) + bound(b)
+    case PowerBound(baseword, n, pf) =>
+      bound(pf) / n
+    case LinNormBound.Empty => 0
+  }
+
+  def leq(pf: LinNormBound) =
+    s"|${pf.word}| \u2264 ${bound(pf)}"
+
+  def leqUse(pf: LinNormBound, used: LinNormBound*) = {
+    val reasons = used.toVector.map(leq).mkString(" and ")
+    s"${leq(pf)} using $reasons"
+  }
+
+  def proofLines: LinNormBound => Vector[String] = {
+    case Gen(n)         => Vector(leq(Gen(n)))
+    case ConjGen(n, pf) => proofLines(pf) :+ leqUse(ConjGen(-n, pf), pf)
+    case Triang(a, b) =>
+      (proofLines(a) ++ proofLines(b)) :+ leqUse(a ++ b, a, b)
+    case PowerBound(baseword, n, pf) =>
+      proofLines(pf) :+ (leqUse(PowerBound(baseword, n, pf)) + s" by taking ${n}th power")
+    case LinNormBound.Empty => Vector()
+  }
+
+  def proofOut(pf: LinNormBound) = proofLines(pf).distinct
+}

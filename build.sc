@@ -25,7 +25,8 @@ object superficial extends CommonModule with ScalaJSModule{
 
 object freegroups extends CommonModule with SbtModule {
   def ivyDeps = Agg(
-    ivy"io.monix::monix:3.0.0-RC2"
+    ivy"io.monix::monix:3.0.0-RC2",
+    ivy"org.typelevel::spire:0.16.0"
   )
 
   override def mainClass = Some("freegroups.ProofScript")

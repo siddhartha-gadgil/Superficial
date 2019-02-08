@@ -8,6 +8,7 @@ lazy val freegroups = project.settings(
   name := "freegroups",
   libraryDependencies ++= Seq(
     // "com.lihaoyi" %% "ammonite-ops" % ammV,
-    "io.monix"      %% "monix"         % "3.0.0-RC2"
+    "io.monix"      %% "monix"         % "3.0.0-RC2",
+    "org.typelevel" %% "spire" % "0.16.0"
   )
 )

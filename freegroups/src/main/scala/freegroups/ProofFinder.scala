@@ -24,6 +24,8 @@ object ProofScript extends App{
         Console.err.println("\n")
         println("## Proof output\n")
         println(proofOut(proof).mkString("* ","\n* ","\n"))
+        println("\n## Proof output with rational coefficients \n")
+        println(RationalProofs.proofOut(proof).mkString("* ","\n* ","\n"))
         working = false
       }
   }
