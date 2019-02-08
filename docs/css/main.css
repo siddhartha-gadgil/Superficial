@@ -1,0 +1,7 @@
+.view {
+    overflow-y: auto;
+    height: 300px;
+    border-style: dotted;
+    border-width: 1px;
+  }
+  
