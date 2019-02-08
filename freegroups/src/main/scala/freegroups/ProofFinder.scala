@@ -11,7 +11,7 @@ import scala.concurrent._
 import LinearNorm._, LinearNormProofs._
 import LinNormBound._
 
-object ProofSript extends App{
+object ProofScript extends App{
   var working = true
   import ProofFinder._
   val t20 = egTask(20)
@@ -21,7 +21,7 @@ object ProofSript extends App{
       val normData = NormData(memMap, norms)
       val proofOpt = quickProof(Word("aba!b!"), normData)
       proofOpt.foreach{proof =>
-        println("## Proof output")
+        println("\n\n## Proof output\n")
         println(proofOut(proof).mkString("* ","\n* ","\n"))
         working = false
       }
