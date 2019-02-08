@@ -1,4 +1,5 @@
 ## Proof output
+
 * |b| ≤ 1.0
 * |a̅ba| ≤ 1.0 using |b| ≤ 1.0
 * |a| ≤ 1.0

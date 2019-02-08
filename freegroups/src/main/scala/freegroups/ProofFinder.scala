@@ -21,7 +21,8 @@ object ProofScript extends App{
       val normData = NormData(memMap, norms)
       val proofOpt = quickProof(Word("aba!b!"), normData)
       proofOpt.foreach{proof =>
-        println("\n\n## Proof output\n")
+        Console.err.println("\n")
+        println("## Proof output\n")
         println(proofOut(proof).mkString("* ","\n* ","\n"))
         working = false
       }
@@ -61,7 +62,7 @@ object ProofFinder {
   def memScaledNorm(word: Word, n: Int) =
     for {
       t1 <- Task {
-        Console.err.println(s"word: $word, exponent: $n"); memoNorm.get(word.ls)
+        Console.err.println(s"Refined using homogeneity; word: $word, exponent: $n"); memoNorm.get(word.ls)
       }
       t2 <- scaledNorm(word.ls, n)
     } yield PowerMove(word, n, t1, t2)
