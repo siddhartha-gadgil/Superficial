@@ -13,19 +13,89 @@
 
   <link href="css/bootstrap.min.css" rel="stylesheet">
 
-  <style type="text/css">
-  body { padding-top: 60px; }
-  .section {padding-top: 40px;}
-  #arxiv {
-    border-style: solid;
-    border-width: 1px;
-  }
-  </style>
+  <script type="text/javascript" async
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+<!-- mathjax config similar to math.stackexchange -->
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+jax: ["input/TeX", "output/HTML-CSS"],
+tex2jax: {
+inlineMath: [ ['$', '$'] ],
+displayMath: [ ['$$', '$$']],
+processEscapes: true,
+skipTags: ['script', 'noscript', 'style', 'textarea']
+},
+messageStyle: "none",
+"HTML-CSS": { preferredFont: "TeX", availableFonts: ["STIX","TeX"] }
+});
+</script>
 </head>
 
 <body>
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+          <!-- Brand and toggle get grouped for better mobile display -->
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <span class="navbar-brand">Author: <a href="http://math.iisc.ac.in/~gadgil" target="_blank">Siddhartha Gadgil</a></span>
+          </div>
+  
+          <!-- Collect the nav links, forms, and other content for toggling -->
+          <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+
+            <ul class="nav navbar-nav navbar-right">
+
+  
+            <li> <a href="https://github.com/siddhartha-gadgil/Superficial" target="_blank">
+            <img src="GitHub-Mark-Light-32px.png" alt="Github"></img> </a> </li>
+
+              <!-- <li><a href="{{ site.baseurl }}/notes-all.html">Notes</a></li> -->
+  
+            </ul>
+          </div><!-- /.navbar-collapse -->
+        </div><!-- /.container-fluid -->
+      </nav>
+  
         <div class="container">
 
-    <h2>The PolyMath 14 computer assisted proof regenerated</h2>
-    </div>
+    <h2>Computer assisted proof : Homogeneous length functions on groups</h2>
+    
+
+    <p> A script to replicate finding of the computer assisted proof in the PolyMath 14 project is available as an <a href="http://math.iisc.ac.in/~gadgil/polymath-proof">executable jar</a> here. To run this, you need to have <strong>Java 8</strong> installed. Assuming Java 8 is setup, the script can be run from a directory to which it is downloaded by running the following.</p>
+        
+    <code>
+        java -jar polymath-proof
+      </code>
+      <p></p>
+      <p>
+      This outputs status updates and then the proof. The status updates are output to the standard error, so the proof can be saved by just redirecting the standard output, for example run the following.</p> 
+      <code>
+          java -jar polymath-proof > proof.md
+        </code>
+        <p></p>
+
+      <p> The full source is at <a href="https://github.com/siddhartha-gadgil/Superficial" target="_blank">https://github.com/siddhartha-gadgil/Superficial</a>. The script is generated from the object <code>ProofScript</code> in the file <a href="https://github.com/siddhartha-gadgil/Superficial/blob/master/freegroups/src/main/scala/freegroups/ProofFinder.scala">ProofFinder.scala</a> from which one can trace backwards to explore how the proof in this script was generated. During the project we used the file <a href="https://github.com/siddhartha-gadgil/Superficial/blob/master/freegroups/src/main/scala/freegroups/LinearNormProofs.scala">LinearNormProofs.scala</a> instead, but this is less robust due to using more memory and garbage collection (since suboptimal proofs are constructed and discarded).
+      </p>
+      
+
+  </div>
+    <div class="container-fluid">
+        <br><br><br>
+        <div class="footer navbar-fixed-bottom bg-primary">
+          <h4>
+          &nbsp;<a href="http://math.iisc.ac.in" target="_blank">&nbsp; Department of Mathematics,</a>
+      
+          &nbsp;<a href="http://iisc.ac.in" target="_blank">Indian Institute of Science.</a>
+        </h4>
+      
+        </div>
+      
+      
+      </div>
 </body>
