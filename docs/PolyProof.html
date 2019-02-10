@@ -52,20 +52,20 @@
     <h2>Computer assisted proof : Homogeneous length functions on groups</h2>
     
 
-    <p> A script to replicate finding of the computer assisted proof in the PolyMath 14 project is available as an <a href="http://math.iisc.ac.in/~gadgil/polymath-proof">executable jar</a> here. To run this, you need to have <strong>Java 8</strong> installed. Assuming Java 8 is setup, the script can be run from a directory to which it is downloaded by running the following.</p>
+    <p> A script to replicate finding of the computer assisted proof in the PolyMath 14 project is available as an <a href="http://math.iisc.ac.in/~gadgil/polymath-proof">executable jar</a> here. To run this, you need to have <strong>Java 8</strong> installed and configured to use enough memory (we used <code>JAVA_OPTS="-Xms512m -Xmx4g"</code>). Assuming Java 8 is setup, the script can be run from a directory to which it is downloaded by running the following.</p>
         
     <code>
         java -jar polymath-proof
       </code>
       <p></p>
       <p>
-      This outputs status updates and then the proof, as well as the proof with <em>rational coefficients</em>. The status updates are output to the standard error, so the proof can be saved by just redirecting the standard output, for example run the following.</p> 
+      This outputs status updates and then the proof, as well as the proof with <em>rational coefficients</em>. The status updates are output to the standard error, so the proof can be saved by redirecting the standard output, for example run the following.</p> 
       <code>
           java -jar polymath-proof > proof.md
         </code>
         <p></p>
 
-      <p> The full source is at <a href="https://github.com/siddhartha-gadgil/Superficial" target="_blank">https://github.com/siddhartha-gadgil/Superficial</a>. The script is generated from the object <code>ProofScript</code> in the file <a href="https://github.com/siddhartha-gadgil/Superficial/blob/master/freegroups/src/main/scala/freegroups/ProofFinder.scala">ProofFinder.scala</a> from which one can trace backwards to explore how the proof in this script was generated. During the project we used the file <a href="https://github.com/siddhartha-gadgil/Superficial/blob/master/freegroups/src/main/scala/freegroups/LinearNormProofs.scala">LinearNormProofs.scala</a> instead, but this is less robust due to using more memory and garbage collection (since suboptimal proofs are constructed and discarded).
+      <p> The full source is at <a href="https://github.com/siddhartha-gadgil/Superficial" target="_blank">https://github.com/siddhartha-gadgil/Superficial</a>. The script is generated from the object <code>ProofScript</code> in the file <a href="https://github.com/siddhartha-gadgil/Superficial/blob/master/freegroups/src/main/scala/freegroups/ProofFinder.scala">ProofFinder.scala</a>, from which one can trace backwards to explore how the proof in this script was generated. During the project we used the code in the file <a href="https://github.com/siddhartha-gadgil/Superficial/blob/master/freegroups/src/main/scala/freegroups/LinearNormProofs.scala">LinearNormProofs.scala</a> instead, but this is less robust due to using more memory and garbage collection (since suboptimal proofs are constructed and discarded).
       </p>
 
       <p>For the readers convenience, the generated output converted from markdown to html (and with unordered lists changed to ordered lists) is below. The output is a 173 line proof with double precision numbers (similar to the one originally posted) followed by the same converted to using exact (arbitrary precision) rational arithmetic. </p>
