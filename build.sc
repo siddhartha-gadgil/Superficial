@@ -6,7 +6,7 @@ trait CommonModule extends ScalaModule {
   def scalaVersion = "2.12.8"
 }
 
-object superficial extends CommonModule with ScalaJSModule{
+object superficial extends CommonModule with ScalaJSModule with SbtModule{
   def scalaJSVersion = "0.6.25"
 
   def ivyDeps = Agg(

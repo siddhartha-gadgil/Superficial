@@ -12,3 +12,8 @@ lazy val freegroups = project.settings(
     "org.typelevel" %% "spire" % "0.16.0"
   )
 )
+
+lazy val superficial = project.settings(
+  name := "superficial",
+
+)
