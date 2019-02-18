@@ -5,7 +5,9 @@ import Polygon.Index
   * Abstract polygon, with given edges and vertices
   * @param sides number of sides
   */
-abstract class Polygon(val sides: Int) extends TwoComplex {
+trait Polygon extends TwoComplex {
+  val sides: Int
+
   lazy val faces = Set(this)
   
   val indices : Vector[Index] = (0 until sides).toVector
@@ -31,7 +33,9 @@ object Polygon {
     * @param n number of sides
     * @return a polgon with n sides
     */
-  def apply(n: Int): Polygon = new Polygon(n) { self =>
+  def apply(n: Int): Polygon = new Polygon { self =>
+    val sides = n
+
     lazy val boundary: Vector[Edge] =
       for (e <- indices)
         yield PolygonEdge(self, e, positiveOriented = true)

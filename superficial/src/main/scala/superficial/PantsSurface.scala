@@ -53,7 +53,9 @@ case class BoundaryEdge(pb: PantsBoundary,
 
 }
 
-abstract class Hexagon extends Polygon(6)
+abstract class Hexagon extends Polygon{
+  val sides = 6
+}
 
 object Hexagon{
   def arccosh(x: Double): Double = log(x + sqrt(x * x - 1))
@@ -121,7 +123,52 @@ case class Curve(left: PantsBoundary, right: PantsBoundary) {
     } yield Curve(newLeft, newRight)
 }
 
+import SkewCurve._
+
+case class SkewCurve(left: PantsBoundary, right: PantsBoundary, twist: Double) { curve =>
+  val skewLess : Boolean = twist == 0 || twist == 0.5
+
+  val support: Set[PantsBoundary] = Set(left, right)
+
+  val neighbours: Set[Index] = support.map(_.pants)
+
+  val shift = math.min(twist, mod1(twist + 0.5))
+
+  def contains(pb: PantsBoundary): Boolean = support.contains(pb)
+
+  def nextVertex(position: Double) : Double = 
+    if (skewLess){
+      assert(position == 0 || position == 0.5, s"twist is $twist but vertex at $position")
+      mod1(position + 0.5)
+    } else 
+    if (position == 0 || position == 0.5) position + shift 
+    else if (position < 0.5) 0.5
+    else 0
+
+  def previousVertex(position: Double) : Double = 
+  if (skewLess){
+    assert(position == 0 || position == 0.5, s"twist is $twist but vertex at $position")
+    mod1(position + 0.5)
+  } else 
+  if (position == 0) 0.5 + shift 
+  else if (position == 0.5) shift
+  else if (position > 0.5) 0.5
+  else 0
+
+  def shiftedVertex(position: Double, positivelyOriented : Boolean) =
+    if (positivelyOriented) nextVertex(position) else (previousVertex(position))
+
+}
+
+object SkewCurve{
+  def mod1(x: Double) = x - math.floor(x)
+}
+
+
+
 case class CurveVertex(curve: Curve, first: Boolean) extends Vertex
+
+case class SkewCurveVertex(curve: SkewCurve, position: Double) extends Vertex
 
 case class CurveEdge(curve: Curve, top: Boolean, positivelyOriented: Boolean)
     extends Edge {
@@ -132,6 +179,16 @@ case class CurveEdge(curve: Curve, top: Boolean, positivelyOriented: Boolean)
 
   lazy val terminal: Vertex =
     CurveVertex(curve, positivelyOriented ^ top)
+}
+
+case class SkewCurveEdge(curve: SkewCurve, position: Double, positivelyOriented: Boolean) extends Edge{
+  lazy val finalPosition = if (positivelyOriented) curve.nextVertex(position) else curve.previousVertex(position)
+  lazy val flip = SkewCurveEdge(curve, finalPosition, !positivelyOriented)
+
+  lazy val initial = SkewCurveVertex(curve, position)
+
+  lazy val terminal = SkewCurveVertex(curve, finalPosition)
+
 }
 
 case class PantsHexagon(pants: Index, top: Boolean, cs: Set[Curve])
