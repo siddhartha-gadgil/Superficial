@@ -54,7 +54,7 @@ case class BoundaryEdge(
 
 }
 
-abstract class Hexagon extends Polygon {
+trait Hexagon extends Polygon {
   val sides = 6
 }
 
@@ -177,7 +177,7 @@ case class SkewCurve(left: PantsBoundary, right: PantsBoundary, twist: Double) {
   def shiftedVertex(position: Double, positivelyOriented: Boolean) =
     if (positivelyOriented) nextVertex(position) else (previousVertex(position))
 
-  def edgesFrom(position: Double, positivelyOriented: Boolean) : Vector[Edge] =
+  def edgesFrom(position: Double, positivelyOriented: Boolean): Vector[Edge] =
     if (skewLess) Vector(SkewCurveEdge(curve, position, positivelyOriented))
     else
       Vector(
@@ -189,21 +189,32 @@ case class SkewCurve(left: PantsBoundary, right: PantsBoundary, twist: Double) {
         )
       )
 
-  def verticesFrom(position: Double, positivelyOriented: Boolean) : Set[Vertex] = 
-    if (skewLess) Set(SkewCurveVertex(curve, position), SkewCurveVertex(curve, shiftedVertex(position, positivelyOriented)))
-    else Set(
-      SkewCurveVertex(curve, position), 
-      SkewCurveVertex(curve, shiftedVertex(position, positivelyOriented)),
-      SkewCurveVertex(curve, shiftedVertex(shiftedVertex(position, positivelyOriented), positivelyOriented))
-    )
+  def verticesFrom(position: Double, positivelyOriented: Boolean): Set[Vertex] =
+    if (skewLess)
+      Set(
+        SkewCurveVertex(curve, position),
+        SkewCurveVertex(curve, shiftedVertex(position, positivelyOriented))
+      )
+    else
+      Set(
+        SkewCurveVertex(curve, position),
+        SkewCurveVertex(curve, shiftedVertex(position, positivelyOriented)),
+        SkewCurveVertex(
+          curve,
+          shiftedVertex(
+            shiftedVertex(position, positivelyOriented),
+            positivelyOriented
+          )
+        )
+      )
 
   def initPos(left: Boolean) = if (left) 0.0 else twist
 
-  def edgesOn(left: Boolean, top: Boolean) : Vector[Edge] = {
+  def edgesOn(left: Boolean, top: Boolean): Vector[Edge] = {
     edgesFrom(initPos(left), top)
   }
 
-  def verticesOn(left: Boolean, top: Boolean) :Set[Vertex] = {
+  def verticesOn(left: Boolean, top: Boolean): Set[Vertex] = {
     verticesFrom(initPos(left), top)
   }
 
@@ -266,6 +277,39 @@ case class PantsHexagon(pants: Index, top: Boolean, cs: Set[Curve])
       )
     } yield e
 
+}
+
+case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
+    extends Polygon {
+  val vertices: Set[Vertex] =
+    Z3.enum.toSet.flatMap { direction: Z3 =>
+      skewVertices(PantsBoundary(pants, direction), top, cs)
+    }
+
+  val segments: Vector[Vector[Edge]] =
+    Z3.enum.map { direction: Z3 =>
+      skewEdges(
+        PantsBoundary(pants, direction),
+        top,
+        positivelyOriented = top,
+        cs
+      )
+    }
+
+  val boundary = fillSeams(pants, segments)
+
+  val sides = boundary.size
+}
+
+case class SkewPantsSurface(numPants: Index, cs: Set[SkewCurve])
+    extends PureTwoComplex {
+  val indices: Vector[Index] = (0 until numPants).toVector
+
+  val faces: Set[Polygon] =
+    for {
+      pants: Index <- indices.toSet
+      top <- Set(true, false)
+    } yield SkewPantsHexagon(pants, top, cs)
 }
 
 case class PantsSurface(numPants: Index, cs: Set[Curve])
@@ -466,17 +510,20 @@ object PantsSurface {
           .map((c) => c -> false)
       )
 
-  def getSkewCurve(pb: PantsBoundary, cs: Set[SkewCurve]): Option[(SkewCurve, Boolean)] =
-  cs.find(
-      (c) => c.left == pb
-    )
-    .map((c) => c -> true)
-    .orElse(
-      cs.find(
-          (c) => c.right == pb
-        )
-        .map((c) => c -> false)
-    )
+  def getSkewCurve(
+      pb: PantsBoundary,
+      cs: Set[SkewCurve]
+  ): Option[(SkewCurve, Boolean)] =
+    cs.find(
+        (c) => c.left == pb
+      )
+      .map((c) => c -> true)
+      .orElse(
+        cs.find(
+            (c) => c.right == pb
+          )
+          .map((c) => c -> false)
+      )
 
   def edge(
       pb: PantsBoundary,
@@ -505,25 +552,50 @@ object PantsSurface {
   }
 
   def skewEdges(
-    pb: PantsBoundary,
-    top: Boolean,
-    positivelyOriented: Boolean,
-    cs: Set[SkewCurve]
-): Vector[Edge] =
-  getSkewCurve(pb, cs)
-    .map {
-      case (curve, left) => curve.edgesOn(left, top)
-    }
-    .getOrElse(Vector(BoundaryEdge(pb, top, positivelyOriented)))
+      pb: PantsBoundary,
+      top: Boolean,
+      positivelyOriented: Boolean,
+      cs: Set[SkewCurve]
+  ): Vector[Edge] =
+    getSkewCurve(pb, cs)
+      .map {
+        case (curve, left) => curve.edgesOn(left, top)
+      }
+      .getOrElse(Vector(BoundaryEdge(pb, top, positivelyOriented)))
 
   def skewVertices(
-    pb: PantsBoundary,
-    top: Boolean,
-    cs: Set[SkewCurve]
-): Set[Vertex] =
-  getSkewCurve(pb, cs)
-    .map {
-      case (curve, left) => curve.verticesOn(left, top)
+      pb: PantsBoundary,
+      top: Boolean,
+      cs: Set[SkewCurve]
+  ): Set[Vertex] =
+    getSkewCurve(pb, cs)
+      .map {
+        case (curve, left) => curve.verticesOn(left, top)
+      }
+      .getOrElse(Set(true, false).map(BoundaryVertex(pb, _)))
+
+  def fillSeamsRec(
+      pants: Index,
+      segments: Vector[Vector[Edge]],
+      gapLess: Vector[Edge]
+  ): Vector[Edge] =
+    segments match {
+      case Vector() => gapLess
+      case ys :+ x =>
+        val newSeam = PantsSeam(pants, ys.last.last.terminal, x.head.initial)
+        fillSeamsRec(pants, ys, newSeam +: gapLess)
     }
-    .getOrElse(Set(true, false).map(BoundaryVertex(pb, _)) )
+
+  def fillSeams(pants: Index, segments: Vector[Vector[Edge]]) =
+    fillSeamsRec(
+      pants,
+      segments,
+      Vector(
+        PantsSeam(
+          pants,
+          segments.last.last.terminal,
+          segments.head.head.initial
+        )
+      )
+    )
 }
