@@ -19,10 +19,10 @@ trait Polygon extends TwoComplex {
 
   val vertices: Set[Vertex]
 
-  def boundaryIndex(e: Edge): Set[Int] =
+  def boundaryIndex(e: Edge): Set[(Int, Boolean)] =
     indices.toSet.filter{
       (n) => e == boundary(n) || e.flip == boundary(n)
-    }
+    }.map(n => (n, e == boundary(n)))
 }
 
 object Polygon {
@@ -109,9 +109,9 @@ trait TwoComplex {
   def facesWithEdge(edge: Edge): Set[Polygon] =
     faces.filter((face) => face.edges.contains(edge))
 
-  def edgeIndices(edge: Edge): Set[(Polygon, Index)] =
+  def edgeIndices(edge: Edge): Set[(Polygon, Index, Boolean)] =
     faces.flatMap((f) =>
-      f.boundaryIndex(edge).map((n) => f -> n)
+      f.boundaryIndex(edge).map{case (n,flipped) => (f, n, flipped)}
     )
 
   def normalArcs: Set[NormalArc] =
@@ -204,7 +204,7 @@ object NormalPath {
         (
           for {
             path <- latest
-            (face, i1) <- complex.edgeIndices(path.terminalEdge) -
+            (face, i1) <- complex.edgeIndices(path.terminalEdge).map{case (f, i, _) => (f, i)} -
               (path.terminalFace -> path.terminalIndex) -
               (path.edges.last.face -> path.edges.last.initial)
             i2 <- face.indices
