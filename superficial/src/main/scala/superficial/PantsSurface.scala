@@ -40,10 +40,11 @@ case class PantsBoundary(pants: Index, direction: Z3) {
 
 case class BoundaryVertex(pb: PantsBoundary, first: Boolean) extends Vertex
 
-case class BoundaryEdge(pb: PantsBoundary,
-                        top: Boolean,
-                        positiveOriented: Boolean)
-    extends Edge {
+case class BoundaryEdge(
+    pb: PantsBoundary,
+    top: Boolean,
+    positiveOriented: Boolean
+) extends Edge {
   lazy val flip = BoundaryEdge(pb, top, !positiveOriented)
   lazy val terminal: BoundaryVertex =
     BoundaryVertex(pb, positiveOriented)
@@ -53,17 +54,17 @@ case class BoundaryEdge(pb: PantsBoundary,
 
 }
 
-abstract class Hexagon extends Polygon{
+abstract class Hexagon extends Polygon {
   val sides = 6
 }
 
-object Hexagon{
+object Hexagon {
   def arccosh(x: Double): Double = log(x + sqrt(x * x - 1))
 
   def arcsinh(x: Double): Double = log(x + sqrt(x * x + 1))
 
   def side(l1: Double, l2: Double, l3: Double): Double =
-    arccosh((cosh(l1) * cosh(l2)  + cosh(l3))/ (sinh(l1) * sinh(l2)))
+    arccosh((cosh(l1) * cosh(l2) + cosh(l3)) / (sinh(l1) * sinh(l2)))
 
   def length2(a: Double, b: Double): Double = arccosh(cosh(a) * cosh(b))
 
@@ -71,35 +72,47 @@ object Hexagon{
     arccosh(cosh(a) * cosh(l) * cosh(b) - sinh(a) * sinh(b))
 
   def length4(a: Double, l1: Double, l2: Double, b: Double): Double =
-    arccosh(cosh(a) * cosh(l1) * cosh(l2) * cosh(b) -
-      sinh(a) * sinh(l2) * cosh(b) - cosh(a) * sinh(l1) * sinh(b))
+    arccosh(
+      cosh(a) * cosh(l1) * cosh(l2) * cosh(b) -
+        sinh(a) * sinh(l2) * cosh(b) - cosh(a) * sinh(l1) * sinh(b)
+    )
 
   def mod6(n: Int): Index = {
     val m = n % 6
     if (m >= 0) m else m + 6
-  } ensuring((m) => 0 <= m && m < 6)
+  } ensuring ((m) => 0 <= m && m < 6)
 
   case class Hyperbolic(a: Double, b: Double, c: Double) {
-    def sideLength(n: Index) : Double =
-      if (n % 2 == 0) Vector(a, b, c)(n/2)
-      else side(length(n - 1), length(n + 1), length(n+3))
+    def sideLength(n: Index): Double =
+      if (n % 2 == 0) Vector(a, b, c)(n / 2)
+      else side(length(n - 1), length(n + 1), length(n + 3))
 
     def length(n: Int): Double = sideLength(mod6(n))
 
-    def getArcLength(i: Int, j: Int, initShift: Double, lastShift: Double): Double = {
-      assert( i < j && j < i + 4, s"getArcLength called with $i, $j" )
+    def getArcLength(
+        i: Int,
+        j: Int,
+        initShift: Double,
+        lastShift: Double
+    ): Double = {
+      assert(i < j && j < i + 4, s"getArcLength called with $i, $j")
       val init = length(i) - initShift
       val last = lastShift
       j - i match {
         case 1 => length2(init, last)
-        case 2 => length3(init, length(i + 1) ,last)
+        case 2 => length3(init, length(i + 1), last)
         case 3 => length4(init, length(i + 1), length(i + 2), last)
       }
     }
 
-    def arcLength(i: Index, j: Index, initShift: Double, lastShift: Double): Double =
+    def arcLength(
+        i: Index,
+        j: Index,
+        initShift: Double,
+        lastShift: Double
+    ): Double =
       if (i > j) arcLength(j, i, lastShift, initShift)
-      else if (j - i <4) getArcLength(i, j, initShift, lastShift)
+      else if (j - i < 4) getArcLength(i, j, initShift, lastShift)
       else getArcLength(j, i + 6, lastShift, initShift)
   }
 }
@@ -125,8 +138,10 @@ case class Curve(left: PantsBoundary, right: PantsBoundary) {
 
 import SkewCurve._
 
-case class SkewCurve(left: PantsBoundary, right: PantsBoundary, twist: Double) { curve =>
-  val skewLess : Boolean = twist == 0 || twist == 0.5
+case class SkewCurve(left: PantsBoundary, right: PantsBoundary, twist: Double) {
+  curve =>
+
+  val skewLess: Boolean = twist == 0 || twist == 0.5
 
   val support: Set[PantsBoundary] = Set(left, right)
 
@@ -136,35 +151,67 @@ case class SkewCurve(left: PantsBoundary, right: PantsBoundary, twist: Double) {
 
   def contains(pb: PantsBoundary): Boolean = support.contains(pb)
 
-  def nextVertex(position: Double) : Double = 
-    if (skewLess){
-      assert(position == 0 || position == 0.5, s"twist is $twist but vertex at $position")
+  def nextVertex(position: Double): Double =
+    if (skewLess) {
+      assert(
+        position == 0 || position == 0.5,
+        s"twist is $twist but vertex at $position"
+      )
       mod1(position + 0.5)
-    } else 
-    if (position == 0 || position == 0.5) position + shift 
+    } else if (position == 0 || position == 0.5) position + shift
     else if (position < 0.5) 0.5
     else 0
 
-  def previousVertex(position: Double) : Double = 
-  if (skewLess){
-    assert(position == 0 || position == 0.5, s"twist is $twist but vertex at $position")
-    mod1(position + 0.5)
-  } else 
-  if (position == 0) 0.5 + shift 
-  else if (position == 0.5) shift
-  else if (position > 0.5) 0.5
-  else 0
+  def previousVertex(position: Double): Double =
+    if (skewLess) {
+      assert(
+        position == 0 || position == 0.5,
+        s"twist is $twist but vertex at $position"
+      )
+      mod1(position + 0.5)
+    } else if (position == 0) 0.5 + shift
+    else if (position == 0.5) shift
+    else if (position > 0.5) 0.5
+    else 0
 
-  def shiftedVertex(position: Double, positivelyOriented : Boolean) =
+  def shiftedVertex(position: Double, positivelyOriented: Boolean) =
     if (positivelyOriented) nextVertex(position) else (previousVertex(position))
 
+  def edgesFrom(position: Double, positivelyOriented: Boolean) : Vector[Edge] =
+    if (skewLess) Vector(SkewCurveEdge(curve, position, positivelyOriented))
+    else
+      Vector(
+        SkewCurveEdge(curve, position, positivelyOriented),
+        SkewCurveEdge(
+          curve,
+          shiftedVertex(position, positivelyOriented),
+          positivelyOriented
+        )
+      )
+
+  def verticesFrom(position: Double, positivelyOriented: Boolean) : Set[Vertex] = 
+    if (skewLess) Set(SkewCurveVertex(curve, position), SkewCurveVertex(curve, shiftedVertex(position, positivelyOriented)))
+    else Set(
+      SkewCurveVertex(curve, position), 
+      SkewCurveVertex(curve, shiftedVertex(position, positivelyOriented)),
+      SkewCurveVertex(curve, shiftedVertex(shiftedVertex(position, positivelyOriented), positivelyOriented))
+    )
+
+  def initPos(left: Boolean) = if (left) 0.0 else twist
+
+  def edgesOn(left: Boolean, top: Boolean) : Vector[Edge] = {
+    edgesFrom(initPos(left), top)
+  }
+
+  def verticesOn(left: Boolean, top: Boolean) :Set[Vertex] = {
+    verticesFrom(initPos(left), top)
+  }
+
 }
 
-object SkewCurve{
+object SkewCurve {
   def mod1(x: Double) = x - math.floor(x)
 }
-
-
 
 case class CurveVertex(curve: Curve, first: Boolean) extends Vertex
 
@@ -181,8 +228,14 @@ case class CurveEdge(curve: Curve, top: Boolean, positivelyOriented: Boolean)
     CurveVertex(curve, positivelyOriented ^ top)
 }
 
-case class SkewCurveEdge(curve: SkewCurve, position: Double, positivelyOriented: Boolean) extends Edge{
-  lazy val finalPosition = if (positivelyOriented) curve.nextVertex(position) else curve.previousVertex(position)
+case class SkewCurveEdge(
+    curve: SkewCurve,
+    position: Double,
+    positivelyOriented: Boolean
+) extends Edge {
+  lazy val finalPosition =
+    if (positivelyOriented) curve.nextVertex(position)
+    else curve.previousVertex(position)
   lazy val flip = SkewCurveEdge(curve, finalPosition, !positivelyOriented)
 
   lazy val initial = SkewCurveVertex(curve, position)
@@ -202,11 +255,15 @@ case class PantsHexagon(pants: Index, top: Boolean, cs: Set[Curve])
   val boundary: Vector[Edge] =
     for {
       direction <- Z3.enum
-      e <- Vector(edge(PantsBoundary(pants, direction),
-                       top,
-                       positivelyOriented = top,
-                       cs),
-                  seam(pants, direction, cs))
+      e <- Vector(
+        edge(
+          PantsBoundary(pants, direction),
+          top,
+          positivelyOriented = top,
+          cs
+        ),
+        seam(pants, direction, cs)
+      )
     } yield e
 
 }
@@ -214,7 +271,7 @@ case class PantsHexagon(pants: Index, top: Boolean, cs: Set[Curve])
 case class PantsSurface(numPants: Index, cs: Set[Curve])
     extends PureTwoComplex {
   val indices: Vector[Index] = (0 until numPants).toVector
-  
+
   val faces: Set[Polygon] =
     for {
       pants: Index <- indices.toSet
@@ -250,9 +307,12 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
     indices
       .filter(
         (m) =>
-          cs.exists((curve) =>
-            curve.neighbours
-              .contains(m) && curve.neighbours.intersect(pantSet).nonEmpty))
+          cs.exists(
+            (curve) =>
+              curve.neighbours
+                .contains(m) && curve.neighbours.intersect(pantSet).nonEmpty
+          )
+      )
       .toSet
 
   @annotation.tailrec
@@ -328,9 +388,10 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
 
 object PantsSurface {
 
-  def bers(g: Int)= 26 * (g - 1)
+  def bers(g: Int) = 26 * (g - 1)
 
-  val margulis = Hexagon.arccosh(sqrt((2 * cos(2 * Pi/7) - 1)/(8 * cos(Pi/7) + 7)))
+  val margulis =
+    Hexagon.arccosh(sqrt((2 * cos(2 * Pi / 7) - 1) / (8 * cos(Pi / 7) + 7)))
 
   def isomorphic(first: PantsSurface, second: PantsSurface): Boolean =
     if (first.numPants == 0) second.numPants == 0
@@ -346,8 +407,9 @@ object PantsSurface {
           } else if (first.boundaryIndices.nonEmpty) {
             val ind = first.boundaryIndices.head
             val pruned = first.drop(ind)
-            val secondIndices = second.boundaryIndices.filter((n) =>
-              second.innerCurves(n) == first.innerCurves(ind))
+            val secondIndices = second.boundaryIndices.filter(
+              (n) => second.innerCurves(n) == first.innerCurves(ind)
+            )
             val secondPruned = secondIndices.map((n) => second.drop(n))
             secondPruned.exists((surf) => isomorphic(pruned, surf))
           } else { // peripheral ones must have no loops or boundaries
@@ -380,29 +442,48 @@ object PantsSurface {
         PantsSurface(1, Set()),
         PantsSurface(
           1,
-          Set(Curve(PantsBoundary(0, Z3(0)), PantsBoundary(0, Z3(1)))))
+          Set(Curve(PantsBoundary(0, Z3(0)), PantsBoundary(0, Z3(1))))
+        )
       )
     else
       distinct(
         getAll(n - 1).flatMap(
           (s) => s.allGlued.toVector
-        ))
+        )
+      )
 
   def allClosed: Stream[Vector[PantsSurface]] = all.map(_.filter(_.isClosed))
 
   def getCurve(pb: PantsBoundary, cs: Set[Curve]): Option[(Curve, Boolean)] =
     cs.find(
+        (c) => c.left == pb
+      )
+      .map((c) => c -> true)
+      .orElse(
+        cs.find(
+            (c) => c.right == pb
+          )
+          .map((c) => c -> false)
+      )
+
+  def getSkewCurve(pb: PantsBoundary, cs: Set[SkewCurve]): Option[(SkewCurve, Boolean)] =
+  cs.find(
       (c) => c.left == pb
-    ).map((c) => c -> true).orElse(
+    )
+    .map((c) => c -> true)
+    .orElse(
       cs.find(
-        (c) => c.right == pb
-      ).map((c) => c -> false)
+          (c) => c.right == pb
+        )
+        .map((c) => c -> false)
     )
 
-  def edge(pb: PantsBoundary,
-           top: Boolean,
-           positivelyOriented: Boolean,
-           cs: Set[Curve]): Edge =
+  def edge(
+      pb: PantsBoundary,
+      top: Boolean,
+      positivelyOriented: Boolean,
+      cs: Set[Curve]
+  ): Edge =
     getCurve(pb, cs)
       .map {
         case (curve, positive) => CurveEdge(curve, top, positive)
@@ -418,7 +499,31 @@ object PantsSurface {
 
   def seam(pants: Index, direction: Z3, cs: Set[Curve]): PantsSeam = {
     val initial = vertex(PantsBoundary(pants, direction), first = false, cs)
-    val terminal = vertex(PantsBoundary(pants, direction.next), first = true, cs)
+    val terminal =
+      vertex(PantsBoundary(pants, direction.next), first = true, cs)
     PantsSeam(pants, initial, terminal)
   }
+
+  def skewEdges(
+    pb: PantsBoundary,
+    top: Boolean,
+    positivelyOriented: Boolean,
+    cs: Set[SkewCurve]
+): Vector[Edge] =
+  getSkewCurve(pb, cs)
+    .map {
+      case (curve, left) => curve.edgesOn(left, top)
+    }
+    .getOrElse(Vector(BoundaryEdge(pb, top, positivelyOriented)))
+
+  def skewVertices(
+    pb: PantsBoundary,
+    top: Boolean,
+    cs: Set[SkewCurve]
+): Set[Vertex] =
+  getSkewCurve(pb, cs)
+    .map {
+      case (curve, left) => curve.verticesOn(left, top)
+    }
+    .getOrElse(Set(true, false).map(BoundaryVertex(pb, _)) )
 }
