@@ -138,7 +138,7 @@ case class Curve(left: PantsBoundary, right: PantsBoundary) {
 
 import SkewCurve._
 
-case class SkewCurve(left: PantsBoundary, right: PantsBoundary, twist: Double) {
+case class SkewCurve(left: PantsBoundary, right: PantsBoundary, twist: Double, length: Double) {
   curve =>
 
   val skewLess: Boolean = twist == 0 || twist == 0.5
