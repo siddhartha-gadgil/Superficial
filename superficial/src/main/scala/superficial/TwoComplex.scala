@@ -108,6 +108,9 @@ trait TwoComplex {
   def edges
     : Set[Edge] // these come in pairs, related by flip (reversing orientation)
 
+  lazy val positiveEdges = 
+    edges.toVector.collect{case oe : OrientedEdge if oe.positivelyOriented => oe}
+
   def vertices: Set[Vertex]
 
   def facesWithEdge(edge: Edge): Set[Polygon] =
