@@ -117,9 +117,9 @@ object Hexagon {
   }
 }
 
-case class PantsSeam(pants: Index, initial: Vertex, terminal: Vertex)
+case class PantsSeam(pants: Index, initial: Vertex, terminal: Vertex, positive: Boolean = true)
     extends Edge {
-  lazy val flip = PantsSeam(pants, terminal, initial)
+  lazy val flip = PantsSeam(pants, terminal, initial, !positive)
 }
 
 case class Curve(left: PantsBoundary, right: PantsBoundary) {
