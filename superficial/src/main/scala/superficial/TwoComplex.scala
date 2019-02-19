@@ -84,6 +84,10 @@ trait Edge {
   def initial: Vertex
 }
 
+trait OrientedEdge extends Edge{
+  val positivelyOriented : Boolean
+}
+
 case class QuotientEdge(edges: Set[Edge]) extends Edge {
   def flip = QuotientEdge(edges map (_.flip))
 

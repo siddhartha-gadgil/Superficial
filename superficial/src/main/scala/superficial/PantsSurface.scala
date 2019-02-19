@@ -43,14 +43,14 @@ case class BoundaryVertex(pb: PantsBoundary, first: Boolean) extends Vertex
 case class BoundaryEdge(
     pb: PantsBoundary,
     top: Boolean,
-    positiveOriented: Boolean
-) extends Edge {
-  lazy val flip = BoundaryEdge(pb, top, !positiveOriented)
+    positivelyOriented: Boolean
+) extends OrientedEdge {
+  lazy val flip = BoundaryEdge(pb, top, !positivelyOriented)
   lazy val terminal: BoundaryVertex =
-    BoundaryVertex(pb, positiveOriented)
+    BoundaryVertex(pb, positivelyOriented)
 
   lazy val initial: BoundaryVertex =
-    BoundaryVertex(pb, !positiveOriented)
+    BoundaryVertex(pb, !positivelyOriented)
 
 }
 
@@ -117,9 +117,9 @@ object Hexagon {
   }
 }
 
-case class PantsSeam(pants: Index, initial: Vertex, terminal: Vertex, positive: Boolean = true)
-    extends Edge {
-  lazy val flip = PantsSeam(pants, terminal, initial, !positive)
+case class PantsSeam(pants: Index, initial: Vertex, terminal: Vertex, positivelyOriented: Boolean = true)
+    extends OrientedEdge {
+  lazy val flip = PantsSeam(pants, terminal, initial, !positivelyOriented)
 }
 
 case class Curve(left: PantsBoundary, right: PantsBoundary) {
@@ -229,7 +229,7 @@ case class CurveVertex(curve: Curve, first: Boolean) extends Vertex
 case class SkewCurveVertex(curve: SkewCurve, position: Double) extends Vertex
 
 case class CurveEdge(curve: Curve, top: Boolean, positivelyOriented: Boolean)
-    extends Edge {
+    extends OrientedEdge {
   lazy val flip = CurveEdge(curve, top, !positivelyOriented)
 
   lazy val initial: Vertex =
@@ -243,7 +243,7 @@ case class SkewCurveEdge(
     curve: SkewCurve,
     position: Double,
     positivelyOriented: Boolean
-) extends Edge {
+) extends OrientedEdge {
   lazy val finalPosition =
     if (positivelyOriented) curve.nextVertex(position)
     else curve.previousVertex(position)
@@ -533,14 +533,14 @@ object PantsSurface {
   ): Edge =
     getCurve(pb, cs)
       .map {
-        case (curve, positive) => CurveEdge(curve, top, positive)
+        case (curve, positivelyOriented) => CurveEdge(curve, top, positivelyOriented)
       }
       .getOrElse(BoundaryEdge(pb, top, positivelyOriented))
 
   def vertex(pb: PantsBoundary, first: Boolean, cs: Set[Curve]): Vertex =
     getCurve(pb, cs)
       .map {
-        case (curve, positive) => CurveVertex(curve, !(first ^ positive))
+        case (curve, positivelyOriented) => CurveVertex(curve, !(first ^ positivelyOriented))
       }
       .getOrElse(BoundaryVertex(pb, first))
 
