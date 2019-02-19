@@ -13,13 +13,13 @@ object superficial extends CommonModule with ScalaJSModule with SbtModule{
     ivy"org.scala-lang.modules::scala-xml:1.1.1"
   )
 
-  def pack() = T.command {
-    def js = fastOpt()
-    def targ = pwd / "docs" / artifactName()
-    cp.over(js.path, targ / "out.js")
-    cp.over(js.path / up / "out.js.map", targ / "out.js.map")
-    js
+  def bin() : define.Command[PathRef] = T.command {
+    def ass: PathRef = assembly()
+    def name: String = artifactName()
+    cp.over(ass.path, pwd/ "superficial" / "notes" / "superficial")
+    ass
   }
+
 }
 
 object freegroups extends CommonModule with SbtModule {
