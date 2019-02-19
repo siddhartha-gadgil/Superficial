@@ -15,5 +15,6 @@ lazy val freegroups = project.settings(
 
 lazy val superficial = project.settings(
   name := "superficial",
+  libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "1.1.1"
 
 )

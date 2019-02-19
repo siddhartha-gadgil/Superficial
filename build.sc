@@ -10,8 +10,7 @@ object superficial extends CommonModule with ScalaJSModule with SbtModule{
   def scalaJSVersion = "0.6.25"
 
   def ivyDeps = Agg(
-    ivy"org.scala-js::scalajs-dom::0.9.4",
-    ivy"com.lihaoyi::scalatags::0.6.7"
+    ivy"org.scala-lang.modules::scala-xml:1.1.1"
   )
 
   def pack() = T.command {
