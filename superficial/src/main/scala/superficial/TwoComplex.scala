@@ -10,7 +10,7 @@ trait Polygon extends TwoComplex {
 
   lazy val faces = Set(this)
   
-  val indices : Vector[Index] = (0 until sides).toVector
+  lazy val indices : Vector[Index] = (0 until sides).toVector
 
   val boundary: Vector[Edge]
 
@@ -146,6 +146,10 @@ case class NormalArc(initial: Index, terminal: Index, face: Polygon) {
 
   val initialEdge = face.boundary(initial)
 
+  def vertexLinking = math.abs(terminal - initial) == 1
+
+  def crosses(that: NormalArc) = (that.initial - initial) * (that.terminal - terminal) * (that.initial - terminal) * (that.terminal - initial) < 0 
+
 }
 
 object NormalArc {
@@ -161,8 +165,8 @@ object NormalArc {
 case class NormalPath(edges: Vector[NormalArc]) {
   edges.zip(edges.tail).foreach {
     case (e1, e2) =>
-      require(e1.terminalEdge == e2.initialEdge,
-              s"terminal point of $e1 is not initial point of $e2")
+      require(e1.terminalEdge == e2.initialEdge || e1.terminalEdge == e2.initialEdge.flip,
+              s"terminal point on ${e1.terminalEdge} of $e1 is not initial point of $e2 on ${e2.initialEdge}")
   }
 
   def +:(arc: NormalArc) = NormalPath(arc +: edges)
@@ -188,6 +192,20 @@ case class NormalPath(edges: Vector[NormalArc]) {
     initialFace.boundary(initialIndex)
 
   def distinctFaces: Boolean = edges.map(_.face).distinct.size == edges.size
+
+  def linkingPair = edges.zip(edges.tail :+ edges.head).exists{case (x, y) => x.vertexLinking && y.vertexLinking}
+
+  def distinctEdges = {
+    val indEdg = edges.zipWithIndex
+    for {
+      (x, i) <- indEdg
+      (y, j) <- indEdg
+    } yield (x, y)
+  }
+
+  def withCross = distinctEdges.exists{case (x, y) => x.crosses(y)}
+
+  def geodesicCandidate = !(linkingPair || withCross)
 }
 
 object NormalPath {
