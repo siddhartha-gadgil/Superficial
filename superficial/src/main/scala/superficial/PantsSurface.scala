@@ -226,6 +226,22 @@ object SkewCurve {
   def mod1(x: Double) = x - math.floor(x)
 
   def untwisted(c: Curve, length: Double = 1) = SkewCurve(c.left, c.right, 0, length)
+
+  def enumerate(c: Curve, twists: Vector[Double], lengths: Vector[Double]) : Vector[SkewCurve] = 
+    for {
+      t <- twists
+      l <- lengths
+    } yield SkewCurve(c.left, c.right, t, l)
+
+  def polyEnumerate(cs: Vector[Curve], twists: Vector[Double], lengths: Vector[Double]) : Vector[Vector[SkewCurve]] = 
+    cs match {
+      case Vector() => Vector(Vector())
+      case x +: ys => 
+        for {
+          c <- enumerate(x, twists, lengths)
+          tcs <- polyEnumerate(ys, twists, lengths)
+        } yield c +: tcs
+    }
 }
 
 case class CurveVertex(curve: Curve, first: Boolean) extends Vertex
@@ -322,6 +338,11 @@ object SkewPantsSurface{
     val cs = surf.cs.map(c => SkewCurve.untwisted(c, l(c)))
     SkewPantsSurface(surf.numPants, cs)
   }
+
+  def enumerate(surf: PantsSurface, twists: Vector[Double], lengths: Vector[Double] = Vector(1)) =
+    SkewCurve.polyEnumerate(surf.cs.toVector, twists, lengths).map{
+      tcs => SkewPantsSurface(surf.numPants, tcs.toSet)
+    }
 }
 
 case class PantsSurface(numPants: Index, cs: Set[Curve])
