@@ -74,15 +74,15 @@ object SvgPlot {
   def allHexagonSides(complex: PantsSurface) = {
     complex.faces.toVector.collect{case ph : PantsHexagon => ph}.flatMap{
       hex =>
-        val offset = (100.0 * (hex.pants), if (hex.top) 0.0 else 100.0)
-        pantsHexagonSides(hex, complex, offset)
+        val offset = (150.0 * (hex.pants), if (hex.top) 0.0 else 150.0)
+        pantsHexagonSides(hex, complex, offset, 60)
     }
   }
 
   def unit(x: Double, y: Double): (Double, Double) =
     (x / sqrt(x * x + y * y), y / sqrt(x * x + y * y))
 
-  val rad: Int = 5
+  val rad: Int = 3
 
   def lineArrow(xinit: Double,
                 yinit: Double,
@@ -111,7 +111,7 @@ object SvgPlot {
   def svgPlot(elems: Seq[Elem]): Elem =
     <svg version="1.1"
            baseProfile="full"
-           width="600" height="200"
+           width="1000" height="400"
            xmlns="http://www.w3.org/2000/svg">
            {elems} </svg>
 
