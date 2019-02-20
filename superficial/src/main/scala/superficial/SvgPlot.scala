@@ -66,15 +66,15 @@ object SvgPlot {
       val x2 = x + (radius) + (cos((j + 1) * Pi / 3) * radius)
       val y1 = y + (radius) + (sin(j * Pi / 3) * radius)
       val y2 = y + (radius) + (sin((j + 1) * Pi / 3) * radius)
-      if (pos) lineArrow(x1, y1, x2, y2, getColour(ind))
-      else lineArrow(x2, y2, x1, y1, getColour(ind))
+      if (pos) lineArrow(x1, y1, x2, y2, getColour(ind), (ind + 1).toString)
+      else lineArrow(x2, y2, x1, y1, getColour(ind), (ind + 1).toString)
     }
   }
 
   def allHexagonSides(complex: PantsSurface) = {
     complex.faces.toVector.collect{case ph : PantsHexagon => ph}.flatMap{
       hex =>
-        val offset = (150.0 * (hex.pants), if (hex.top) 0.0 else 150.0)
+        val offset = (150.0 * (hex.pants) + 20.0, if (hex.top) 0.0 else 150.0)
         pantsHexagonSides(hex, complex, offset, 60)
     }
   }
@@ -88,10 +88,12 @@ object SvgPlot {
                 yinit: Double,
                 xt: Double,
                 yterm: Double,
-                colour: String = "black"): Vector[Elem] = {
+                colour: String = "black",
+                label: String = ""): Vector[Elem] = {
 
     val arrowBase = ((xt * 3 + xinit) / 4, (yterm * 3 + yinit) / 4)
     val (bu, tu) = arrowBase
+    val (bt, tt) = ((xt + (3 * xinit)) / 4, (yterm + (3 * yinit)) / 4)
     val (xu, yu) = unit(xt - xinit, yterm - yinit)
     Vector(
       drawLine(xinit, yinit, xt, yterm, colour),
@@ -104,7 +106,8 @@ object SvgPlot {
                tu,
                bu - (xu * rad) + (yu * rad),
                tu - (yu * rad) - (xu * rad),
-               "black")
+               "black"),
+               <text x={bt.toInt.toString} y={tt.toInt.toString}>{label}</text>
     )
   }
 
