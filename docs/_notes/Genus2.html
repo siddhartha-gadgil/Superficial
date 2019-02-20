@@ -1,12 +1,11 @@
 --- 
-title: test-note
---- 
-
+title: Genus 2 surfaces
+---
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8" />
 
-<title>svg-eg</title>
+<title>Genus2</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
@@ -13120,7 +13119,233 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="This-is-to-test-the-setup-for-Jupyter,-Jekyll,-SVG-etc">This is to test the setup for Jupyter, Jekyll, SVG etc<a class="anchor-link" href="#This-is-to-test-the-setup-for-Jupyter,-Jekyll,-SVG-etc">&#182;</a></h1>
+<h2 id="The-simplest-pants-decompositions">The simplest pants decompositions<a class="anchor-link" href="#The-simplest-pants-decompositions">&#182;</a></h2><p>Here we explore, test, and correct code written earlier for enumerating pants decompositions. A component to illustrate these has been added</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-scala"><pre><span></span><span class="k">import</span> <span class="nn">$cp.</span><span class="n">`superficial.jar`</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[1]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre><span class="ansi-green-fg">import </span><span class="ansi-cyan-fg">$cp.$                </span></pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[2]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-scala"><pre><span></span><span class="k">import</span> <span class="nn">superficial._</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[2]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre><span class="ansi-green-fg">import </span><span class="ansi-cyan-fg">superficial._</span></pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We enumerate all the pants decompositions with 2 pairs of pants, i.e., for surfaces of genus 2, up to isomorphism. There are two such decompositions.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[3]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-scala"><pre><span></span><span class="k">val</span> <span class="n">genus2</span> <span class="k">=</span> <span class="nc">PantsSurface</span><span class="o">.</span><span class="n">allClosed</span><span class="o">(</span><span class="mi">2</span><span class="o">).</span><span class="n">toVector</span>
+<span class="n">genus2</span><span class="o">.</span><span class="n">size</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[3]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre><span class="ansi-cyan-fg">genus2</span>: <span class="ansi-green-fg">Vector</span>[<span class="ansi-green-fg">PantsSurface</span>] = <span class="ansi-yellow-fg">Vector</span>(
+  <span class="ansi-yellow-fg">PantsSurface</span>(
+    <span class="ansi-green-fg">2</span>,
+    <span class="ansi-yellow-fg">Set</span>(
+      <span class="ansi-yellow-fg">Curve</span>(<span class="ansi-yellow-fg">PantsBoundary</span>(<span class="ansi-green-fg">0</span>, <span class="ansi-yellow-fg">Z3</span>(<span class="ansi-green-fg">0</span>)), <span class="ansi-yellow-fg">PantsBoundary</span>(<span class="ansi-green-fg">1</span>, <span class="ansi-yellow-fg">Z3</span>(<span class="ansi-green-fg">0</span>))),
+      <span class="ansi-yellow-fg">Curve</span>(<span class="ansi-yellow-fg">PantsBoundary</span>(<span class="ansi-green-fg">0</span>, <span class="ansi-yellow-fg">Z3</span>(<span class="ansi-green-fg">1</span>)), <span class="ansi-yellow-fg">PantsBoundary</span>(<span class="ansi-green-fg">1</span>, <span class="ansi-yellow-fg">Z3</span>(<span class="ansi-green-fg">1</span>))),
+      <span class="ansi-yellow-fg">Curve</span>(<span class="ansi-yellow-fg">PantsBoundary</span>(<span class="ansi-green-fg">0</span>, <span class="ansi-yellow-fg">Z3</span>(<span class="ansi-green-fg">2</span>)), <span class="ansi-yellow-fg">PantsBoundary</span>(<span class="ansi-green-fg">1</span>, <span class="ansi-yellow-fg">Z3</span>(<span class="ansi-green-fg">2</span>)))
+    )
+  ),
+  <span class="ansi-yellow-fg">PantsSurface</span>(
+    <span class="ansi-green-fg">2</span>,
+    <span class="ansi-yellow-fg">Set</span>(
+      <span class="ansi-yellow-fg">Curve</span>(<span class="ansi-yellow-fg">PantsBoundary</span>(<span class="ansi-green-fg">0</span>, <span class="ansi-yellow-fg">Z3</span>(<span class="ansi-green-fg">0</span>)), <span class="ansi-yellow-fg">PantsBoundary</span>(<span class="ansi-green-fg">0</span>, <span class="ansi-yellow-fg">Z3</span>(<span class="ansi-green-fg">1</span>))),
+      <span class="ansi-yellow-fg">Curve</span>(<span class="ansi-yellow-fg">PantsBoundary</span>(<span class="ansi-green-fg">0</span>, <span class="ansi-yellow-fg">Z3</span>(<span class="ansi-green-fg">2</span>)), <span class="ansi-yellow-fg">PantsBoundary</span>(<span class="ansi-green-fg">1</span>, <span class="ansi-yellow-fg">Z3</span>(<span class="ansi-green-fg">0</span>))),
+      <span class="ansi-yellow-fg">Curve</span>(<span class="ansi-yellow-fg">PantsBoundary</span>(<span class="ansi-green-fg">1</span>, <span class="ansi-yellow-fg">Z3</span>(<span class="ansi-green-fg">1</span>)), <span class="ansi-yellow-fg">PantsBoundary</span>(<span class="ansi-green-fg">1</span>, <span class="ansi-yellow-fg">Z3</span>(<span class="ansi-green-fg">2</span>)))
+    )
+  )
+)
+<span class="ansi-cyan-fg">res2_1</span>: <span class="ansi-green-fg">Int</span> = <span class="ansi-green-fg">2</span></pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[4]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-scala"><pre><span></span><span class="k">val</span> <span class="nc">Vector</span><span class="o">(</span><span class="n">surf1</span><span class="o">,</span> <span class="n">surf2</span><span class="o">)</span> <span class="k">=</span> <span class="n">genus2</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[4]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre><span class="ansi-cyan-fg">surf1</span>: <span class="ansi-green-fg">PantsSurface</span> = <span class="ansi-yellow-fg">PantsSurface</span>(
+  <span class="ansi-green-fg">2</span>,
+  <span class="ansi-yellow-fg">Set</span>(
+    <span class="ansi-yellow-fg">Curve</span>(<span class="ansi-yellow-fg">PantsBoundary</span>(<span class="ansi-green-fg">0</span>, <span class="ansi-yellow-fg">Z3</span>(<span class="ansi-green-fg">0</span>)), <span class="ansi-yellow-fg">PantsBoundary</span>(<span class="ansi-green-fg">1</span>, <span class="ansi-yellow-fg">Z3</span>(<span class="ansi-green-fg">0</span>))),
+    <span class="ansi-yellow-fg">Curve</span>(<span class="ansi-yellow-fg">PantsBoundary</span>(<span class="ansi-green-fg">0</span>, <span class="ansi-yellow-fg">Z3</span>(<span class="ansi-green-fg">1</span>)), <span class="ansi-yellow-fg">PantsBoundary</span>(<span class="ansi-green-fg">1</span>, <span class="ansi-yellow-fg">Z3</span>(<span class="ansi-green-fg">1</span>))),
+    <span class="ansi-yellow-fg">Curve</span>(<span class="ansi-yellow-fg">PantsBoundary</span>(<span class="ansi-green-fg">0</span>, <span class="ansi-yellow-fg">Z3</span>(<span class="ansi-green-fg">2</span>)), <span class="ansi-yellow-fg">PantsBoundary</span>(<span class="ansi-green-fg">1</span>, <span class="ansi-yellow-fg">Z3</span>(<span class="ansi-green-fg">2</span>)))
+  )
+)
+<span class="ansi-cyan-fg">surf2</span>: <span class="ansi-green-fg">PantsSurface</span> = <span class="ansi-yellow-fg">PantsSurface</span>(
+  <span class="ansi-green-fg">2</span>,
+  <span class="ansi-yellow-fg">Set</span>(
+    <span class="ansi-yellow-fg">Curve</span>(<span class="ansi-yellow-fg">PantsBoundary</span>(<span class="ansi-green-fg">0</span>, <span class="ansi-yellow-fg">Z3</span>(<span class="ansi-green-fg">0</span>)), <span class="ansi-yellow-fg">PantsBoundary</span>(<span class="ansi-green-fg">0</span>, <span class="ansi-yellow-fg">Z3</span>(<span class="ansi-green-fg">1</span>))),
+    <span class="ansi-yellow-fg">Curve</span>(<span class="ansi-yellow-fg">PantsBoundary</span>(<span class="ansi-green-fg">0</span>, <span class="ansi-yellow-fg">Z3</span>(<span class="ansi-green-fg">2</span>)), <span class="ansi-yellow-fg">PantsBoundary</span>(<span class="ansi-green-fg">1</span>, <span class="ansi-yellow-fg">Z3</span>(<span class="ansi-green-fg">0</span>))),
+    <span class="ansi-yellow-fg">Curve</span>(<span class="ansi-yellow-fg">PantsBoundary</span>(<span class="ansi-green-fg">1</span>, <span class="ansi-yellow-fg">Z3</span>(<span class="ansi-green-fg">1</span>)), <span class="ansi-yellow-fg">PantsBoundary</span>(<span class="ansi-green-fg">1</span>, <span class="ansi-yellow-fg">Z3</span>(<span class="ansi-green-fg">2</span>)))
+  )
+)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We now make pictures for these. First we generate these as <code>svg</code> using <code>scala.xml</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[5]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-scala"><pre><span></span><span class="k">val</span> <span class="n">pics</span> <span class="k">=</span> <span class="n">genus2</span><span class="o">.</span><span class="n">map</span><span class="o">(</span><span class="nc">SvgPlot</span><span class="o">.</span><span class="n">plotSurface</span><span class="o">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[5]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre><span class="ansi-cyan-fg">pics</span>: <span class="ansi-green-fg">Vector</span>[<span class="ansi-green-fg">xml</span>.<span class="ansi-green-fg">Elem</span>] = <span class="ansi-yellow-fg">Vector</span>(
+  &lt;svg version=&#34;1.1&#34; baseProfile=&#34;full&#34; width=&#34;1000&#34; height=&#34;400&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;
+           &lt;line x1=&#34;140&#34; x2=&#34;110&#34; y1=&#34;60&#34; y2=&#34;111&#34; stroke=&#34;red&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;117&#34; x2=&#34;116&#34; y1=&#34;98&#34; y2=&#34;94&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;117&#34; x2=&#34;121&#34; y1=&#34;98&#34; y2=&#34;97&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;text x=&#34;132&#34; y=&#34;72&#34;&gt;6&lt;/text&gt;&lt;line x1=&#34;110&#34; x2=&#34;50&#34; y1=&#34;111&#34; y2=&#34;111&#34; stroke=&#34;gold&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;65&#34; x2=&#34;68&#34; y1=&#34;111&#34; y2=&#34;108&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;65&#34; x2=&#34;68&#34; y1=&#34;111&#34; y2=&#34;114&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;text x=&#34;95&#34; y=&#34;111&#34;&gt;12&lt;/text&gt;&lt;line x1=&#34;50&#34; x2=&#34;20&#34; y1=&#34;111&#34; y2=&#34;60&#34; stroke=&#34;orange&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;27&#34; x2=&#34;31&#34; y1=&#34;72&#34; y2=&#34;74&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;27&#34; x2=&#34;26&#34; y1=&#34;72&#34; y2=&#34;77&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;text x=&#34;42&#34; y=&#34;98&#34;&gt;4&lt;/text&gt;&lt;line x1=&#34;20&#34; x2=&#34;49&#34; y1=&#34;60&#34; y2=&#34;8&#34; stroke=&#34;grey&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;42&#34; x2=&#34;43&#34; y1=&#34;21&#34; y2=&#34;25&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;42&#34; x2=&#34;38&#34; y1=&#34;21&#34; y2=&#34;22&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;text x=&#34;27&#34; y=&#34;47&#34;&gt;8&lt;/text&gt;&lt;line x1=&#34;49&#34; x2=&#34;110&#34; y1=&#34;8&#34; y2=&#34;8&#34; stroke=&#34;darkcyan&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;95&#34; x2=&#34;92&#34; y1=&#34;8&#34; y2=&#34;11&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;95&#34; x2=&#34;92&#34; y1=&#34;8&#34; y2=&#34;5&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;text x=&#34;64&#34; y=&#34;8&#34;&gt;11&lt;/text&gt;&lt;line x1=&#34;110&#34; x2=&#34;140&#34; y1=&#34;8&#34; y2=&#34;59&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;132&#34; x2=&#34;128&#34; y1=&#34;47&#34; y2=&#34;45&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;132&#34; x2=&#34;133&#34; y1=&#34;47&#34; y2=&#34;42&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;text x=&#34;117&#34; y=&#34;21&#34;&gt;3&lt;/text&gt;&lt;line x1=&#34;140&#34; x2=&#34;110&#34; y1=&#34;210&#34; y2=&#34;261&#34; stroke=&#34;green&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;117&#34; x2=&#34;116&#34; y1=&#34;248&#34; y2=&#34;244&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;117&#34; x2=&#34;121&#34; y1=&#34;248&#34; y2=&#34;247&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;text x=&#34;132&#34; y=&#34;222&#34;&gt;2&lt;/text&gt;&lt;line x1=&#34;110&#34; x2=&#34;50&#34; y1=&#34;261&#34; y2=&#34;261&#34; stroke=&#34;gold&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;65&#34; x2=&#34;68&#34; y1=&#34;261&#34; y2=&#34;258&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;65&#34; x2=&#34;68&#34; y1=&#34;261&#34; y2=&#34;264&#34; stroke=&#34;black&#34; strok...</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now we can view them.</p>
+
 </div>
 </div>
 </div>
@@ -13129,7 +13354,8 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[6]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-scala"><pre><span></span><span class="k">import</span> <span class="nn">$cp.</span><span class="n">`superficial.jar`</span>
+<div class=" highlight hl-scala"><pre><span></span><span class="k">import</span> <span class="nn">almond.interpreter.api._</span>
+<span class="k">val</span> <span class="n">picData</span> <span class="k">=</span> <span class="n">pics</span><span class="o">.</span><span class="n">map</span><span class="o">(</span><span class="n">p</span> <span class="k">=&gt;</span> <span class="nc">DisplayData</span><span class="o">.</span><span class="n">svg</span><span class="o">(</span><span class="n">p</span><span class="o">.</span><span class="n">toString</span><span class="o">))</span>
 </pre></div>
 
     </div>
@@ -13148,7 +13374,13 @@ div#notebook {
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre><span class="ansi-green-fg">import </span><span class="ansi-cyan-fg">$cp.$                </span></pre>
+<pre><span class="ansi-green-fg">import </span><span class="ansi-cyan-fg">almond.interpreter.api._
+</span>
+<span class="ansi-cyan-fg">picData</span>: <span class="ansi-green-fg">Vector</span>[<span class="ansi-green-fg">DisplayData</span>] = <span class="ansi-yellow-fg">Vector</span>(
+  <span class="ansi-yellow-fg">DisplayData</span>(
+    <span class="ansi-yellow-fg">Map</span>(
+      <span class="ansi-green-fg">&#34;image/svg+xml&#34;</span> -&gt; <span class="ansi-green-fg">&#34;&#34;&#34;&lt;svg version=&#34;1.1&#34; baseProfile=&#34;full&#34; width=&#34;1000&#34; height=&#34;400&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;
+           &lt;line x1=&#34;140&#34; x2=&#34;110&#34; y1=&#34;60&#34; y2=&#34;111&#34; stroke=&#34;red&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;117&#34; x2=&#34;116&#34; y1=&#34;98&#34; y2=&#34;94&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;117&#34; x2=&#34;121&#34; y1=&#34;98&#34; y2=&#34;97&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;text x=&#34;132&#34; y=&#34;72&#34;&gt;6&lt;/text&gt;&lt;line x1=&#34;110&#34; x2=&#34;50&#34; y1=&#34;111&#34; y2=&#34;111&#34; stroke=&#34;gold&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;65&#34; x2=&#34;68&#34; y1=&#34;111&#34; y2=&#34;108&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;65&#34; x2=&#34;68&#34; y1=&#34;111&#34; y2=&#34;114&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;text x=&#34;95&#34; y=&#34;111&#34;&gt;12&lt;/text&gt;&lt;line x1=&#34;50&#34; x2=&#34;20&#34; y1=&#34;111&#34; y2=&#34;60&#34; stroke=&#34;orange&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;27&#34; x2=&#34;31&#34; y1=&#34;72&#34; y2=&#34;74&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;27&#34; x2=&#34;26&#34; y1=&#34;72&#34; y2=&#34;77&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;text x=&#34;42&#34; y=&#34;98&#34;&gt;4&lt;/text&gt;&lt;line x1=&#34;20&#34; x2=&#34;49&#34; y1=&#34;60&#34; y2=&#34;8&#34; stroke=&#34;grey&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;42&#34; x2=&#34;43&#34; y1=&#34;21&#34; y2=&#34;25&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;42&#34; x2=&#34;38&#34; y1=&#34;21&#34; y2=&#34;22&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;text x=&#34;27&#34; y=&#34;47&#34;&gt;8&lt;/text&gt;&lt;line x1=&#34;49&#34; x2=&#34;110&#34; y1=&#34;8&#34; y2=&#34;8&#34; stroke=&#34;darkcyan&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;95&#34; x2=&#34;92&#34; y1=&#34;8&#34; y2=&#34;11&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;95&#34; x2=&#34;92&#34; y1=&#34;8&#34; y2=&#34;5&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;text x=&#34;64&#34; y=&#34;8&#34;&gt;11&lt;/text&gt;&lt;line x1=&#34;110&#34; x2=&#34;140&#34; y1=&#34;8&#34; y2=&#34;59&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;132&#34; x2=&#34;128&#34; y1=&#34;47&#34; y2=&#34;45&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;132&#34; x2=&#34;133&#34; y1=&#34;47&#34; y2=&#34;42&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;text x=&#34;117&#34; y=&#34;21&#34;&gt;3&lt;/text&gt;&lt;line x1=&#34;140&#34; x2=&#34;110&#34; y1=&#34;210&#34; y2=&#34;261&#34; stroke=&#34;green&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;117&#34; x2=&#34;116&#34; y1=&#34;248&#34; y2=&#34;244&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;117&#34; x2=&#34;121&#34; y1=&#34;248&#34; y2=&#34;247&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;text x=&#34;132&#34; y=&#34;222&#34;&gt;2&lt;/text&gt;&lt;line x1=&#34;110&#34; x2=&#34;50&#34; y1=&#34;261&#34; y2=&#34;261&#34; stroke=&#34;gold&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;65&#34; </span>...</pre>
 </div>
 
 </div>
@@ -13162,114 +13394,7 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[7]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-scala"><pre><span></span><span class="k">import</span> <span class="nn">superficial._</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[7]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre><span class="ansi-green-fg">import </span><span class="ansi-cyan-fg">superficial._</span></pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[8]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-scala"><pre><span></span><span class="k">import</span> <span class="nn">almond.interpreter.api._</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[8]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre><span class="ansi-green-fg">import </span><span class="ansi-cyan-fg">almond.interpreter.api._
-</span></pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[9]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-scala"><pre><span></span><span class="k">val</span> <span class="n">svEg</span> <span class="k">=</span>  <span class="nc">DisplayData</span><span class="o">.</span><span class="n">svg</span><span class="o">(</span><span class="nc">SvgPlot</span><span class="o">.</span><span class="n">eg</span><span class="o">.</span><span class="n">toString</span><span class="o">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[9]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre><span class="ansi-cyan-fg">svEg</span>: <span class="ansi-green-fg">DisplayData</span> = <span class="ansi-yellow-fg">DisplayData</span>(
-  <span class="ansi-yellow-fg">Map</span>(
-    <span class="ansi-green-fg">&#34;image/svg+xml&#34;</span> -&gt; <span class="ansi-green-fg">&#34;&#34;&#34;&lt;svg version=&#34;1.1&#34; baseProfile=&#34;full&#34; width=&#34;1000&#34; height=&#34;400&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;
-           &lt;line x1=&#34;200&#34; x2=&#34;150&#34; y1=&#34;100&#34; y2=&#34;186&#34; stroke=&#34;blue&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;162&#34; x2=&#34;161&#34; y1=&#34;164&#34; y2=&#34;160&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;162&#34; x2=&#34;166&#34; y1=&#34;164&#34; y2=&#34;163&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;text x=&#34;187&#34; y=&#34;121&#34;&gt;&lt;/text&gt;&lt;line x1=&#34;150&#34; x2=&#34;50&#34; y1=&#34;186&#34; y2=&#34;186&#34; stroke=&#34;green&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;75&#34; x2=&#34;78&#34; y1=&#34;186&#34; y2=&#34;183&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;75&#34; x2=&#34;78&#34; y1=&#34;186&#34; y2=&#34;189&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;text x=&#34;125&#34; y=&#34;186&#34;&gt;&lt;/text&gt;&lt;line x1=&#34;50&#34; x2=&#34;0&#34; y1=&#34;186&#34; y2=&#34;100&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;12&#34; x2=&#34;16&#34; y1=&#34;121&#34; y2=&#34;122&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;12&#34; x2=&#34;11&#34; y1=&#34;121&#34; y2=&#34;125&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;text x=&#34;37&#34; y=&#34;164&#34;&gt;&lt;/text&gt;&lt;line x1=&#34;0&#34; x2=&#34;49&#34; y1=&#34;100&#34; y2=&#34;13&#34; stroke=&#34;orange&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;37&#34; x2=&#34;38&#34; y1=&#34;35&#34; y2=&#34;39&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;37&#34; x2=&#34;33&#34; y1=&#34;35&#34; y2=&#34;36&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;text x=&#34;12&#34; y=&#34;78&#34;&gt;&lt;/text&gt;&lt;line x1=&#34;49&#34; x2=&#34;150&#34; y1=&#34;13&#34; y2=&#34;13&#34; stroke=&#34;cyan&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;124&#34; x2=&#34;121&#34; y1=&#34;13&#34; y2=&#34;16&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;124&#34; x2=&#34;121&#34; y1=&#34;13&#34; y2=&#34;10&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;text x=&#34;74&#34; y=&#34;13&#34;&gt;&lt;/text&gt;&lt;line x1=&#34;150&#34; x2=&#34;200&#34; y1=&#34;13&#34; y2=&#34;99&#34; stroke=&#34;red&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;187&#34; x2=&#34;183&#34; y1=&#34;78&#34; y2=&#34;77&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;187&#34; x2=&#34;188&#34; y1=&#34;78&#34; y2=&#34;74&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;text x=&#34;162&#34; y=&#34;35&#34;&gt;&lt;/text&gt; &lt;/svg&gt;&#34;&#34;&#34;</span>
-  ),
-  <span class="ansi-yellow-fg">Map</span>(),
-  <span class="ansi-green-fg">None</span>
-)</pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[10]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-scala"><pre><span></span><span class="n">display</span><span class="o">(</span><span class="n">svEg</span><span class="o">)</span>
+<div class=" highlight hl-scala"><pre><span></span><span class="n">display</span><span class="o">(</span><span class="n">picData</span><span class="o">(</span><span class="mi">0</span><span class="o">))</span>
 </pre></div>
 
     </div>
@@ -13288,11 +13413,57 @@ div#notebook {
 
 <div class="output_svg output_subarea ">
 <svg version="1.1" baseProfile="full" width="1000" height="400" xmlns="http://www.w3.org/2000/svg">
-           <line x1="200" x2="150" y1="100" y2="186" stroke="blue" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="162" x2="161" y1="164" y2="160" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="162" x2="166" y1="164" y2="163" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="187" y="121"></text><line x1="150" x2="50" y1="186" y2="186" stroke="green" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="75" x2="78" y1="186" y2="183" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="75" x2="78" y1="186" y2="189" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="125" y="186"></text><line x1="50" x2="0" y1="186" y2="100" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="12" x2="16" y1="121" y2="122" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="12" x2="11" y1="121" y2="125" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="37" y="164"></text><line x1="0" x2="49" y1="100" y2="13" stroke="orange" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="37" x2="38" y1="35" y2="39" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="37" x2="33" y1="35" y2="36" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="12" y="78"></text><line x1="49" x2="150" y1="13" y2="13" stroke="cyan" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="124" x2="121" y1="13" y2="16" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="124" x2="121" y1="13" y2="10" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="74" y="13"></text><line x1="150" x2="200" y1="13" y2="99" stroke="red" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="187" x2="183" y1="78" y2="77" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="187" x2="188" y1="78" y2="74" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="162" y="35"></text> </svg>
+           <line x1="140" x2="110" y1="60" y2="111" stroke="red" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="117" x2="116" y1="98" y2="94" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="117" x2="121" y1="98" y2="97" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="132" y="72">6</text><line x1="110" x2="50" y1="111" y2="111" stroke="gold" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="65" x2="68" y1="111" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="65" x2="68" y1="111" y2="114" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="95" y="111">12</text><line x1="50" x2="20" y1="111" y2="60" stroke="orange" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="27" x2="31" y1="72" y2="74" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="27" x2="26" y1="72" y2="77" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="42" y="98">4</text><line x1="20" x2="49" y1="60" y2="8" stroke="grey" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="42" x2="43" y1="21" y2="25" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="42" x2="38" y1="21" y2="22" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="27" y="47">8</text><line x1="49" x2="110" y1="8" y2="8" stroke="darkcyan" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="95" x2="92" y1="8" y2="11" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="95" x2="92" y1="8" y2="5" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="64" y="8">11</text><line x1="110" x2="140" y1="8" y2="59" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="132" x2="128" y1="47" y2="45" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="132" x2="133" y1="47" y2="42" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="117" y="21">3</text><line x1="140" x2="110" y1="210" y2="261" stroke="green" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="117" x2="116" y1="248" y2="244" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="117" x2="121" y1="248" y2="247" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="132" y="222">2</text><line x1="110" x2="50" y1="261" y2="261" stroke="gold" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="65" x2="68" y1="261" y2="258" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="65" x2="68" y1="261" y2="264" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="95" y="261">12</text><line x1="50" x2="20" y1="261" y2="210" stroke="yellow" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="27" x2="31" y1="222" y2="224" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="27" x2="26" y1="222" y2="227" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="42" y="248">10</text><line x1="20" x2="49" y1="210" y2="158" stroke="grey" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="42" x2="43" y1="171" y2="175" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="42" x2="38" y1="171" y2="172" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="27" y="197">8</text><line x1="49" x2="110" y1="158" y2="158" stroke="magenta" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="95" x2="92" y1="158" y2="161" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="95" x2="92" y1="158" y2="155" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="64" y="158">9</text><line x1="110" x2="140" y1="158" y2="209" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="132" x2="128" y1="197" y2="195" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="132" x2="133" y1="197" y2="192" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="117" y="171">3</text><line x1="260" x2="290" y1="111" y2="60" stroke="red" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="282" x2="283" y1="72" y2="77" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="282" x2="278" y1="72" y2="74" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="267" y="98">6</text><line x1="260" x2="200" y1="111" y2="111" stroke="cyan" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="215" x2="218" y1="111" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="215" x2="218" y1="111" y2="114" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="245" y="111">5</text><line x1="170" x2="200" y1="60" y2="111" stroke="orange" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="192" x2="188" y1="98" y2="97" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="192" x2="193" y1="98" y2="94" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="177" y="72">4</text><line x1="170" x2="199" y1="60" y2="8" stroke="brown" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="192" x2="193" y1="21" y2="25" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="192" x2="188" y1="21" y2="22" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="177" y="47">7</text><line x1="260" x2="199" y1="8" y2="8" stroke="darkcyan" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="214" x2="217" y1="8" y2="5" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="214" x2="217" y1="8" y2="11" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="245" y="8">11</text><line x1="260" x2="290" y1="8" y2="59" stroke="blue" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="282" x2="278" y1="47" y2="45" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="282" x2="283" y1="47" y2="42" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="267" y="21">1</text><line x1="260" x2="290" y1="261" y2="210" stroke="green" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="282" x2="283" y1="222" y2="227" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="282" x2="278" y1="222" y2="224" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="267" y="248">2</text><line x1="260" x2="200" y1="261" y2="261" stroke="cyan" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="215" x2="218" y1="261" y2="258" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="215" x2="218" y1="261" y2="264" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="245" y="261">5</text><line x1="170" x2="200" y1="210" y2="261" stroke="yellow" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="192" x2="188" y1="248" y2="247" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="192" x2="193" y1="248" y2="244" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="177" y="222">10</text><line x1="170" x2="199" y1="210" y2="158" stroke="brown" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="192" x2="193" y1="171" y2="175" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="192" x2="188" y1="171" y2="172" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="177" y="197">7</text><line x1="260" x2="199" y1="158" y2="158" stroke="magenta" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="214" x2="217" y1="158" y2="155" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="214" x2="217" y1="158" y2="161" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="245" y="158">9</text><line x1="260" x2="290" y1="158" y2="209" stroke="blue" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="282" x2="278" y1="197" y2="195" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="282" x2="283" y1="197" y2="192" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="267" y="171">1</text> </svg>
 </div>
 
 </div>
 
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[8]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-scala"><pre><span></span><span class="n">display</span><span class="o">(</span><span class="n">picData</span><span class="o">(</span><span class="mi">1</span><span class="o">))</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+<div class="output_svg output_subarea ">
+<svg version="1.1" baseProfile="full" width="1000" height="400" xmlns="http://www.w3.org/2000/svg">
+           <line x1="140" x2="110" y1="60" y2="111" stroke="green" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="117" x2="116" y1="98" y2="94" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="117" x2="121" y1="98" y2="97" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="132" y="72">2</text><line x1="110" x2="50" y1="111" y2="111" stroke="magenta" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="65" x2="68" y1="111" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="65" x2="68" y1="111" y2="114" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="95" y="111">9</text><line x1="20" x2="50" y1="60" y2="111" stroke="green" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="42" x2="38" y1="98" y2="97" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="42" x2="43" y1="98" y2="94" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="27" y="72">2</text><line x1="20" x2="49" y1="60" y2="8" stroke="darkcyan" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="42" x2="43" y1="21" y2="25" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="42" x2="38" y1="21" y2="22" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="27" y="47">11</text><line x1="49" x2="110" y1="8" y2="8" stroke="grey" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="95" x2="92" y1="8" y2="11" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="95" x2="92" y1="8" y2="5" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="64" y="8">8</text><line x1="110" x2="140" y1="8" y2="59" stroke="gold" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="132" x2="128" y1="47" y2="45" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="132" x2="133" y1="47" y2="42" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="117" y="21">12</text><line x1="140" x2="110" y1="210" y2="261" stroke="blue" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="117" x2="116" y1="248" y2="244" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="117" x2="121" y1="248" y2="247" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="132" y="222">1</text><line x1="110" x2="50" y1="261" y2="261" stroke="magenta" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="65" x2="68" y1="261" y2="258" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="65" x2="68" y1="261" y2="264" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="95" y="261">9</text><line x1="20" x2="50" y1="210" y2="261" stroke="blue" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="42" x2="38" y1="248" y2="247" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="42" x2="43" y1="248" y2="244" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="27" y="222">1</text><line x1="20" x2="49" y1="210" y2="158" stroke="darkcyan" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="42" x2="43" y1="171" y2="175" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="42" x2="38" y1="171" y2="172" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="27" y="197">11</text><line x1="49" x2="110" y1="158" y2="158" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="95" x2="92" y1="158" y2="161" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="95" x2="92" y1="158" y2="155" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="64" y="158">3</text><line x1="110" x2="140" y1="158" y2="209" stroke="gold" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="132" x2="128" y1="197" y2="195" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="132" x2="133" y1="197" y2="192" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="117" y="171">12</text><line x1="260" x2="290" y1="111" y2="60" stroke="grey" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="282" x2="283" y1="72" y2="77" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="282" x2="278" y1="72" y2="74" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="267" y="98">8</text><line x1="260" x2="200" y1="111" y2="111" stroke="red" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="215" x2="218" y1="111" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="215" x2="218" y1="111" y2="114" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="245" y="111">6</text><line x1="200" x2="170" y1="111" y2="60" stroke="cyan" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="177" x2="181" y1="72" y2="74" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="177" x2="176" y1="72" y2="77" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="192" y="98">5</text><line x1="170" x2="199" y1="60" y2="8" stroke="brown" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="192" x2="193" y1="21" y2="25" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="192" x2="188" y1="21" y2="22" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="177" y="47">7</text><line x1="260" x2="199" y1="8" y2="8" stroke="cyan" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="214" x2="217" y1="8" y2="5" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="214" x2="217" y1="8" y2="11" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="245" y="8">5</text><line x1="260" x2="290" y1="8" y2="59" stroke="orange" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="282" x2="278" y1="47" y2="45" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="282" x2="283" y1="47" y2="42" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="267" y="21">4</text><line x1="260" x2="290" y1="261" y2="210" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="282" x2="283" y1="222" y2="227" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="282" x2="278" y1="222" y2="224" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="267" y="248">3</text><line x1="260" x2="200" y1="261" y2="261" stroke="red" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="215" x2="218" y1="261" y2="258" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="215" x2="218" y1="261" y2="264" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="245" y="261">6</text><line x1="200" x2="170" y1="261" y2="210" stroke="yellow" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="177" x2="181" y1="222" y2="224" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="177" x2="176" y1="222" y2="227" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="192" y="248">10</text><line x1="170" x2="199" y1="210" y2="158" stroke="brown" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="192" x2="193" y1="171" y2="175" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="192" x2="188" y1="171" y2="172" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="177" y="197">7</text><line x1="260" x2="199" y1="158" y2="158" stroke="yellow" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="214" x2="217" y1="158" y2="155" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="214" x2="217" y1="158" y2="161" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="245" y="158">10</text><line x1="260" x2="290" y1="158" y2="209" stroke="orange" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="282" x2="278" y1="197" y2="195" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="282" x2="283" y1="197" y2="192" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="267" y="171">4</text> </svg>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-scala"><pre><span></span>
+</pre></div>
+
+    </div>
 </div>
 </div>
 
