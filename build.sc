@@ -16,7 +16,7 @@ object superficial extends CommonModule with ScalaJSModule with SbtModule{
   def bin() : define.Command[PathRef] = T.command {
     def ass: PathRef = assembly()
     def name: String = artifactName()
-    cp.over(ass.path, pwd/ "superficial" / "notes" / "superficial")
+    cp.over(ass.path, pwd/ "superficial" / "notes" / "superficial.jar")
     ass
   }
 

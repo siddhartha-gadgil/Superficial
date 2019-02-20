@@ -2,6 +2,7 @@
 *.log
 
 out/
+*.jar
 
 # sbt specific
 .cache
