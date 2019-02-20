@@ -141,6 +141,8 @@ import SkewCurve._
 case class SkewCurve(left: PantsBoundary, right: PantsBoundary, twist: Double, length: Double) {
   curve =>
 
+  def base = Curve(left, right)
+
   val skewLess: Boolean = twist == 0 || twist == 0.5
 
   val support: Set[PantsBoundary] = Set(left, right)
@@ -222,6 +224,8 @@ case class SkewCurve(left: PantsBoundary, right: PantsBoundary, twist: Double, l
 
 object SkewCurve {
   def mod1(x: Double) = x - math.floor(x)
+
+  def untwisted(c: Curve, length: Double = 1) = SkewCurve(c.left, c.right, 0, length)
 }
 
 case class CurveVertex(curve: Curve, first: Boolean) extends Vertex
@@ -281,12 +285,12 @@ case class PantsHexagon(pants: Index, top: Boolean, cs: Set[Curve])
 
 case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
     extends Polygon {
-  val vertices: Set[Vertex] =
+  lazy val vertices: Set[Vertex] =
     Z3.enum.toSet.flatMap { direction: Z3 =>
       skewVertices(PantsBoundary(pants, direction), top, cs)
     }
 
-  val segments: Vector[Vector[Edge]] =
+  lazy val segments: Vector[Vector[Edge]] =
     Z3.enum.map { direction: Z3 =>
       skewEdges(
         PantsBoundary(pants, direction),
@@ -296,20 +300,28 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
       )
     }
 
-  val boundary = fillSeams(pants, segments)
+  lazy val boundary = fillSeams(pants, segments)
 
-  val sides = boundary.size
+  lazy val sides = boundary.size
 }
 
 case class SkewPantsSurface(numPants: Index, cs: Set[SkewCurve])
     extends PureTwoComplex {
-  val indices: Vector[Index] = (0 until numPants).toVector
+  lazy val indices: Vector[Index] = (0 until numPants).toVector
 
-  val faces: Set[Polygon] =
+  lazy val faces: Set[Polygon] =
     for {
       pants: Index <- indices.toSet
       top <- Set(true, false)
     } yield SkewPantsHexagon(pants, top, cs)
+}
+
+object SkewPantsSurface{
+  def untwisted(surf: PantsSurface, m: Map[Curve, Double] = Map()) = {
+    def l(c: Curve) = m.getOrElse(c, 0.0)
+    val cs = surf.cs.map(c => SkewCurve.untwisted(c, l(c)))
+    SkewPantsSurface(surf.numPants, cs)
+  }
 }
 
 case class PantsSurface(numPants: Index, cs: Set[Curve])
@@ -586,15 +598,15 @@ object PantsSurface {
     segments match {
       case Vector() => gapLess
       case ys :+ x =>
-        val newSeam = PantsSeam(pants, ys.last.last.terminal, x.head.initial)
-        fillSeamsRec(pants, ys, newSeam +: gapLess)
+        val newSeam = PantsSeam(pants, x.last.terminal, gapLess.head.initial)
+        fillSeamsRec(pants, ys, x ++ (newSeam +: gapLess))
     }
 
   def fillSeams(pants: Index, segments: Vector[Vector[Edge]]) =
     fillSeamsRec(
       pants,
-      segments,
-      Vector(
+      segments.init,
+      segments.last :+( 
         PantsSeam(
           pants,
           segments.last.last.terminal,
