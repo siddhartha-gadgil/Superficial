@@ -34,4 +34,8 @@ project/plugins/project/
 .idea/**/dictionaries
 .idea/**/shelf
 .metals/
+.bloop/_site
+.sass-cache
+.jekyll-metadata
 .bloop/
+docs/_site
