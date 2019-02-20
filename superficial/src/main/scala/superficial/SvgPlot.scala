@@ -19,7 +19,28 @@ object SvgPlot {
                        "red",
                        "brown",
                        "grey",
-                       "magenta")
+                       "magenta",
+                       "yellow",
+                      "darkcyan",
+                      "gold",
+                      "khaki",
+                      "darkgrey",
+                      "fuchsia",
+                      "silver",
+                      "skyblue",
+                      "tan",
+                      "azure",
+                      "chocolate",
+                      "hotpink",
+                      "indianred",
+                      "violet",
+                      "pink",
+                      "orangered",
+                      "salmon",
+                      "steelblue"
+                      )
+
+  def getColour(n: Int) = colours(n % (colours.size))
 
   def hexagonSides(offset: (Double, Double) = (0, 0),
                    radius: Double = 100): immutable.Seq[Elem] = {
@@ -30,6 +51,31 @@ object SvgPlot {
       val y1 = y + (radius) + (sin(j * Pi / 3) * radius)
       val y2 = y + (radius) + (sin((j + 1) * Pi / 3) * radius)
       lineArrow(x1, y1, x2, y2, colours(j % (colours.size)))
+    }
+  }
+
+  def pantsHexagonSides(
+      hex: PantsHexagon,
+      complex: TwoComplex,
+      offset: (Double, Double) = (0, 0),
+                   radius: Double = 100): immutable.Seq[Elem] = {
+    hex.boundary.zipWithIndex.flatMap { case (e, j) =>
+      val (ind, pos) = complex.edgeIndex(e).get
+      val (x, y) = offset
+      val x1 = x + (radius) + (cos(j * Pi / 3) * radius)
+      val x2 = x + (radius) + (cos((j + 1) * Pi / 3) * radius)
+      val y1 = y + (radius) + (sin(j * Pi / 3) * radius)
+      val y2 = y + (radius) + (sin((j + 1) * Pi / 3) * radius)
+      if (pos) lineArrow(x1, y1, x2, y2, getColour(ind))
+      else lineArrow(x2, y2, x1, y1, getColour(ind))
+    }
+  }
+
+  def allHexagonSides(complex: PantsSurface) = {
+    complex.faces.toVector.collect{case ph : PantsHexagon => ph}.flatMap{
+      hex =>
+        val offset = (100.0 * (hex.pants), if (hex.top) 0.0 else 100.0)
+        pantsHexagonSides(hex, complex, offset)
     }
   }
 
@@ -65,10 +111,12 @@ object SvgPlot {
   def svgPlot(elems: Seq[Elem]): Elem =
     <svg version="1.1"
            baseProfile="full"
-           width="300" height="200"
+           width="600" height="200"
            xmlns="http://www.w3.org/2000/svg">
            {elems} </svg>
 
   val eg: Elem = svgPlot(hexagonSides())
+
+  def plotSurface(complex: PantsSurface) = svgPlot(allHexagonSides(complex))
 
 }

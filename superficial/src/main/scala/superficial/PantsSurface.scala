@@ -322,6 +322,10 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
       top <- Set(true, false)
     } yield PantsHexagon(pants, top, cs)
 
+  val topFaces = faces.toVector.collect{
+    case ph: PantsHexagon if ph.top => ph
+  }
+
   val allCurves: Set[PantsBoundary] =
     for {
       direction: Z3 <- Z3.enum.toSet

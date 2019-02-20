@@ -9,7 +9,7 @@ trait Polygon extends TwoComplex {
   val sides: Int
 
   lazy val faces = Set(this)
-  
+
   lazy val indices : Vector[Index] = (0 until sides).toVector
 
   val boundary: Vector[Edge]
@@ -108,8 +108,12 @@ trait TwoComplex {
   def edges
     : Set[Edge] // these come in pairs, related by flip (reversing orientation)
 
-  lazy val positiveEdges = 
+  lazy val positiveEdges =
     edges.toVector.collect{case oe : OrientedEdge if oe.positivelyOriented => oe}
+
+  def edgeIndex(edge: Edge) = {
+    positiveEdges.zipWithIndex.find{case (e, i) => e == edge || e.flip == edge}.map{case (e, i) => (i, e == edge)}
+  }
 
   def vertices: Set[Vertex]
 
@@ -155,7 +159,7 @@ case class NormalArc(initial: Index, terminal: Index, face: Polygon) {
 
   def vertexLinking = math.abs(terminal - initial) == 1
 
-  def crosses(that: NormalArc) = (that.initial - initial) * (that.terminal - terminal) * (that.initial - terminal) * (that.terminal - initial) < 0 
+  def crosses(that: NormalArc) = (that.initial - initial) * (that.terminal - terminal) * (that.initial - terminal) * (that.terminal - initial) < 0
 
 }
 
