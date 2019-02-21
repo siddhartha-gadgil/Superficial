@@ -17,7 +17,7 @@ trait Polygon extends TwoComplex {
   def del = {
     val ob = boundary.collect{case oe: OrientedEdge => oe}
     assert(ob.size == boundary.size, "computing boundary where some edge is not oriented")
-    val coeffVec = ob.map{case e => (e, if (e.positivelyOriented) 1 else -1)}
+    val coeffVec = ob.map{case e => if (e.positivelyOriented) (e, 1) else (e.flip, -1)}
     FormalSum.reduced(coeffVec)
   }
 
@@ -90,7 +90,7 @@ trait Edge {
 
   def initial: Vertex
 
-  def del : FormalSum[Vertex] = FormalSum(Map(terminal -> 1, initial -> -1))
+  def del : FormalSum[Vertex] = FormalSum.reduced(Vector(terminal -> 1, initial -> -1))
 }
 
 trait OrientedEdge extends Edge{
@@ -165,11 +165,21 @@ case class FormalSum[A](coeffs: Map[A, Int]){
   def -(el: A) = FormalSum.reduced(coeffVec :+ (el -> -1) )
 
   def map[B](f: A => B) : FormalSum[B] = FormalSum.reduced(coeffVec.map{case (a, n) => (f(a), n)}) 
+
+  def flatMap[B](f: A => FormalSum[B]) : FormalSum[B] = 
+    {
+      val cv = 
+        for {
+          (a, n) <- coeffVec
+          (b, m) <- f(a).coeffVec
+        } yield (b, n * m)
+      FormalSum.reduced(cv)
+    }
 }
 
 object FormalSum{
   def reduced[A](v: Vector[(A, Int)]) = {
-    val m = v.groupBy(_._1).mapValues(vc => vc.map(_._2).sum)
+    val m = v.groupBy(_._1).mapValues(vc => vc.map(_._2).sum).filter(_._2 != 0)
     FormalSum(m)
   }
 }
