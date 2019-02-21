@@ -182,6 +182,10 @@ object FormalSum{
     val m = v.groupBy(_._1).mapValues(vc => vc.map(_._2).sum).filter(_._2 != 0)
     FormalSum(m)
   }
+
+  def del2(c2: FormalSum[Polygon]) = c2.flatMap(_.del)
+
+  def del1(c1: FormalSum[Edge]) = c1.flatMap(_.del)
 }
 
 /**

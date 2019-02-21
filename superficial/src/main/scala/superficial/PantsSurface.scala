@@ -333,6 +333,13 @@ case class SkewPantsSurface(numPants: Index, cs: Set[SkewCurve])
       pants: Index <- indices.toSet
       top <- Set(true, false)
     } yield SkewPantsHexagon(pants, top, cs)
+
+  lazy val fundamentalClass = {
+    val cv = faces.toVector.collect{
+      case ph: SkewPantsHexagon => (ph : Polygon, if (ph.top) 1 else -1)
+    }
+    FormalSum.reduced(cv)
+  }
 }
 
 object SkewPantsSurface{
@@ -360,6 +367,13 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
 
   val topFaces = faces.toVector.collect{
     case ph: PantsHexagon if ph.top => ph
+  }
+
+  val fundamentalClass = {
+    val cv = faces.toVector.collect{
+      case ph: PantsHexagon => (ph : Polygon, if (ph.top) 1 else -1)
+    }
+    FormalSum.reduced(cv)
   }
 
   val allCurves: Set[PantsBoundary] =
