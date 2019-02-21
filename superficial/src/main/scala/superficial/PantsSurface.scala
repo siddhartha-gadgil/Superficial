@@ -213,7 +213,8 @@ case class SkewCurve(left: PantsBoundary, right: PantsBoundary, twist: Double, l
   def initPos(left: Boolean) = if (left) 0.0 else twist
 
   def edgesOn(left: Boolean, top: Boolean): Vector[Edge] = {
-    edgesFrom(initPos(left), top)
+    val es = edgesFrom(initPos(left), top)
+    if (left) es else es.map(_.flip).reverse
   }
 
   def verticesOn(left: Boolean, top: Boolean): Set[Vertex] = {
