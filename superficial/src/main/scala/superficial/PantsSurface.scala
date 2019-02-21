@@ -267,6 +267,9 @@ case class SkewCurveEdge(
   lazy val finalPosition =
     if (positivelyOriented) curve.nextVertex(position)
     else curve.previousVertex(position)
+
+  lazy val length = if (positivelyOriented) mod1(finalPosition - position) else mod1(position - finalPosition)
+
   lazy val flip = SkewCurveEdge(curve, finalPosition, !positivelyOriented)
 
   lazy val initial = SkewCurveVertex(curve, position)
