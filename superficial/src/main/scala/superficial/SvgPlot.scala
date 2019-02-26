@@ -74,8 +74,8 @@ object SvgPlot {
   def allHexagonSides(complex: PantsSurface) = {
     complex.faces.toVector.collect{case ph : PantsHexagon => ph}.flatMap{
       hex =>
-        val offset = (150.0 * (hex.pants) + 20.0, if (hex.top) 20.0 else 170.0)
-        pantsHexagonSides(hex, complex, offset, 60)
+        val offset = (150.0 * (hex.pants) + 25.0, if (hex.top) 25.0 else 175.0)
+        pantsHexagonSides(hex, complex, offset, 50)
     }
   }
 
@@ -111,15 +111,15 @@ object SvgPlot {
     )
   }
 
-  def svgPlot(elems: Seq[Elem]): Elem =
+  def svgPlot(elems: Seq[Elem], width: Int = 1000, height: Int = 400): Elem =
     <svg version="1.1"
            baseProfile="full"
-           width="1000" height="350"
+           viewBox={s"0 0 $width $height"}
            xmlns="http://www.w3.org/2000/svg">
            {elems} </svg>
 
   val eg: Elem = svgPlot(hexagonSides())
 
-  def plotSurface(complex: PantsSurface) = svgPlot(allHexagonSides(complex))
+  def plotSurface(complex: PantsSurface) = svgPlot(allHexagonSides(complex), 150 * math.max(complex.numPants, 4), 300)
 
 }
