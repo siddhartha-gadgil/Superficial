@@ -11,36 +11,10 @@ object SvgPlot {
                colour: String): Elem =
     <line x1={x1.toInt.toString} x2={x2.toInt.toString} y1={y1.toInt.toString} y2={y2.toInt.toString} stroke={colour} stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line>
 
-  val colours: Vector[String] = Vector("blue",
-                       "green",
-                       "black",
-                       "orange",
-                       "cyan",
-                       "red",
-                       "brown",
-                       "grey",
-                       "magenta",
-                       "yellow",
-                      "darkcyan",
-                      "gold",
-                      "khaki",
-                      "darkgrey",
-                      "fuchsia",
-                      "silver",
-                      "skyblue",
-                      "tan",
-                      "azure",
-                      "chocolate",
-                      "hotpink",
-                      "indianred",
-                      "violet",
-                      "pink",
-                      "orangered",
-                      "salmon",
-                      "steelblue"
-                      )
 
-  def getColour(n: Int) = colours(n % (colours.size))
+  def getColour(n: Int) = 
+    s"hsl(${n * 73}, 100%, 50%)"
+    // colours(n % (colours.size))
 
   def hexagonSides(offset: (Double, Double) = (0, 0),
                    radius: Double = 100): immutable.Seq[Elem] = {
@@ -50,7 +24,7 @@ object SvgPlot {
       val x2 = x + (radius) + (cos((j + 1) * Pi / 3) * radius)
       val y1 = y + (radius) + (sin(j * Pi / 3) * radius)
       val y2 = y + (radius) + (sin((j + 1) * Pi / 3) * radius)
-      lineArrow(x1, y1, x2, y2, colours(j % (colours.size)))
+      lineArrow(x1, y1, x2, y2, getColour(j))
     }
   }
 
