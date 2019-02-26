@@ -13,7 +13,7 @@ object SvgPlot {
 
 
   def getColour(n: Int) = 
-    s"hsl(${n * 73}, 100%, 50%)"
+    s"hsl(${n * 81}, 100%, 50%)"
     // colours(n % (colours.size))
 
   def hexagonSides(offset: (Double, Double) = (0, 0),
