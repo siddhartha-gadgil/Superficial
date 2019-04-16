@@ -34,3 +34,6 @@ project/plugins/project/
 .idea/**/shelf
 .metals/
 .bloop/
+*.jar
+_site/
+.sass_cache/
