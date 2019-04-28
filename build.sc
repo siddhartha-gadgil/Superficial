@@ -30,3 +30,20 @@ object freegroups extends CommonModule with SbtModule {
 
   override def mainClass = Some("freegroups.ProofScript")
 }
+
+object polymath extends CommonModule with SbtModule {
+  def ivyDeps = Agg(
+    ivy"io.monix::monix:3.0.0-RC2",
+    ivy"org.typelevel::spire:0.16.0"
+  )
+
+  override def mainClass = Some("freegroups.ProofScript")
+
+  def bin() : define.Command[PathRef] = T.command {
+    def ass: PathRef = assembly()
+    def name: String = artifactName()
+    cp.over(ass.path, pwd/ "bin" / "polymath.jar")
+    ass
+  }
+
+}

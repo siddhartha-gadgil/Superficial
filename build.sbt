@@ -18,3 +18,12 @@ lazy val superficial = project.settings(
   libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "1.1.1"
 
 )
+
+lazy val polymath = project.settings(
+  name := "polymath",
+  libraryDependencies ++= Seq(
+    // "com.lihaoyi" %% "ammonite-ops" % ammV,
+    "io.monix"      %% "monix"         % "3.0.0-RC2",
+    "org.typelevel" %% "spire" % "0.16.0"
+  )
+)
