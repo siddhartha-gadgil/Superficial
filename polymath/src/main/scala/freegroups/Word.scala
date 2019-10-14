@@ -1,6 +1,6 @@
 package freegroups
 
-import Word._
+import Word._, pprint._
 
 object Word {
 
@@ -72,6 +72,19 @@ object Word {
     */
   val e = Word(Vector())
 
+  val wordHandler : PartialFunction[Any, Tree] = {
+    case w : Word => Tree.Literal(w.toUnicode)
+  }
+
+  val wordPrint: PPrinter =
+    pprint.PPrinter.Color.copy(additionalHandlers = wordHandler)
+
+
+  def length(w: Word) : Int = w.reduce.ls.length
+
+  def reduced(w: Word) : Word = w.reduce
+
+  def wcLength(w: Word) : Int = LinearNorm.norm(w.ls)
 }
 
 /**

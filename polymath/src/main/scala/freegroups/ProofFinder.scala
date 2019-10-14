@@ -12,6 +12,8 @@ import LinearNorm._, LinearNormProofs._
 import LinNormBound._
 
 object ProofScript extends App{
+  def run() = main(Array())
+
   var working = true
   import ProofFinder._
   val t20 = egTask(20)

@@ -24,6 +24,7 @@ lazy val polymath = project.settings(
   libraryDependencies ++= Seq(
     // "com.lihaoyi" %% "ammonite-ops" % ammV,
     "io.monix"      %% "monix"         % "3.0.0-RC2",
-    "org.typelevel" %% "spire" % "0.16.0"
+    "org.typelevel" %% "spire" % "0.16.0",
+    "com.lihaoyi" %% "pprint" % "0.5.2"
   )
 )
