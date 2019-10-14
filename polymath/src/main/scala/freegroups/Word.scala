@@ -113,16 +113,17 @@ case class Word(ls: Vector[Int]) extends AnyVal {
     * string representation
     */
   def toPlainString =
-    ((ls map (letterString(_))).foldLeft("")(_ + _)).dropRight(1)
+    if (ls.nonEmpty) ((ls map (letterString(_))).foldLeft("")(_ + _)).dropRight(1) else "e"
 
-  override def toString = if (ls.isEmpty) "1" else toUnicode
+  override def toString = toUnicode
 
   def ++(that: Word) = Word(ls ++ that.ls)
 
   /**
     * unicode representation.
     */
-  def toUnicode = ((ls map (letterUnic(_))).foldLeft("")(_ + _))
+  def toUnicode = 
+    if (ls.nonEmpty) ((ls map (letterUnic(_))).foldLeft("")(_ + _)) else "e"
 
   /**
     * letter prepended to word
