@@ -1,6 +1,7 @@
 package freegroups
 
 import Word._, pprint._
+import scala.collection.immutable.Nil
 
 object Word {
 
@@ -85,6 +86,18 @@ object Word {
   def reduced(w: Word) : Word = w.reduce
 
   def wcLength(w: Word) : Int = LinearNorm.norm(w.ls)
+
+  def abelianize(w: Word, n: Int = 2) : Vector[Int] = w.ls.toList match {
+    case head :: tl => 
+      abelianize(Word(tl.toVector), n).zipWithIndex.map{
+        case (x, j) => 
+          if (head == j + 1) x + 1
+          else if (-head == j + 1) x - 1
+          else x
+      }
+    case Nil =>
+      Vector.fill(n)(0)
+  }
 }
 
 /**
