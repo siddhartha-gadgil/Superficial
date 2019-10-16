@@ -98,6 +98,9 @@ object Word {
     case Nil =>
       Vector.fill(n)(0)
   }
+
+  def pseudoLength(w: Word, n: Int = 2) : Int =
+    abelianize(w, n).map(math.abs(_)).sum
 }
 
 /**
@@ -183,7 +186,7 @@ case class Word(ls: Vector[Int]) extends AnyVal {
   /**
     * conjugate
     */
-  def conj(that: Word) = that.inv * this * that
+  def conj(that: Word) = that * this * that.inv
 
   /**
     * conjugate
