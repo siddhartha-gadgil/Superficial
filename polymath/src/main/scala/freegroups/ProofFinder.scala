@@ -169,4 +169,6 @@ ${RationalProofs.proofOut(proof).mkString("* ", "\n* ", "\n")}
           } yield PowerBound(w, n, pf)
         }
     }
+
+    def getProof(w: Word) : LinNormBound = LinearNormProofs.normProofTask(w, true).runSyncUnsafe()
 }

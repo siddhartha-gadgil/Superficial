@@ -3,6 +3,7 @@ package freegroups
 import Word._, pprint._
 import scala.collection.immutable.Nil
 
+
 object Word {
 
   /**
@@ -75,6 +76,7 @@ object Word {
 
   val wordHandler : PartialFunction[Any, Tree] = {
     case w : Word => Tree.Literal(w.toUnicode)
+    case s: String => Tree.Literal(s)
   }
 
   val wordPrint: PPrinter =
