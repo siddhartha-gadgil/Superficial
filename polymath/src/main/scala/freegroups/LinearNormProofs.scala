@@ -38,7 +38,7 @@ object LinearNormProofs {
     case Triang(a, b) =>
       (proofLines(a) ++ proofLines(b)) :+ leqUse(a ++ b, a, b)
     case PowerBound(baseword, n, pf) =>
-      proofLines(pf) :+ (leqUse(PowerBound(baseword, n, pf)) + s" by taking ${n}th power")
+      proofLines(pf) :+ (leqUse(PowerBound(baseword, n, pf), pf) + s" by taking ${n}th power")
     case Empty => Vector()
   }
 
