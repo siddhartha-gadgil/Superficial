@@ -68,20 +68,22 @@ object ProofFinder {
     val f20 = t20.runToFuture
     f20.map { norms =>
       val normData = NormData(memMap, norms)
-      val proof =
-        quickProof(Word("aba!b!"), normData).getOrElse(LinNormBound.Empty)
-      Console.err.println("\n")
-      s"""
-## Proof output 
-
-${proofOut(proof).mkString("* ", "\n* ", "\n")}
-
-## Proof output with rational coefficients 
-
-${RationalProofs.proofOut(proof).mkString("* ", "\n* ", "\n")}
-"""
+      quickProof(Word("aba!b!"), normData).getOrElse(LinNormBound.Empty)
     }
   }
+
+  lazy val getProofOutputFuture =
+    getProofFuture.map { proof =>
+      s"""
+        |## Proof output 
+        |
+        |${proofOut(proof).mkString("* ", "\n* ", "\n")}
+        |
+        |## Proof output with rational coefficients 
+        |
+        |${RationalProofs.proofOut(proof).mkString("* ", "\n* ", "\n")}
+        |""".stripMargin
+    }
 
   def memScaledNorm(word: Word, n: Int) =
     for {
@@ -170,5 +172,6 @@ ${RationalProofs.proofOut(proof).mkString("* ", "\n* ", "\n")}
         }
     }
 
-    def getProof(w: Word) : LinNormBound = LinearNormProofs.normProofTask(w, true).runSyncUnsafe()
+  def getProof(w: Word): LinNormBound =
+    LinearNormProofs.normProofTask(w, true).runSyncUnsafe()
 }
