@@ -1,0 +1,14 @@
+{{ define "main"}}
+<h4>Binaries</h4>
+
+{{ .Content }}
+
+
+{{ $files := readDir "static/bin" }}
+<ol>
+    {{ range $files }}<li><a href="{{ $.Site.BaseURL }}bin/{{ .Name }}">{{ .Name }}</a> </li> {{ end }}
+</ol>
+
+{{ end }}
+
+
