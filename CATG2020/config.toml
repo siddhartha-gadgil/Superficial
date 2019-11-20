@@ -1,0 +1,9 @@
+baseURL = "http://math.iisc.ac.in/~gadgil/catg2020/"
+languageCode = "en-uk"
+title = "MA 337: Computer Assisted Topology and Geometry"
+theme = "course"
+buildFuture = "true"
+[params]
+    code = "MA 337"
+    course = "Computer Assisted Topology and Geometry"
+    term = "January 2020"

@@ -39,3 +39,4 @@ project/plugins/project/
 .jekyll-metadata
 .bloop/
 docs/_site
+public/
