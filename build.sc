@@ -1,9 +1,21 @@
 import mill._
 import mill.scalalib._, mill.scalajslib._
 import ammonite.ops._
+import $ivy.`org.eclipse.jgit:org.eclipse.jgit:3.5.0.201409260305-r`
 
 trait CommonModule extends ScalaModule {
   def scalaVersion = "2.12.8"
+}
+
+def glog = {
+  import java.io._
+  import org.eclipse.jgit._
+  import storage.file._
+  val builder = new FileRepositoryBuilder()
+  val repo = builder.findGitDir(new File(".")).readEnvironment(). build()
+  val git = new api.Git(repo)
+  import scala.collection.JavaConversions._
+  git.log().call().head
 }
 
 object superficial extends CommonModule with ScalaJSModule with SbtModule{
@@ -16,7 +28,9 @@ object superficial extends CommonModule with ScalaJSModule with SbtModule{
   def bin() : define.Command[PathRef] = T.command {
     def ass: PathRef = assembly()
     def name: String = artifactName()
-    cp.over(ass.path, pwd/ "superficial" / "notes" / "superficial.jar")
+    val hashName = s"$name-${glog.abbreviate(10).name}.jar"
+    os.copy.over(ass.path, os.pwd/ "superficial" / "notebooks" / hashName, createFolders = true)
+    // os.copy.over(ass.path, os.pwd/ "CATG2020" / "static" / "bin" / hashName, createFolders = true)
     ass
   }
 

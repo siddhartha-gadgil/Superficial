@@ -6,7 +6,8 @@
 
 {{ $files := readDir "static/bin" }}
 <ol>
-    {{ range $files }}<li><a href="{{ $.Site.BaseURL }}bin/{{ .Name }}">{{ .Name }}</a> </li> {{ end }}
+    {{ range $files }}<li><strong><a href="{{ $.Site.BaseURL }}bin/{{ .Name }}">{{ .Name }}</a></strong> built on {{ dateFormat "Monday, Jan 2, 2006" .ModTime }}.  
+    </li> {{ end }}
 </ol>
 
 {{ end }}
