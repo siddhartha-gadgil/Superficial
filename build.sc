@@ -4,7 +4,9 @@ import ammonite.ops._
 import $ivy.`org.eclipse.jgit:org.eclipse.jgit:3.5.0.201409260305-r`
 
 trait CommonModule extends ScalaModule {
-  def scalaVersion = "2.12.8"
+  def scalaVersion = "2.13.1"
+
+  def scalacOptions = Seq("-deprecation")
 }
 
 def glog = {
@@ -19,10 +21,10 @@ def glog = {
 }
 
 object superficial extends CommonModule with ScalaJSModule with SbtModule{
-  def scalaJSVersion = "0.6.25"
+  def scalaJSVersion = "0.6.31"
 
   def ivyDeps = Agg(
-    ivy"org.scala-lang.modules::scala-xml:1.1.1"
+    ivy"org.scala-lang.modules::scala-xml:1.2.0"
   )
 
   def bin() : define.Command[PathRef] = T.command {
@@ -38,8 +40,8 @@ object superficial extends CommonModule with ScalaJSModule with SbtModule{
 
 object freegroups extends CommonModule with SbtModule {
   def ivyDeps = Agg(
-    ivy"io.monix::monix:3.0.0-RC2",
-    ivy"org.typelevel::spire:0.16.0"
+    ivy"io.monix::monix:3.1.0",
+    ivy"org.typelevel::spire:0.17.0-M1"
   )
 
   override def mainClass = Some("freegroups.ProofScript")
@@ -47,9 +49,9 @@ object freegroups extends CommonModule with SbtModule {
 
 object polymath extends CommonModule with SbtModule {
   def ivyDeps = Agg(
-    ivy"io.monix::monix:3.0.0-RC2",
-    ivy"org.typelevel::spire:0.16.0",
-    ivy"com.lihaoyi::pprint::0.5.2"
+    ivy"io.monix::monix:3.1.0",
+    ivy"org.typelevel::spire:0.17.0-M1",
+    ivy"com.lihaoyi::pprint::0.5.6"
   )
 
   override def mainClass = Some("freegroups.ProofScript")

@@ -179,7 +179,7 @@ case class FormalSum[A](coeffs: Map[A, Int]){
 
 object FormalSum{
   def reduced[A](v: Vector[(A, Int)]) = {
-    val m = v.groupBy(_._1).mapValues(vc => vc.map(_._2).sum).filter(_._2 != 0)
+    val m = v.groupBy(_._1).view.mapValues{vc => vc.map(_._2).sum}.filter(_._2 != 0).toMap
     FormalSum(m)
   }
 

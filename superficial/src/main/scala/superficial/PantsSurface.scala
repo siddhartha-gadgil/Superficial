@@ -532,7 +532,7 @@ object PantsSurface {
         else head +: newTail
     }
 
-  val all: Stream[Vector[PantsSurface]] = Stream.from(0).map(getAll)
+  val all: LazyList[Vector[PantsSurface]] = LazyList.from(0).map(getAll)
 
   def getAll(n: Int): Vector[PantsSurface] =
     if (n == 0) Vector()
@@ -551,7 +551,7 @@ object PantsSurface {
         )
       )
 
-  def allClosed: Stream[Vector[PantsSurface]] = all.map(_.filter(_.isClosed))
+  def allClosed: LazyList[Vector[PantsSurface]] = all.map(_.filter(_.isClosed))
 
   def getCurve(pb: PantsBoundary, cs: Set[Curve]): Option[(Curve, Boolean)] =
     cs.find(

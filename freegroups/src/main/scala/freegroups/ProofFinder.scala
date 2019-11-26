@@ -44,7 +44,7 @@ case class PowerMove(
 object PowerMove {
   def historyMap(m: Map[Word, Double], moves: Vector[PowerMove]) = {
     val moveMap =
-      moves.groupBy(_.word).mapValues(v => v.map(_.normBeforeOpt).flatten.min)
+      moves.groupBy(_.word).view.mapValues(v => v.map(_.normBeforeOpt).flatten.min).toMap
     m ++ moveMap
   }
 }

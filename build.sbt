@@ -1,21 +1,19 @@
-val scalaV = "2.12.8"
+val scalaV = "2.13.1"
 
-val ammV = "1.6.0"
 
 scalaVersion in ThisBuild := scalaV
 
 lazy val freegroups = project.settings(
   name := "freegroups",
   libraryDependencies ++= Seq(
-    // "com.lihaoyi" %% "ammonite-ops" % ammV,
-    "io.monix"      %% "monix"         % "3.0.0-RC2",
-    "org.typelevel" %% "spire" % "0.16.0"
+    "io.monix"      %% "monix"         % "3.1.0",
+    "org.typelevel" %% "spire" % "0.17.0-M1"
   )
 )
 
 lazy val superficial = project.settings(
   name := "superficial",
-  libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "1.1.1"
+  libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "1.2.0"
 
 )
 
@@ -23,8 +21,8 @@ lazy val polymath = project.settings(
   name := "polymath",
   libraryDependencies ++= Seq(
     // "com.lihaoyi" %% "ammonite-ops" % ammV,
-    "io.monix"      %% "monix"         % "3.0.0-RC2",
-    "org.typelevel" %% "spire" % "0.16.0",
-    "com.lihaoyi" %% "pprint" % "0.5.2"
+    "io.monix"      %% "monix"         % "3.1.0",
+    "org.typelevel" %% "spire" % "0.17.1-M1",
+    "com.lihaoyi" %% "pprint" % "0.5.6"
   )
 )
