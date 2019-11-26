@@ -31,8 +31,11 @@ object superficial extends CommonModule with ScalaJSModule with SbtModule{
     def ass: PathRef = assembly()
     def name: String = artifactName()
     val hashName = s"$name-${glog.abbreviate(10).name}.jar"
-    os.copy.over(ass.path, os.pwd/ "superficial" / "notebooks" / hashName, createFolders = true)
-    // os.copy.over(ass.path, os.pwd/ "CATG2020" / "static" / "bin" / hashName, createFolders = true)
+    os.copy.over(ass.path, os.pwd/ "CATG2020" / "notebooks" / "bin" / hashName, createFolders = true)
+    println(s"""
+import ${"$"}cp.bin.`$hashName`
+import superficial._
+""")
     ass
   }
 
