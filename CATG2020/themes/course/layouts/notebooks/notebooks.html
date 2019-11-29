@@ -1,0 +1,15 @@
+{{ define "main"}}
+<h4>Notebooks</h4>
+
+{{ .Content }}
+
+
+{{ $files := readDir "static/notebooks" }}
+<ol>
+    {{ range $files }}<li><strong><a href="{{ $.Site.BaseURL }}notebooks/{{ .Name }}" target="_blank">{{ .Name }}</a></strong> built on {{ dateFormat "Monday, Jan 2, 2006" .ModTime }}.  
+    </li> {{ end }}
+</ol>
+
+{{ end }}
+
+
