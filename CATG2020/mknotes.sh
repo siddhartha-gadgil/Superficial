@@ -7,4 +7,5 @@ do
     echo $note   
     jupyter nbconvert --to html --output $note.html $note
 done
-mv notebooks/notebooks/* static/
+ls notebooks/notebooks/
+mv notebooks/notebooks/* static/notebooks/

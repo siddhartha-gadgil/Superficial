@@ -1,5 +1,6 @@
 {{ define "main" }}
-
-{{ .Content }}
+<body>
+{{ .RawContent | safeHTML }}
+</body>
 
 {{ end }}
