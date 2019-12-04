@@ -32,10 +32,13 @@ object superficial extends CommonModule with ScalaJSModule with SbtModule{
     def name: String = artifactName()
     val hashName = s"$name-${glog.abbreviate(10).name}.jar"
     os.copy.over(ass.path, os.pwd/ "CATG2020" / "notebooks" / "bin" / hashName, createFolders = true)
-    println(s"""
-import ${"$"}cp.bin.`$hashName`
-import superficial._
-""")
+    os.copy.over(ass.path, os.pwd/ "bin" / hashName, createFolders = true)
+    val init = 
+    s"""import ${"$"}cp.bin.`$hashName`
+    |import superficial._
+    |""".stripMargin
+    println(init)
+    os.write.over(os.pwd / "init-superficial.sc", init)
     ass
   }
 
