@@ -1,5 +1,7 @@
 val scalaV = "2.13.1"
 
+ThisBuild / organization := "in.ac.iisc"
+ThisBuild / version      := "0.1-SNAPSHOT"
 
 scalaVersion in ThisBuild := scalaV
 
@@ -22,7 +24,7 @@ lazy val polymath = project.settings(
   libraryDependencies ++= Seq(
     // "com.lihaoyi" %% "ammonite-ops" % ammV,
     "io.monix"      %% "monix"         % "3.1.0",
-    "org.typelevel" %% "spire" % "0.17.1-M1",
+    "org.typelevel" %% "spire" % "0.17.0-M1",
     "com.lihaoyi" %% "pprint" % "0.5.6"
   )
 )
