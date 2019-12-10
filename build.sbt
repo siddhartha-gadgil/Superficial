@@ -3,6 +3,11 @@ val scalaV = "2.13.1"
 ThisBuild / organization := "in.ac.iisc"
 ThisBuild / version      := "0.1-SNAPSHOT"
 
+ThisBuild / githubOwner := "siddhartha-gadgil"
+ThisBuild / githubRepository := "Superficial"
+
+ThisBuild / githubTokenSource := Some(TokenSource.GitConfig("github.token"))
+
 scalaVersion in ThisBuild := scalaV
 
 lazy val freegroups = project.settings(
@@ -15,6 +20,14 @@ lazy val freegroups = project.settings(
 
 lazy val superficial = project.settings(
   name := "superficial",
+  ThisBuild / organization := "in.ac.iisc",
+ThisBuild / version      := "0.1-SNAPSHOT",
+
+ThisBuild / githubOwner := "siddhartha-gadgil",
+ThisBuild / githubRepository := "Superficial",
+
+ThisBuild / githubTokenSource := Some(TokenSource.GitConfig("github.token")),
+
   libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "1.2.0"
 
 )
