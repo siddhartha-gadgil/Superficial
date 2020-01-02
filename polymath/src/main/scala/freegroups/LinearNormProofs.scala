@@ -42,7 +42,7 @@ object LinearNormProofs {
     case Empty => Vector()
   }
 
-  def proofOut(pf: LinNormBound) = proofLines(pf).distinct
+  def proofOut(pf: LinNormBound) = proofLines(pf).distinct.zipWithIndex.map{case (l, n) => s"${n+1}. $l"}
 
 
   import LinNormBound._

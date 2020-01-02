@@ -24,9 +24,9 @@ object ProofScript extends App {
     proofOpt.foreach { proof =>
       Console.err.println("\n")
       println("## Proof output\n")
-      println(proofOut(proof).mkString("* ", "\n* ", "\n"))
+      println(proofOut(proof).mkString("\n"))
       println("\n## Proof output with rational coefficients \n")
-      println(RationalProofs.proofOut(proof).mkString("* ", "\n* ", "\n"))
+      println(RationalProofs.proofOut(proof).mkString("\n"))
       working = false
     }
   }
@@ -46,7 +46,11 @@ case class PowerMove(
 object PowerMove {
   def historyMap(m: Map[Word, Double], moves: Vector[PowerMove]) = {
     val moveMap =
-      moves.groupBy(_.word).view.mapValues(v => v.map(_.normBeforeOpt).flatten.min).toMap
+      moves
+        .groupBy(_.word)
+        .view
+        .mapValues(v => v.map(_.normBeforeOpt).flatten.min)
+        .toMap
     m ++ moveMap
   }
 }
@@ -74,15 +78,14 @@ object ProofFinder {
 
   lazy val getProofOutputFuture =
     getProofFuture.map { proof =>
-      s"""
+      (s"""
         |## Proof output 
         |
-        |${proofOut(proof).mkString("* ", "\n* ", "\n")}
+        |${proofOut(proof).mkString("\n")}
+        |""".stripMargin, s"""|## Proof output with rational coefficients 
         |
-        |## Proof output with rational coefficients 
-        |
-        |${RationalProofs.proofOut(proof).mkString("* ", "\n* ", "\n")}
-        |""".stripMargin
+        |${RationalProofs.proofOut(proof).mkString("\n")}
+        |""".stripMargin)
     }
 
   def memScaledNorm(word: Word, n: Int) =
