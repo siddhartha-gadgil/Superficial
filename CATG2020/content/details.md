@@ -23,5 +23,7 @@ To register for the course, in addition to registering in the IISc system, you n
 
 ##### Timings and Venues
 
-The official timings are for now __Monday-Wednesday-Friday, 12:10 - 1:00 pm__ in LH-3/LH-5. As this is a `1:3` credit course, we will meet an average of 1 hour a week. Initially we will meet more often. 
-The first meeting will be in LH-3 on __Friday, January 10, 2020__ (though this may be shifted to LH-5 based on functioning of projectors). Subsequent meetings will be co-ordinated through the outlook e-mail group `CATG2020` at IISc.
+The official timings are for now __Monday-Wednesday-Friday, 12:10 - 1:00 pm__ in LH-3. As this is a `1:3` credit course, we will meet an average of 1 hour a week. Initially we will meet more often. 
+The first meeting will be in LH-3 on __Monday, January 13, 2020__. 
+
+Subsequent meetings will be co-ordinated through the outlook e-mail group `CATG2020` at IISc.
