@@ -1,6 +1,8 @@
 package superficial
 
-/** This program basically abstracts :
+/** Contribution of Ankit-Jaiswal and Soumyo Biswas, independent of the rest of the code.
+ * 
+  * This program basically abstracts :
  	*		(i) OrientableSurface (i.e. a connected compact 2-manifold) parametrized by g and r.
 	*		    where, g is its genus and r is the number of components in its boundary.
 	*		(ii) Surfaces' fundamental group Generators along with the 'relation' over them,
@@ -12,12 +14,19 @@ package superficial
 	*  Reference:: "Simple Closed Curves on Surfaces" by D.R.J. Chillingworth
 	*/
 sealed trait Generator
-case class a(index: Int) extends Generator
-case class b(index: Int) extends Generator
-case class s(index: Int) extends Generator
-case class Inverse(gen: Generator) extends Generator
+object Generator {
+  case class a(index: Int) extends Generator
+  case class b(index: Int) extends Generator
+  case class s(index: Int) extends Generator
+  case class Inverse(gen: Generator) extends Generator
 
-/** 'a' and 'b' are the two Generators of a OrientableSurface, parametrized by the genus number.
+}
+
+import Generator._
+
+/** Contribution of Ankit-Jaiswal and Soumyo Biswas, independent of the rest of the code.
+ * 
+  * 'a' and 'b' are the two Generators of a OrientableSurface, parametrized by the genus number.
 	* And 's' is the generator corressponding to surface's boundary, parametrized by r, the number of components.
 	*	Because their inverse can also generate the fundamental group;
 	* therefore they are also being considered as Generators.
@@ -120,22 +129,33 @@ case class OrientableSurface(g: Int, r: Int) {
         if ((xs ++ xs).containsSlice((relation ++ relation).slice(i, i + n))) {
           val j =
             (xs ++ xs).indexOfSlice((relation ++ relation).slice(i, i + n))
-          subred2(relInv((xs ++ xs).slice(j, j + n)) ++ (xs ++ xs).slice(j + n,
-                                                                         j + l),
-                  i,
-                  n)
-        } else if ((xs ++ xs).containsSlice(
-                     (relationInv ++ relationInv).slice(i, i + n))) {
-          val j = (xs ++ xs).indexOfSlice(
-            (relationInv ++ relationInv).slice(i, i + n))
           subred2(
-            invRelInv((xs ++ xs).slice(j, j + n)) ++ (xs ++ xs).slice(j + n,
-                                                                      j + l),
+            relInv((xs ++ xs).slice(j, j + n)) ++ (xs ++ xs)
+              .slice(j + n, j + l),
             i,
-            n)
-        } else { subred2(xs, i + 1, n) }
-      } else { subred2(xs, 0, n - 1) }
-    } else { xs }
+            n
+          )
+        } else if ((xs ++ xs).containsSlice(
+                     (relationInv ++ relationInv).slice(i, i + n)
+                   )) {
+          val j = (xs ++ xs).indexOfSlice(
+            (relationInv ++ relationInv).slice(i, i + n)
+          )
+          subred2(
+            invRelInv((xs ++ xs).slice(j, j + n)) ++ (xs ++ xs)
+              .slice(j + n, j + l),
+            i,
+            n
+          )
+        } else {
+          subred2(xs, i + 1, n)
+        }
+      } else {
+        subred2(xs, 0, n - 1)
+      }
+    } else {
+      xs
+    }
   }
 
   def red3(xs: Word): Word = subred3(xs, 0)
@@ -149,7 +169,8 @@ case class OrientableSurface(g: Int, r: Int) {
 		*/
     if (i < d) {
       if ((xs ++ xs).containsSlice(
-            (relation ++ relation).slice(i, i + (d / 2)))) {
+            (relation ++ relation).slice(i, i + (d / 2))
+          )) {
         val j =
           (xs ++ xs).indexOfSlice((relation ++ relation).slice(i, i + (d / 2)))
         if (g > 0 && !(relation ++ relation)
@@ -157,38 +178,48 @@ case class OrientableSurface(g: Int, r: Int) {
               .contains(a(1)) && !(relation ++ relation)
               .slice(i, i + (d / 2))
               .contains(Inverse(a(1))))
-          subred3(relInv((xs ++ xs).slice(j, j + (d / 2))) ++ (xs ++ xs)
-                    .slice(j + (d / 2), j + (xs.length)),
-                  i)
+          subred3(
+            relInv((xs ++ xs).slice(j, j + (d / 2))) ++ (xs ++ xs)
+              .slice(j + (d / 2), j + (xs.length)),
+            i
+          )
         else if (g == 0 && !(relation ++ relation)
                    .slice(i, i + (d / 2))
                    .contains(s(1)) && !(relation ++ relation)
                    .slice(i, i + (d / 2))
                    .contains(Inverse(s(1))))
-          subred3(relInv((xs ++ xs).slice(j, j + (d / 2))) ++ (xs ++ xs)
-                    .slice(j + (d / 2), j + (xs.length)),
-                  i)
+          subred3(
+            relInv((xs ++ xs).slice(j, j + (d / 2))) ++ (xs ++ xs)
+              .slice(j + (d / 2), j + (xs.length)),
+            i
+          )
         else subred3(xs, i + 1)
       } else if ((xs ++ xs).containsSlice(
-                   (relationInv ++ relationInv).slice(i, i + (d / 2)))) {
+                   (relationInv ++ relationInv).slice(i, i + (d / 2))
+                 )) {
         val j = (xs ++ xs).indexOfSlice(
-          (relationInv ++ relationInv).slice(i, i + (d / 2)))
+          (relationInv ++ relationInv).slice(i, i + (d / 2))
+        )
         if (g > 0 && !(relationInv ++ relationInv)
               .slice(i, i + (d / 2))
               .contains(a(1)) && !(relationInv ++ relationInv)
               .slice(i, i + (d / 2))
               .contains(Inverse(a(1))))
-          subred3(invRelInv((xs ++ xs).slice(j, j + (d / 2))) ++ (xs ++ xs)
-                    .slice(j + (d / 2), j + (xs.length)),
-                  i)
+          subred3(
+            invRelInv((xs ++ xs).slice(j, j + (d / 2))) ++ (xs ++ xs)
+              .slice(j + (d / 2), j + (xs.length)),
+            i
+          )
         else if (g == 0 && !(relationInv ++ relationInv)
                    .slice(i, i + (d / 2))
                    .contains(s(1)) && !(relationInv ++ relationInv)
                    .slice(i, i + (d / 2))
                    .contains(Inverse(s(1))))
-          subred3(invRelInv((xs ++ xs).slice(j, j + (d / 2))) ++ (xs ++ xs)
-                    .slice(j + (d / 2), j + (xs.length)),
-                  i)
+          subred3(
+            invRelInv((xs ++ xs).slice(j, j + (d / 2))) ++ (xs ++ xs)
+              .slice(j + (d / 2), j + (xs.length)),
+            i
+          )
         else subred3(xs, i + 1)
       } else subred3(xs, i + 1)
     } else xs
@@ -240,7 +271,8 @@ case class OrientableSurface(g: Int, r: Int) {
     else
       (countRespectingR(xs) - xs.count((x: Generator) => vecInvA.contains(x)) -
         xs.count((x: Generator) => vecB.contains(x)) - xs.count(
-        (x: Generator) => vecInvS.contains(x)))
+        (x: Generator) => vecInvS.contains(x)
+      ))
   }
 
   def satisfyEquation(xs: Word, i: Int, j: Int): Boolean = {
@@ -261,7 +293,8 @@ case class OrientableSurface(g: Int, r: Int) {
         val v = permutated.slice(j + 1, l)
 
         if (windingT(red1(u ++ inv(v))) == (windingT(red1(u)) + windingT(
-              red1(inv(v)))))
+              red1(inv(v))
+            )))
           satisfyEquation(xs, i, j + 1)
         else false
       } else satisfyEquation(xs, i + 1, 0)

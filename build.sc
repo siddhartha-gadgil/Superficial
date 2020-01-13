@@ -42,6 +42,11 @@ object superficial extends CommonModule with ScalaJSModule with SbtModule{
     ass
   }
 
+  def docs() = T.command{
+    def jar = docJar()
+    os.copy.over(jar.path / up / "javadoc", os.pwd / "CATG2020" / "static" / "scaladocs", createFolders = true)
+    jar
+  }
 }
 
 object freegroups extends CommonModule with SbtModule {
