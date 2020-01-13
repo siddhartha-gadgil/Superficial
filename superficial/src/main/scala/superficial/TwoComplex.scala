@@ -60,6 +60,12 @@ object Polygon {
       (indices map (PolygonVertex(self, _))).toSet
   }
 
+  case class Symbolic(name: String, boundary: Vector[Edge]) extends Polygon{
+    val sides: Int = boundary.size
+
+    val vertices: Set[Vertex] = edges.flatMap(e => Set(e.initial, e.terminal))
+  }
+
   case class PolygonEdge(polygon: Polygon,
                          index: Index,
                          positiveOriented: Boolean)
@@ -89,6 +95,10 @@ object Polygon {
   */
 class Vertex
 
+object Vertex{
+  case class Symbolic(name: String) extends Vertex
+}
+
 /**
   * An oriented edge in a two-complex
   */
@@ -103,6 +113,15 @@ trait Edge {
   def initial: Vertex
 
   def del : FormalSum[Vertex] = FormalSum.reduced(Vector(terminal -> 1, initial -> -1))
+}
+
+object Edge{
+  case class Symbolic(name: String, initial: Vertex, terminal: Vertex, positivelyOriented : Boolean = true) extends OrientedEdge{
+    def flip: Edge = Symbolic(name, terminal, initial, !positivelyOriented)
+  }
+
+  def symbolic(name: String, initialName: String, terminalName: String, positivelyOriented : Boolean = true) = 
+    Symbolic(name, Vertex.Symbolic(initialName), Vertex.Symbolic(terminalName), positivelyOriented)
 }
 
 trait OrientedEdge extends Edge{
