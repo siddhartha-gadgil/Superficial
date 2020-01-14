@@ -175,7 +175,7 @@ object TwoComplex {
   def symbolic(
       vertexNames: Set[String],
       edgeMap: Map[String, (String, String)],
-      faceMap: Map[String, Vector[String]]
+      faceMap: Map[String, Vector[(String, Boolean)]]
   ): TwoComplex =
     new TwoComplex {
       lazy val vertices: Set[Vertex] = vertexNames.map(Vertex.Symbolic(_))
@@ -184,16 +184,16 @@ object TwoComplex {
           case (e, (a, b)) => Edge.symbolic(e, a, b)
         }.toSet
 
-      def getEdge(s: String) = edgeMap.find(_._1 == s).map {
-        case (e, (a, b)) => Edge.symbolic(e, a, b)
+      def getEdge(s: String, pos: Boolean) = edgeMap.find(_._1 == s).map {
+        case (e, (a, b)) => Edge.symbolic(e, a, b, pos)
       }
 
       lazy val faces: Set[Polygon] =
         faceMap.map {
           case (face, vec) =>
             val edges = for {
-              name <- vec
-            } yield getEdge(name).get
+              (name, pos) <- vec
+            } yield (getEdge(name, pos).get)
             Polygon.Symbolic(face, edges)
         }.toSet
     }
