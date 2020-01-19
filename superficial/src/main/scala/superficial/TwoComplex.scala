@@ -172,30 +172,35 @@ case class QuotientEdge(edges: Set[Edge]) extends Edge {
 case class QuotientVertex(vertices: Set[Vertex]) extends Vertex
 
 object TwoComplex {
+  case class Impl(vertices: Set[Vertex], edges: Set[Edge], faces: Set[Polygon]) extends TwoComplex
+
   def symbolic(
-      vertexNames: Set[String],
-      edgeMap: Map[String, (String, String)],
-      faceMap: Map[String, Vector[String]]
+      vertexNames: String*)(
+      edgeMap: (String, (String, String))*)(
+      faceMap: (String, Vector[(String, Boolean)])*
   ): TwoComplex =
-    new TwoComplex {
-      lazy val vertices: Set[Vertex] = vertexNames.map(Vertex.Symbolic(_))
-      lazy val edges: Set[Edge] =
-        edgeMap.map {
-          case (e, (a, b)) => Edge.symbolic(e, a, b)
+    {
+      val vertices: Set[Vertex] = vertexNames.toSet.map(Vertex.Symbolic(_))
+      val edges: Set[Edge] =
+        edgeMap.toMap.flatMap {
+          case (e, (a, b)) => 
+            val ed = Edge.symbolic(e, a, b)
+            Set(ed, ed.flip)
         }.toSet
 
-      def getEdge(s: String) = edgeMap.find(_._1 == s).map {
-        case (e, (a, b)) => Edge.symbolic(e, a, b)
+      def getEdge(s: String, pos: Boolean) = edgeMap.find(_._1 == s).map {
+        case (e, (a, b)) => Edge.symbolic(e, a, b, pos)
       }
 
-      lazy val faces: Set[Polygon] =
+      val faces: Set[Polygon] =
         faceMap.map {
           case (face, vec) =>
             val edges = for {
-              name <- vec
-            } yield getEdge(name).get
+              (name, pos) <- vec
+            } yield (getEdge(name, pos).get)
             Polygon.Symbolic(face, edges)
         }.toSet
+      Impl(vertices, edges, faces)
     }
 }
 
