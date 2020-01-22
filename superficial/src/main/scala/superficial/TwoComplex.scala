@@ -108,6 +108,22 @@ object Vertex {
   case class Symbolic(name: String) extends Vertex
 }
 
+class EdgePair(initial: Vertex, terminal: Vertex){pair =>
+  case object Positive extends Edge{
+    val initial = pair.initial
+    val terminal = pair.terminal
+
+    lazy val flip: Edge = Negative
+  }
+
+  case object  Negative extends Edge{
+    val initial = pair.terminal
+    val terminal = pair.initial
+
+    lazy val flip: Edge = Positive
+  }
+}
+
 /**
   * An oriented edge in a two-complex
   */
