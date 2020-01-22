@@ -109,18 +109,22 @@ object Vertex {
 }
 
 class EdgePair(initial: Vertex, terminal: Vertex){pair =>
-  case object Positive extends Edge{
+  case object Positive extends OrientedEdge{
     val initial = pair.initial
     val terminal = pair.terminal
 
-    lazy val flip: Edge = Negative
+    val positivelyOriented: Boolean = true
+
+    lazy val flip: OrientedEdge = Negative
   }
 
-  case object  Negative extends Edge{
+  case object  Negative extends OrientedEdge{
     val initial = pair.terminal
     val terminal = pair.initial
 
-    lazy val flip: Edge = Positive
+    val positivelyOriented: Boolean = false
+
+    lazy val flip: OrientedEdge = Positive
   }
 }
 
@@ -149,7 +153,7 @@ object Edge {
       terminal: Vertex,
       positivelyOriented: Boolean = true
   ) extends OrientedEdge {
-    def flip: Edge = Symbolic(name, terminal, initial, !positivelyOriented)
+    def flip: OrientedEdge = Symbolic(name, terminal, initial, !positivelyOriented)
   }
 
   def symbolic(
@@ -168,6 +172,8 @@ object Edge {
 
 trait OrientedEdge extends Edge {
   val positivelyOriented: Boolean
+
+  def flip: OrientedEdge 
 }
 
 /**
