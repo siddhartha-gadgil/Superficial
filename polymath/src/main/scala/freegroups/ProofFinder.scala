@@ -177,4 +177,18 @@ object ProofFinder {
 
   def getProof(w: Word): LinNormBound =
     LinearNormProofs.normProofTask(w, true).runSyncUnsafe()
+
+  def matchingPairs(pf: LinNormBound): Set[(Int, Int)] = 
+    pf match {
+      case Gen(n) => Set()
+      case ConjGen(n, pf) => 
+        val inner = matchingPairs(pf)
+        inner.map{case (a, b) => (a + 1, b + 1)} + (0 -> (pf.word.ls.size + 1))
+      case Triang(pf1, pf2) => 
+        val first = matchingPairs(pf1)
+        val shift = pf1.word.ls.size
+        first union (matchingPairs(pf2).map {case (a, b) => (a + shift, b+ shift)})
+      case PowerBound(baseword, n, pf) => Set()
+      case Empty => Set()
+    }
 }
