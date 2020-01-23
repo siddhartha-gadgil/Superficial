@@ -201,16 +201,24 @@ object ProofFinder {
 
   def pairPath(a: Int, b: Int, index: Int) = {
     val r = (b - a) * 6
-    val x = (a * 12)
+    val x = (a * 12) + 6
     val y = 750
     val p = s"M $x $y A $r $r 0 0 1 ${x + (2 *r)} $y"
     val colour = Map(1 -> "black", 2 -> "blue", -1 -> "red", -2 -> "green")(index)
-    s"""<path d="$p" stroke="$colour" fill="$colour" stroke-width="1" fill-opacity="0"/>"""
+    s"""<path d="$p" stroke="$colour" fill="$colour" stroke-width="2" fill-opacity="0"/>"""
+  }
+
+  def textSvg(w: Word) = {
+    val rnaMap : Map[Int, String] = Map(1 -> "A", -1 -> "U", 2 -> "G", -2 -> "C") 
+    val s = w.ls.map(rnaMap)
+    (0 until(w.ls.length)).map{
+      n => s"""<text x="${n * 12}" y="762">${s(n)}</text>"""
+    }.mkString("\n")
   }
 
   def pairsArcs(pairs: Vector[(Int, Int)], word: Word)
     = pairs.map{case (a, b) => pairPath(a, b, word.ls(a))}.mkString(
       """<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900">"""+ "\n",
       "\n",
-      "</svg>")
+      s"${textSvg(word)}\n</svg>")
 }
