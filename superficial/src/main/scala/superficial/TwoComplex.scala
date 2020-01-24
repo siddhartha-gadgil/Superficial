@@ -229,7 +229,7 @@ object TwoComplex {
 /**
   *  A polyheadral two complex, with faces polygons, a collection of edges and
   */
-trait TwoComplex {
+trait TwoComplex {self =>
   def faces: Set[Polygon]
 
   def edges: Set[Edge] // these come in pairs, related by flip (reversing orientation)
@@ -261,6 +261,33 @@ trait TwoComplex {
       initial <- face.indices
       terminal <- face.indices
     } yield NormalArc(initial, terminal, face)
+
+  def collapseEdge(e: Edge) : TwoComplex = {
+    require(e.initial != e.terminal, s"cannot collapse loop $e at ${e.initial}")
+    // map from edges to new edges
+    val newEdges : Map[Edge, Edge] = 
+      edges.filterNot(Set(e, e.flip).contains(_)).map{
+        edge => 
+          val newChap : Edge = 
+            if (Set(edge.initial, edge.terminal).contains(e.terminal)) 
+              new Edge {
+                def flip: Edge = ???
+                def initial: Vertex = 
+                  if (edge.initial == e.terminal) e.initial else edge.initial
+                def terminal: Vertex = 
+                  if (edge.terminal == e.terminal) e.initial else edge.terminal
+              }
+            else edge
+          edge -> newChap
+      }.toMap
+
+    object newComplex extends TwoComplex{
+      def edges: Set[Edge] = ???
+      def faces: Set[Polygon] = ???
+      def vertices: Set[Vertex] = self.vertices - e.terminal
+    }
+    newComplex    
+  }
 }
 
 /**
