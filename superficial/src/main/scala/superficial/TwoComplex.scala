@@ -108,6 +108,26 @@ object Vertex {
   case class Symbolic(name: String) extends Vertex
 }
 
+class EdgePair(initial: Vertex, terminal: Vertex){pair =>
+  case object Positive extends OrientedEdge{
+    val initial = pair.initial
+    val terminal = pair.terminal
+
+    val positivelyOriented: Boolean = true
+
+    lazy val flip: OrientedEdge = Negative
+  }
+
+  case object  Negative extends OrientedEdge{
+    val initial = pair.terminal
+    val terminal = pair.initial
+
+    val positivelyOriented: Boolean = false
+
+    lazy val flip: OrientedEdge = Positive
+  }
+}
+
 /**
   * An oriented edge in a two-complex
   */
@@ -133,7 +153,7 @@ object Edge {
       terminal: Vertex,
       positivelyOriented: Boolean = true
   ) extends OrientedEdge {
-    def flip: Edge = Symbolic(name, terminal, initial, !positivelyOriented)
+    def flip: OrientedEdge = Symbolic(name, terminal, initial, !positivelyOriented)
   }
 
   def symbolic(
@@ -152,6 +172,8 @@ object Edge {
 
 trait OrientedEdge extends Edge {
   val positivelyOriented: Boolean
+
+  def flip: OrientedEdge 
 }
 
 /**
@@ -207,7 +229,7 @@ object TwoComplex {
 /**
   *  A polyheadral two complex, with faces polygons, a collection of edges and
   */
-trait TwoComplex {
+trait TwoComplex {self =>
   def faces: Set[Polygon]
 
   def edges: Set[Edge] // these come in pairs, related by flip (reversing orientation)
@@ -239,6 +261,33 @@ trait TwoComplex {
       initial <- face.indices
       terminal <- face.indices
     } yield NormalArc(initial, terminal, face)
+
+  def collapseEdge(e: Edge) : TwoComplex = {
+    require(e.initial != e.terminal, s"cannot collapse loop $e at ${e.initial}")
+    // map from edges to new edges
+    val newEdges : Map[Edge, Edge] = 
+      edges.filterNot(Set(e, e.flip).contains(_)).map{
+        edge => 
+          val newChap : Edge = 
+            if (Set(edge.initial, edge.terminal).contains(e.terminal)) 
+              new Edge {
+                def flip: Edge = ???
+                def initial: Vertex = 
+                  if (edge.initial == e.terminal) e.initial else edge.initial
+                def terminal: Vertex = 
+                  if (edge.terminal == e.terminal) e.initial else edge.terminal
+              }
+            else edge
+          edge -> newChap
+      }.toMap
+
+    object newComplex extends TwoComplex{
+      def edges: Set[Edge] = ???
+      def faces: Set[Polygon] = ???
+      def vertices: Set[Vertex] = self.vertices - e.terminal
+    }
+    newComplex    
+  }
 }
 
 /**

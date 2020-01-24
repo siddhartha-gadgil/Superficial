@@ -6,7 +6,7 @@ import monix.eval._, monix.tail._, cats.implicits._
 
 import monix.execution.Scheduler.Implicits.global
 
-import scala.concurrent._
+import scala.concurrent._, scala.util._
 
 import LinearNorm._, LinearNormProofs._
 import LinNormBound._
@@ -177,4 +177,48 @@ object ProofFinder {
 
   def getProof(w: Word): LinNormBound =
     LinearNormProofs.normProofTask(w, true).runSyncUnsafe()
+
+  def matchingPairs(pf: LinNormBound): Vector[(Int, Int)] = 
+    pf match {
+      case Gen(n) => Vector()
+      case ConjGen(n, pf) => 
+        val inner = matchingPairs(pf)
+        (0 -> (pf.word.ls.size + 1)) +: inner.map{case (a, b) => (a + 1, b + 1)} 
+      case Triang(pf1, pf2) => 
+        val first = matchingPairs(pf1)
+        val shift = pf1.word.ls.size
+        first ++ (matchingPairs(pf2).map {case (a, b) => (a + shift, b+ shift)})
+      case PowerBound(baseword, n, pf) => Vector()
+      case Empty => Vector()
+    }
+
+  val rnd = new Random()
+
+  def randomWord(length: Int) : Word = 
+    Word(
+      (1 to length).toVector.map(_ => rnd.nextInt(4)).map{j => if (j > 1) j -1 else j - 2}
+      )    
+
+  def pairPath(a: Int, b: Int, index: Int) = {
+    val r = (b - a) * 6
+    val x = (a * 12) + 6
+    val y = 750
+    val p = s"M $x $y A $r $r 0 0 1 ${x + (2 *r)} $y"
+    val colour = Map(1 -> "black", 2 -> "blue", -1 -> "red", -2 -> "green")(index)
+    s"""<path d="$p" stroke="$colour" fill="$colour" stroke-width="2" fill-opacity="0"/>"""
+  }
+
+  def textSvg(w: Word) = {
+    val rnaMap : Map[Int, String] = Map(1 -> "A", -1 -> "U", 2 -> "G", -2 -> "C") 
+    val s = w.ls.map(rnaMap)
+    (0 until(w.ls.length)).map{
+      n => s"""<text x="${n * 12}" y="762">${s(n)}</text>"""
+    }.mkString("\n")
+  }
+
+  def pairsArcs(pairs: Vector[(Int, Int)], word: Word)
+    = pairs.map{case (a, b) => pairPath(a, b, word.ls(a))}.mkString(
+      """<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900">"""+ "\n",
+      "\n",
+      s"${textSvg(word)}\n</svg>")
 }
