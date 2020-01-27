@@ -2,6 +2,7 @@ package superficial
 
 import Polygon.Index
 import scala.collection.immutable.Nil
+import superficial.Generator.a
 
 /**
   * Abstract polygon, with given edges and vertices, i.e. a two-complex with a single face.
@@ -15,6 +16,8 @@ trait Polygon extends TwoComplex {
   lazy val indices: Vector[Index] = (0 until sides).toVector
 
   val boundary: Vector[Edge]
+
+  def checkBoundary = Polygon.checkBoundary(boundary) // not asserted here because of possible delayed initialization
 
   /**
     * the boundary as a formal sum
@@ -51,6 +54,12 @@ trait Polygon extends TwoComplex {
 }
 
 object Polygon {
+  def checkBoundary(v: Vector[Edge]) = 
+    v.zip(v.tail).forall{case (e1, e2) => e1.terminal == e2.initial} && (
+      v.last.terminal == v.head.initial
+    )
+  
+
   type Index = Int
 
   /**
@@ -70,11 +79,13 @@ object Polygon {
   }
 
   def apply(v: Vector[Edge]) : Polygon =
-    new Polygon {
+    {assert(checkBoundary(v), s"boundary $v not a loop")
+      new Polygon {
       val sides: Int = v.size
       val boundary: Vector[Edge] = v
       val vertices: Set[Vertex] = v.map(_.initial).toSet
     }
+  }
 
   case class Symbolic(name: String, boundary: Vector[Edge]) extends Polygon {
     val sides: Int = boundary.size
@@ -207,9 +218,12 @@ case class QuotientEdge(edges: Set[Edge]) extends Edge {
 case class QuotientVertex(vertices: Set[Vertex]) extends Vertex
 
 object TwoComplex {
-  def pure(fs: Polygon*) : TwoComplex = new PureTwoComplex {
+  def pure(fs: Polygon*) : TwoComplex = {
+    fs.foreach(f => assert(f.checkBoundary))
+    new PureTwoComplex {
     val faces: Set[Polygon] = fs.toSet
   }
+}
   case class Impl(vertices: Set[Vertex], edges: Set[Edge], faces: Set[Polygon])
       extends TwoComplex
 
@@ -239,7 +253,7 @@ object TwoComplex {
     val secondHead = second.boundary.takeWhile(_ != e.flip) // edges before e
     val secondTail = second.boundary.drop(secondHead.size + 1) // edges after e
     Polygon(firstHead ++ secondTail ++ secondHead ++ firstTail)
-  }
+  }.ensuring(poly => poly.checkBoundary)
 
   def symbolic(vertexNames: String*)(edgeMap: (String, (String, String))*)(
       faceMap: (String, Vector[(String, Boolean)])*
@@ -342,6 +356,7 @@ trait TwoComplex { twoComplex =>
           val boundary: Vector[Edge] = 
             polygon.boundary.filterNot(Set(e, e.flip).contains(_)).map{edge => newEdgeMap(edge)}
           val vertices: Set[Vertex] = polygon.vertices - e.terminal
+          assert(checkBoundary)
         }
 
     object newComplex extends TwoComplex {
