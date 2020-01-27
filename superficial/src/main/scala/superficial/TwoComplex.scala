@@ -124,6 +124,8 @@ class EdgePair(initial: Vertex, terminal: Vertex) { pair =>
     val positivelyOriented: Boolean = true
 
     lazy val flip: OrientedEdge = Negative
+
+    override def toString = s"$pair.positive"
   }
 
   case object Negative extends OrientedEdge {
@@ -133,6 +135,8 @@ class EdgePair(initial: Vertex, terminal: Vertex) { pair =>
     val positivelyOriented: Boolean = false
 
     lazy val flip: OrientedEdge = Positive
+
+    override def toString = s"$pair.negative"
   }
 }
 
@@ -333,14 +337,15 @@ trait TwoComplex { twoComplex =>
         new Polygon {
           val sides: Int = polygon.sides
           val boundary: Vector[Edge] = 
-            polygon.boundary.map{edge => newEdgeMap(edge)}
+            polygon.boundary.filterNot(Set(e, e.flip).contains(_)).map{edge => newEdgeMap(edge)}
           val vertices: Set[Vertex] = polygon.vertices - e.terminal
         }
 
     object newComplex extends TwoComplex {
       def edges: Set[Edge] = newEdgeMap.values.toSet
-      def faces: Set[Polygon] = faces.map(newPoly(_))
+      def faces: Set[Polygon] = twoComplex.faces.map(newPoly(_))
       def vertices: Set[Vertex] = twoComplex.vertices - e.terminal
+      override def toString(): String = s"$twoComplex/$e"
     }
     newComplex
   }
