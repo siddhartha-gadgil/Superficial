@@ -11,9 +11,7 @@ case object C extends EdgePair(Z, X)
 val upper = Polygon(Vector(A.Positive, B.Positive, C.Positive))
 val lower = Polygon(Vector(C.Negative, B.Negative, A.Negative))
 
-val doubleTriangle: TwoComplex = new PureTwoComplex {
-    val faces: Set[Polygon] = Set(upper, lower)
-}
+val doubleTriangle: TwoComplex = TwoComplex.pure(upper, lower)
 
 val doubleBigon = doubleTriangle.collapseEdge(A.Positive)
 doubleBigon.edges
@@ -32,3 +30,7 @@ doubleMonogon.faces.map(_.boundary)
 doubleBigon.faces.map(_.boundary)
 
 doubleMonogon.positiveEdges
+
+val faceMerged = TwoComplex.mergeFaces(C.Positive, upper, lower)
+faceMerged.faces 
+faceMerged.faces.map(_.boundary)

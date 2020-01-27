@@ -20,7 +20,7 @@ def glog = {
   git.log().call().head
 }
 
-object superficial extends CommonModule  with SbtModule{
+object superficial extends CommonModule with SbtModule{
   def scalaJSVersion = "0.6.31"
 
   def ivyDeps = Agg(

@@ -207,6 +207,9 @@ case class QuotientEdge(edges: Set[Edge]) extends Edge {
 case class QuotientVertex(vertices: Set[Vertex]) extends Vertex
 
 object TwoComplex {
+  def pure(fs: Polygon*) : TwoComplex = new PureTwoComplex {
+    val faces: Set[Polygon] = fs.toSet
+  }
   case class Impl(vertices: Set[Vertex], edges: Set[Edge], faces: Set[Polygon])
       extends TwoComplex
 
