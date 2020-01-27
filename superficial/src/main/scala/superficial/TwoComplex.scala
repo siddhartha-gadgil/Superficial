@@ -345,7 +345,7 @@ trait TwoComplex { twoComplex =>
       def edges: Set[Edge] = newEdgeMap.values.toSet
       def faces: Set[Polygon] = twoComplex.faces.map(newPoly(_))
       def vertices: Set[Vertex] = twoComplex.vertices - e.terminal
-      override def toString(): String = s"$twoComplex/$e"
+      override def toString(): String = s"$twoComplex/$e @ $hashCode"
     }
     newComplex
   }

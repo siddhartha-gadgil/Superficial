@@ -20,7 +20,7 @@ def glog = {
   git.log().call().head
 }
 
-object superficial extends CommonModule with ScalaJSModule with SbtModule{
+object superficial extends CommonModule  with SbtModule{
   def scalaJSVersion = "0.6.31"
 
   def ivyDeps = Agg(
@@ -46,6 +46,11 @@ object superficial extends CommonModule with ScalaJSModule with SbtModule{
     def jar = docJar()
     os.copy.over(jar.path / up / "javadoc", os.pwd / "CATG2020" / "static" / "scaladocs", createFolders = true)
     jar
+  }
+
+  object test extends Tests {
+    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.1")
+    def testFrameworks = Seq("utest.runner.Framework")
   }
 }
 

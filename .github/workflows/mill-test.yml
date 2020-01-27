@@ -16,3 +16,4 @@ jobs:
     - name: Build with mill
       run: |
         ./mill all __.compile
+        ./mill superficial.test
