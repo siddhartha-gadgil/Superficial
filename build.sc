@@ -21,7 +21,7 @@ def glog = {
 }
 
 object superficial extends CommonModule with SbtModule{
-  def scalaJSVersion = "0.6.31"
+  def scalaJSVersion = "0.6.32"
 
   def ivyDeps = Agg(
     ivy"org.scala-lang.modules::scala-xml:1.2.0"

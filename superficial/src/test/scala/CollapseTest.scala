@@ -14,9 +14,7 @@ object SphereComplex {
   val upper = Polygon(Vector(A.Positive, B.Positive, C.Positive))
   val lower = Polygon(Vector(C.Negative, B.Negative, A.Negative))
 
-  val doubleTriangle: TwoComplex = new PureTwoComplex {
-    val faces: Set[Polygon] = Set(upper, lower)
-  }
+  val doubleTriangle: TwoComplex = TwoComplex.pure(upper, lower)
 
   val doubleBigon : TwoComplex = doubleTriangle.collapseEdge(A.Positive)
   val doubleMonogon = TwoComplex.allCollapsed(doubleTriangle)
