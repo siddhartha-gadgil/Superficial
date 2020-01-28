@@ -17,7 +17,15 @@ trait Polygon extends TwoComplex {
 
   val boundary: Vector[Edge]
 
-  def checkBoundary = Polygon.checkBoundary(boundary) // not asserted here because of possible delayed initialization
+  def checkBoundary =
+    Polygon.checkBoundary(boundary) // not asserted here because of possible delayed initialization
+
+  def checkPoly: Boolean =
+    checkBoundary &&
+      (sides == boundary.size) &&
+      (edges.forall(_.checkFlip)) &&
+      (edges == boundary.toSet) &&
+      (vertices == edges.map(_.initial))
 
   /**
     * the boundary as a formal sum
@@ -54,11 +62,10 @@ trait Polygon extends TwoComplex {
 }
 
 object Polygon {
-  def checkBoundary(v: Vector[Edge]) = 
-    v.zip(v.tail).forall{case (e1, e2) => e1.terminal == e2.initial} && (
+  def checkBoundary(v: Vector[Edge]) =
+    v.zip(v.tail).forall { case (e1, e2) => e1.terminal == e2.initial } && (
       v.last.terminal == v.head.initial
     )
-  
 
   type Index = Int
 
@@ -78,9 +85,9 @@ object Polygon {
       (indices map (PolygonVertex(self, _))).toSet
   }
 
-  def apply(v: Vector[Edge]) : Polygon =
-    {assert(checkBoundary(v), s"boundary $v not a loop")
-      new Polygon {
+  def apply(v: Vector[Edge]): Polygon = {
+    assert(checkBoundary(v), s"boundary $v not a loop")
+    new Polygon {
       val sides: Int = v.size
       val boundary: Vector[Edge] = v
       val vertices: Set[Vertex] = v.map(_.initial).toSet
@@ -165,6 +172,9 @@ trait Edge {
 
   def initial: Vertex
 
+  def checkFlip: Boolean =
+    (flip.terminal == initial) && (flip.initial == terminal)
+
   def del: FormalSum[Vertex] =
     FormalSum.reduced(Vector(terminal -> 1, initial -> -1))
 }
@@ -218,33 +228,35 @@ case class QuotientEdge(edges: Set[Edge]) extends Edge {
 case class QuotientVertex(vertices: Set[Vertex]) extends Vertex
 
 object TwoComplex {
-  def pure(fs: Polygon*) : TwoComplex = {
+  def pure(fs: Polygon*): TwoComplex = {
     fs.foreach(f => assert(f.checkBoundary))
     new PureTwoComplex {
-    val faces: Set[Polygon] = fs.toSet
+      val faces: Set[Polygon] = fs.toSet
+    }
   }
-}
   case class Impl(vertices: Set[Vertex], edges: Set[Edge], faces: Set[Polygon])
       extends TwoComplex
 
   @annotation.tailrec
   def halfEdges(edges: List[Edge], accum: Set[Edge]): Set[Edge] = edges match {
     case head :: next =>
-      if (accum.intersect(Set(head, head.flip)).nonEmpty) halfEdges(next, accum) 
+      if (accum.intersect(Set(head, head.flip)).nonEmpty) halfEdges(next, accum)
       else halfEdges(next, accum + head)
     case Nil => accum
   }
 
   // collapse all edges that are not loops
-  def allCollapsed(complex: TwoComplex) : TwoComplex =
-    nonLoop(complex).map{
-      e => allCollapsed(complex.collapseEdge(e))
-    }.getOrElse(complex)
+  def allCollapsed(complex: TwoComplex): TwoComplex =
+    nonLoop(complex)
+      .map { e =>
+        allCollapsed(complex.collapseEdge(e))
+      }
+      .getOrElse(complex).ensuring{_.checkComplex}
 
-  def nonLoop(complex: TwoComplex) : Option[Edge] = 
+  def nonLoop(complex: TwoComplex): Option[Edge] =
     complex.edges.find(edge => edge.initial != edge.terminal)
 
-  def mergeFaces(e: Edge, first: Polygon, second: Polygon) : Polygon = {
+  def mergeFaces(e: Edge, first: Polygon, second: Polygon): Polygon = {
     require(first.boundary.contains(e))
     require(second.boundary.contains(e.flip))
     require(first != second)
@@ -253,7 +265,7 @@ object TwoComplex {
     val secondHead = second.boundary.takeWhile(_ != e.flip) // edges before e
     val secondTail = second.boundary.drop(secondHead.size + 1) // edges after e
     Polygon(firstHead ++ secondTail ++ secondHead ++ firstTail)
-  }.ensuring(poly => poly.checkBoundary)
+  }.ensuring(poly => poly.checkPoly)
 
   def symbolic(vertexNames: String*)(edgeMap: (String, (String, String))*)(
       faceMap: (String, Vector[(String, Boolean)])*
@@ -290,16 +302,22 @@ trait TwoComplex { twoComplex =>
 
   def edges: Set[Edge] // these come in pairs, related by flip (reversing orientation)
 
-  lazy val positiveEdges : Vector[OrientedEdge] =
+  def checkComplex =
+    faces.forall(_.checkBoundary) && edges.forall(_.checkFlip) && edges
+      .map(_.initial)
+      .subsetOf(vertices)
+
+  lazy val positiveEdges: Vector[OrientedEdge] =
     edges.toVector.collect {
       case oe: OrientedEdge if oe.positivelyOriented => oe
     }
 
-    // to take care of unoriented edges
-  lazy val halfEdges : Set[Edge] =
+  // to take care of unoriented edges
+  lazy val halfEdges: Set[Edge] =
     TwoComplex.halfEdges(
-      (edges -- positiveEdges.toSet).toList, 
-      positiveEdges.toSet)
+      (edges -- positiveEdges.toSet).toList,
+      positiveEdges.toSet
+    )
 
   def edgeIndex(edge: Edge) = {
     positiveEdges.zipWithIndex
@@ -332,32 +350,33 @@ trait TwoComplex { twoComplex =>
         .filterNot(Set(e, e.flip).contains(_))
         .map { edge =>
           val newChap: Edge =
-            if (Set(edge.initial, edge.terminal).contains(e.terminal))
-              {
-                val initial: Vertex =
-                  if (edge.initial == e.terminal) e.initial else edge.initial
-                val terminal: Vertex =
-                  if (edge.terminal == e.terminal) e.initial else edge.terminal
-                new EdgePair(initial, terminal).Positive
-              } else edge // the new chap is the old one
+            if (Set(edge.initial, edge.terminal).contains(e.terminal)) {
+              val initial: Vertex =
+                if (edge.initial == e.terminal) e.initial else edge.initial
+              val terminal: Vertex =
+                if (edge.terminal == e.terminal) e.initial else edge.terminal
+              new EdgePair(initial, terminal).Positive
+            } else edge // the new chap is the old one
           edge -> newChap
         }
         .toMap
 
-    val newEdgeMap : Map[Edge, Edge] = 
-        newEdgeHalfMap ++
-        newEdgeHalfMap.map{
+    val newEdgeMap: Map[Edge, Edge] =
+      newEdgeHalfMap ++
+        newEdgeHalfMap.map {
           case (k, v) => (k.flip, v.flip)
         }
 
-    def newPoly(polygon: Polygon) : Polygon =
-        new Polygon {
-          val sides: Int = polygon.sides
-          val boundary: Vector[Edge] = 
-            polygon.boundary.filterNot(Set(e, e.flip).contains(_)).map{edge => newEdgeMap(edge)}
-          val vertices: Set[Vertex] = polygon.vertices - e.terminal
-          assert(checkBoundary)
-        }
+    def newPoly(polygon: Polygon): Polygon =
+      new Polygon {
+        val sides: Int = polygon.sides
+        val boundary: Vector[Edge] =
+          polygon.boundary.filterNot(Set(e, e.flip).contains(_)).map { edge =>
+            newEdgeMap(edge)
+          }
+        val vertices: Set[Vertex] = polygon.vertices - e.terminal
+        assert(checkBoundary)
+      }
 
     object newComplex extends TwoComplex {
       def edges: Set[Edge] = newEdgeMap.values.toSet
