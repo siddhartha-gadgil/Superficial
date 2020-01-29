@@ -414,7 +414,11 @@ trait TwoComplex { twoComplex =>
   def SetNbr(s: Set[Vertex]): Set[Vertex] = {
     //Accumulates first order neighbours onto a list
     def ListNbr(s: List[Vertex], accum: List[Vertex]): List[Vertex] = {
-    ListNbr(s.tail, accum ++ VertexNbr(s.head))
+      s match {
+        case x::rest => ListNbr(rest, accum ++ VertexNbr(x))
+        case Nil => accum
+      }
+    
     }
     ListNbr(s.toList, List[Vertex]()).toSet
   }
