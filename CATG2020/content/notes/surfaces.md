@@ -1,6 +1,6 @@
 ---
 title: "Surfaces and Turns"
-date: 2019-01-29
+date: 2020-01-28
 ---
 
 In this note we describe how to determine if a two-complex is an oriented surface (possibly with boundary), with polygons oriented according to the orientation of the surface. Some cases may be missed below, so please check the description in addition to implementing it. Assume that we are given a two-complex `complex: TwoComplex`.
