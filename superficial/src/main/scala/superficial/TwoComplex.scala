@@ -24,7 +24,7 @@ trait Polygon extends TwoComplex {
     checkBoundary &&
       (sides == boundary.size) &&
       (edges.forall(_.checkFlip)) &&
-      (edges == boundary.toSet) &&
+      (edges == boundary.toSet.flatMap((e: Edge) => Set(e, e.flip))) &&
       (vertices == edges.map(_.initial))
 
   /**
@@ -164,7 +164,7 @@ class EdgePair(initial: Vertex, terminal: Vertex) { pair =>
 trait Edge {
 
   /**
-    * the same edge with the opposite orientation.
+    * the same (undirected) edge with the opposite orientation.
     */
   def flip: Edge
 
@@ -173,7 +173,8 @@ trait Edge {
   def initial: Vertex
 
   def checkFlip: Boolean =
-    (flip.terminal == initial) && (flip.initial == terminal)
+    (flip.terminal == initial) && (flip.initial == terminal) && 
+    (flip.flip == this) && (flip != this)
 
   def del: FormalSum[Vertex] =
     FormalSum.reduced(Vector(terminal -> 1, initial -> -1))
