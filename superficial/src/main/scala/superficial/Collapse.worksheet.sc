@@ -34,3 +34,10 @@ doubleMonogon.positiveEdges
 val faceMerged = TwoComplex.mergeFaces(C.Positive, upper, lower)
 faceMerged.faces 
 faceMerged.faces.map(_.boundary)
+
+val ep = EdgePath.Append(EdgePath.Constant(X), A.Positive)
+import scala.util.Try
+
+val bad = Try{
+    EdgePath.Append(EdgePath.Constant(X), A.Negative)
+}
