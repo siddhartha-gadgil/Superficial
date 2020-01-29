@@ -435,7 +435,7 @@ trait TwoComplex { twoComplex =>
   }
 
   //Checks if the complex is connected
-  def isConnectedComplex(): Boolean = {
+  def isConnectedComplex: Boolean = {
     val v = twoComplex.vertices.toList.head
     ConnectedComponent(v).equals(twoComplex.vertices)
   }
