@@ -429,7 +429,7 @@ trait TwoComplex { twoComplex =>
     else MaxSetNbr(SetNbr(s))
   }
 
-  //Finds the connected component of a set
+  //Finds the connected component of a vertex
   def ConnectedComponent(v: Vertex): Set[Vertex] = {
     MaxSetNbr(Set(v))
   }
