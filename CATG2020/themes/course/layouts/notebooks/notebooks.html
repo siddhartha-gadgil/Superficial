@@ -4,10 +4,10 @@
 {{ .Content }}
 
 
-{{ $files := readDir "static/notebooks" }}
+{{ $files := readDir "notebooks" }}
 <ol>
-    {{ range $files }}<li><strong><a href="{{ $.Site.BaseURL }}notebooks/{{ .Name }}" target="_blank">{{ .Name }}</a></strong> built on {{ dateFormat "Monday, Jan 2, 2006" .ModTime }}.  
-    </li> {{ end }}
+    {{ range $files  }}{{ if (strings.HasSuffix .Name ".ipynb") }}<li><strong><a href="{{ $.Site.BaseURL }}notebooks/{{ .Name }}.html" target="_blank">{{ .Name }}</a></strong>, created on {{ dateFormat "Monday, Jan 2, 2006" .ModTime }}.  
+    </li> {{ end }} {{ end }}
 </ol>
 
 {{ end }}

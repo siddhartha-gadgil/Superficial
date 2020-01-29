@@ -1,4 +1,4 @@
-![](https://github.com/siddhartha-gadgil/Superficial/workflows/scala%20CI/badge.svg)
+![scala CI](https://github.com/siddhartha-gadgil/Superficial/workflows/scala%20CI/badge.svg)
 ## Superficial
 
 Our goal is to implement various representations and algorithms for surfaces and structures on these. The implementation will be in _scala_.

@@ -8,6 +8,10 @@ ThisBuild / githubRepository := "Superficial"
 
 ThisBuild / githubTokenSource := Some(TokenSource.GitConfig("github.token"))
 
+libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.1" % "test"
+
+testFrameworks += new TestFramework("utest.runner.Framework")
+
 scalaVersion in ThisBuild := scalaV
 
 lazy val freegroups = project.settings(
@@ -28,7 +32,11 @@ ThisBuild / githubRepository := "Superficial",
 
 ThisBuild / githubTokenSource := Some(TokenSource.GitConfig("github.token")),
 
-  libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "1.2.0"
+  libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "1.2.0",
+
+  libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.1" % "test",
+
+testFrameworks += new TestFramework("utest.runner.Framework")
 
 )
 
