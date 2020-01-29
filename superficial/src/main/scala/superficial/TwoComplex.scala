@@ -84,6 +84,7 @@ object Polygon {
     lazy val vertices: Set[Vertex] =
       (indices map (PolygonVertex(self, _))).toSet
 
+    // given a polygon P and an edge e gives the next edge of e if e is in P
     def succOpt (e : Edge) : Option[Edge] = {
       val indexOf_e = boundary.indexOf(e);
       if (indexOf_e <= - 1) { None }
@@ -324,6 +325,7 @@ trait TwoComplex { twoComplex =>
       (edges -- positiveEdges.toSet).toList,
       positiveEdges.toSet
     )
+  
 
   def edgeIndex(edge: Edge) = {
     positiveEdges.zipWithIndex
