@@ -90,7 +90,15 @@ object Polygon {
       if (indexOf_e <= - 1) { None }
       else if (indexOf_e >= boundary.length - 1 ) {Some(boundary.head)}
       else { Some(boundary(indexOf_e + 1)) }
-    }    
+    }   
+
+    // given a polygon P and an edge e gives the previous edge of e if e is in P
+    def predOpt (e : Edge) : Option[Edge] = {
+      val indexOf_e = boundary.indexOf(e);
+      if (indexOf_e <= - 1) { None }
+      else if (indexOf_e == 0) {Some(boundary.last)}
+      else { Some(boundary(indexOf_e - 1)) }
+    } 
   }
 
   def apply(v: Vector[Edge]): Polygon = {
