@@ -348,7 +348,37 @@ trait TwoComplex { twoComplex =>
   }
 
   // gives the edge with same terminal vertex obtained by right rotation.
-  def rotateRightOpt (e : Edge) : Option[Edge] = predOpt(e.flip)        
+  def rotateRightOpt (e : Edge) : Option[Edge] = predOpt(e.flip)
+
+  // checks if we start with an edge e with v == e.terminal, using left rotations, 
+  // (by iterating) we should get all edges with terminal vertex v.
+  // The naming is slightly misleading. Do give suggestions for better names
+
+  def isSurroundedVertex (v : Vertex) : Boolean = {
+    assert( twoComplex.vertices.contains(v), "vertex is not part of the complex")
+    val edgesEndingAt_v = twoComplex.edges.filter(_.terminal == v).toSet // set of all edges ending at v
+    
+    // auxilliary function to start with an edge and take all edges by rotating left
+    def takeSum (e : Edge) (steps : Int) (accum : Set[Edge]) : Set[Edge] = {
+      if (steps <= 0) accum
+      else { 
+        val nextEdge = twoComplex.rotateLeftOpt(e)
+        nextEdge match {
+          case Some(f) => takeSum(f)(steps - 1)(accum + f)
+          case None => accum     
+        }
+      }
+    }
+
+    if (edgesEndingAt_v.nonEmpty) {
+      // take all edges by going to the left
+      val allEdgesToTheLeft = takeSum(edgesEndingAt_v.head)(edgesEndingAt_v.size)(Set.empty)
+      // check if that is same as the set of all edges ending at v
+      edgesEndingAt_v == allEdgesToTheLeft 
+    }
+    else true // if there are no edges ending at v then there is nothing to check
+    
+  }        
     
 }
 
