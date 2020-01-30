@@ -11,6 +11,13 @@ Ensure that you have Java 8 installed. In a linux system, you can start a consol
 ./repl.sh
 ```
 
+alternatively, you can start a `mill` REPL with 
+```bash
+./mill -i superficial.repl
+```
+
+but make sure to give the repl command `import superficial._`.
+
 ## Other stuff
 
 For the sake of convenience, this same repository was also used in the PolyMath 14 project, so there is code related to free groups and lengths on them here.

@@ -24,7 +24,7 @@ trait Polygon extends TwoComplex {
     checkBoundary &&
       (sides == boundary.size) &&
       (edges.forall(_.checkFlip)) &&
-      (edges == boundary.toSet) &&
+      (edges == boundary.toSet.flatMap((e: Edge) => Set(e, e.flip))) &&
       (vertices == edges.map(_.initial))
 
   /**
@@ -180,7 +180,7 @@ class EdgePair(initial: Vertex, terminal: Vertex) { pair =>
 trait Edge {
 
   /**
-    * the same edge with the opposite orientation.
+    * the same (undirected) edge with the opposite orientation.
     */
   def flip: Edge
 
@@ -189,7 +189,8 @@ trait Edge {
   def initial: Vertex
 
   def checkFlip: Boolean =
-    (flip.terminal == initial) && (flip.initial == terminal)
+    (flip.terminal == initial) && (flip.initial == terminal) && 
+    (flip.flip == this) && (flip != this)
 
   def del: FormalSum[Vertex] =
     FormalSum.reduced(Vector(terminal -> 1, initial -> -1))
@@ -401,6 +402,34 @@ trait TwoComplex { twoComplex =>
       override def toString(): String = s"$twoComplex/$e @ $hashCode"
     }
     newComplex
+  }
+
+  //Finds neighbours of a vertex
+  def vertexNbr(v: Vertex): Set[Vertex] = {
+    val s = (twoComplex.edges.filter(_.initial == v).map(_.terminal)).union(twoComplex.edges.filter(_.terminal == v).map(_.initial))
+    s+v
+  }
+
+  //Collects a first order neighbourhood of a set onto a set
+  def setNbr(s: Set[Vertex]): Set[Vertex] = {
+    s.flatMap(vertexNbr(_))
+  }
+
+  //Finds the maximal set of neighbours of a given set
+  def maxSetNbr(s: Set[Vertex]): Set[Vertex] = {
+    if (setNbr(s) == s) s
+    else maxSetNbr(setNbr(s))
+  }
+
+  //Finds the connected component of a vertex
+  def connectedComponent(v: Vertex): Set[Vertex] = {
+    maxSetNbr(Set(v))
+  }
+
+  //Checks if the complex is connected
+  def isConnectedComplex: Boolean = {
+    val v = twoComplex.vertices.toList.head
+    connectedComponent(v) == twoComplex.vertices
   }
 }
 

@@ -43,6 +43,11 @@ object CollapseTest extends TestSuite {
             }
         }
     }
+    "All complexes are " - {
+            "connected" - {
+                assert(doubleTriangle.isConnectedComplex && doubleBigon.isConnectedComplex&& doubleMonogon.isConnectedComplex)
+            }
+        }
     }
 }
 
