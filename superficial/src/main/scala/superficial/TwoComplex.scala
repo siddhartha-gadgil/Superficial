@@ -315,8 +315,8 @@ trait TwoComplex { twoComplex =>
     connectedComponent(v) == twoComplex.vertices
   }
 
-  // given an edge, find a face whose boundary contains e (if it exists, it is unique); 
-  //take the next edge along the boundary
+  /* given an edge, find a face whose boundary contains e (if it exists, it is unique); 
+  * take the next edge along the boundary */
   def succOpt (e : Edge) : Option[Edge] = {
       val mayBefaceOf_e = twoComplex.faces.find(_.boundary.contains(e))
       mayBefaceOf_e flatMap {
@@ -363,10 +363,10 @@ trait TwoComplex { twoComplex =>
       }
     } 
 
-  /* all edges to the left of the edge e excluding itself*/  
-  def allEdgesToTheLeftOf (e : Edge) = (takeSum(e, edges.size, rotateLeftOpt(_), Set.empty) - e)
-  /* all edges to the left of the edge e excluding itself*/
-  def allEdgesToTheRightOf (e : Edge) = (takeSum(e, edges.size, rotateRightOpt(_), Set.empty) - e)
+  /* all edges to the left of the edge e including itself*/  
+  def allEdgesToTheLeftOf (e : Edge) = takeSum(e, edges.size + 1, rotateLeftOpt(_), Set.empty)
+  /* all edges to the left of the edge e including itself*/
+  def allEdgesToTheRightOf (e : Edge) = takeSum(e, edges.size + 1, rotateRightOpt(_), Set.empty)
   /* set of all edges ending at v */
   def edgesEndingAt (v : Vertex) = twoComplex.edges.filter(_.terminal == v).toSet
 
@@ -400,10 +400,11 @@ trait TwoComplex { twoComplex =>
       if (edgesEndingAt_v.nonEmpty) {
         val picked = edgesEndingAt_v.head // pick an edge
         // take all edges by left and right turns
-        val allAroundPicked = (allEdgesToTheLeftOf(picked) ++ allEdgesToTheRightOf(picked)) + picked 
-        // check if they cover all edges around v
-        (edgesEndingAt_v == allAroundPicked)
-      }
+        val allAroundPicked = (allEdgesToTheLeftOf(picked) ++ allEdgesToTheRightOf(picked)) 
+        // check if they cover all edges around v and the picked edge is part of a face
+        ((edgesEndingAt_v == allAroundPicked) &&
+         (twoComplex.faces.find(_.boundary.contains(picked)) != None)) 
+       }
       else true // if there are no edges ending at v then there is nothing to check 
     }   
     // check this for all vertices
