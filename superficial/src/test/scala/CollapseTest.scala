@@ -23,28 +23,28 @@ import SphereComplex._
 
 object CollapseTest extends TestSuite {
     val tests: Tests = Tests{
-        "collapse A has " - {
-            "two edges" - {
+        "collapseA" - {
+            "twoedges" - {
                 assert(doubleBigon.edges.size == 4)
             }
-            "vertex set" - {
+            "vertexSet" - {
                 assert(doubleBigon.vertices == Set(X, Z))
             }
-        "full collapse has " - {
-            "one vertex" - {
+        "fullCollapse" - {
+            "oneVertex" - {
                 assert(doubleMonogon.vertices.size == 1)
             }
-            "two edges" - {
+            "twoEdges" - {
                 assert(doubleMonogon.edges.size == 2)
             }
-            "edges flips of each other" - {
+            "edgesFlipsOfEachOther" - {
                 val e = doubleMonogon.edges.head
                 assert(doubleMonogon.edges == Set(e, e.flip))
             }
         }
     }
-    "All complexes are " - {
-            "connected" - {
+    "AllComplexes" - {
+            "areConnected" - {
                 assert(doubleTriangle.isConnectedComplex && doubleBigon.isConnectedComplex&& doubleMonogon.isConnectedComplex)
             }
         }
