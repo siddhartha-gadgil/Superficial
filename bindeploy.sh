@@ -8,3 +8,7 @@ chmod a+r static/bin/*
 ./mknotes.sh
 hugo
 rsync -avz --progress public/ math.iisc.ac.in:/home/gadgil/public_html/catg2020/
+cd ..
+git add .
+git commit -m "commit on deploy; rebuilt scaladocs, notebooks"
+git push
