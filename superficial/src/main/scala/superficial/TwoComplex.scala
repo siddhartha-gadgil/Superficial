@@ -359,22 +359,24 @@ trait TwoComplex { twoComplex =>
     val edgesEndingAt_v = twoComplex.edges.filter(_.terminal == v).toSet // set of all edges ending at v
     
     // auxilliary function to start with an edge and take all edges by rotating left
-    def takeSum (e : Edge) (steps : Int) (accum : Set[Edge]) : Set[Edge] = {
+    def takeSum (e : Edge, steps : Int, opt  : Edge => Option[Edge], accum : Set[Edge]) : Set[Edge] = {
       if (steps <= 0) accum
       else { 
-        val nextEdge = twoComplex.rotateLeftOpt(e)
+        val nextEdge = opt(e)
         nextEdge match {
-          case Some(f) => takeSum(f)(steps - 1)(accum + f)
-          case None => accum     
+          case Some(f) => takeSum(f, steps - 1, opt, accum + f)
+            case None => accum     
         }
       }
     }
 
     if (edgesEndingAt_v.nonEmpty) {
-      // take all edges by going to the left
-      val allEdgesToTheLeft = takeSum(edgesEndingAt_v.head)(edgesEndingAt_v.size)(Set.empty)
+      // take all edges by going to the left 
+      val allEdgesToTheLeft = takeSum(edgesEndingAt_v.head, edgesEndingAt_v.size, rotateLeftOpt(_), Set.empty)
+      // take all edges by going to the right
+      val allEdgesToTheRight = takeSum(edgesEndingAt_v.head, edgesEndingAt_v.size, rotateRightOpt(_), Set.empty)
       // check if that is same as the set of all edges ending at v
-      edgesEndingAt_v == allEdgesToTheLeft 
+      (edgesEndingAt_v == allEdgesToTheLeft) && (edgesEndingAt_v == allEdgesToTheRight) 
     }
     else true // if there are no edges ending at v then there is nothing to check
     
