@@ -288,7 +288,8 @@ trait TwoComplex { twoComplex =>
 
   //Finds neighbours of a vertex
   def vertexNbr(v: Vertex): Set[Vertex] = {
-    val s = (twoComplex.edges.filter(_.initial == v).map(_.terminal)).union(twoComplex.edges.filter(_.terminal == v).map(_.initial))
+    val s = (twoComplex.edges.filter(_.initial == v).map(_.terminal)).
+        union(twoComplex.edges.filter(_.terminal == v).map(_.initial))
     s+v
   }
 
@@ -318,24 +319,36 @@ trait TwoComplex { twoComplex =>
   //take the next edge along the boundary
   def succOpt (e : Edge) : Option[Edge] = {
       val mayBefaceOf_e = twoComplex.faces.find(_.boundary.contains(e))
-      mayBefaceOf_e match {
-        case Some(faceOf_e) => {
-          val indexOf_e = faceOf_e.boundary.indexOf(e);
-          if (indexOf_e <= - 1) { None }
-          else if (indexOf_e >= faceOf_e.boundary.length - 1 ) {Some(faceOf_e.boundary.head)}
-          else { Some(faceOf_e.boundary(indexOf_e + 1)) }}
-        case None => {None}}}   
+      mayBefaceOf_e flatMap {
+        faceOf_e => 
+          val indexOf_e = faceOf_e.boundary.indexOf(e)
+          if (indexOf_e <= -1) None
+          else if (indexOf_e == faceOf_e.boundary.length) Some(faceOf_e.boundary.head)
+          else Some(faceOf_e.boundary(indexOf_e + 1))
+      }
+  }    
   // given an edge, find a face whose boundary contains e (if it exists, it is unique); 
   //take the previous edge along the boundary
   def predOpt (e : Edge) : Option[Edge] = {
       val mayBefaceOf_e = twoComplex.faces.find(_.boundary.contains(e))
-      mayBefaceOf_e match {
-        case Some(faceOf_e) => {
-          val indexOf_e = faceOf_e.boundary.indexOf(e);
-          if (indexOf_e <= - 1) { None }
-          else if (indexOf_e == 0 ) {Some(faceOf_e.boundary.last)}
-          else { Some(faceOf_e.boundary(indexOf_e - 1)) }}
-        case None => {None}}}
+      mayBefaceOf_e flatMap {
+        faceOf_e => 
+          val indexOf_e = faceOf_e.boundary.indexOf(e)
+          if (indexOf_e <= -1) None
+          else if (indexOf_e == 0) Some(faceOf_e.boundary.last)
+          else Some(faceOf_e.boundary(indexOf_e - 1))
+      }
+  }        
+
+  // gives the edge with same terminal vertex obtained by left rotation.
+  def rotateLeftOpt (e : Edge) : Option[Edge] = {
+    succOpt(e) flatMap {
+      f => Some(f.flip)
+    }
+  }
+
+  // gives the edge with same terminal vertex obtained by right rotation.
+  def rotateRightOpt (e : Edge) : Option[Edge] = predOpt(e.flip)        
     
 }
 
