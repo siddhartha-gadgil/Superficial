@@ -58,7 +58,7 @@ trait Polygon extends TwoComplex {
       .filter { (n) =>
         e == boundary(n) || e.flip == boundary(n)
       }
-      .map(n => (n, e == boundary(n)))
+      .map(n => (n, e == boundary(n)))    
 }
 
 object Polygon {
@@ -82,23 +82,7 @@ object Polygon {
         yield PolygonEdge(self, e, positiveOriented = true)
 
     lazy val vertices: Set[Vertex] =
-      (indices map (PolygonVertex(self, _))).toSet
-
-    // given a polygon P and an edge e gives the next edge of e if e is in P
-    def succOpt (e : Edge) : Option[Edge] = {
-      val indexOf_e = boundary.indexOf(e);
-      if (indexOf_e <= - 1) { None }
-      else if (indexOf_e >= boundary.length - 1 ) {Some(boundary.head)}
-      else { Some(boundary(indexOf_e + 1)) }
-    }   
-
-    // given a polygon P and an edge e gives the previous edge of e if e is in P
-    def predOpt (e : Edge) : Option[Edge] = {
-      val indexOf_e = boundary.indexOf(e);
-      if (indexOf_e <= - 1) { None }
-      else if (indexOf_e == 0) {Some(boundary.last)}
-      else { Some(boundary(indexOf_e - 1)) }
-    } 
+      (indices map (PolygonVertex(self, _))).toSet     
   }
 
   def apply(v: Vector[Edge]): Polygon = {
@@ -108,6 +92,7 @@ object Polygon {
       val boundary: Vector[Edge] = v
       val vertices: Set[Vertex] = v.map(_.initial).toSet
     }
+    
   }
 
   case class Symbolic(name: String, boundary: Vector[Edge]) extends Polygon {
@@ -431,6 +416,26 @@ trait TwoComplex { twoComplex =>
     val v = twoComplex.vertices.toList.head
     connectedComponent(v) == twoComplex.vertices
   }
+
+  // given an edge, find a face whose boundary contains e (if it exists, it is unique); 
+  //take the next edge along the boundary
+  def succOpt (e : Edge) : Option[Edge] = {
+      val mayBefaceOf_e = twoComplex.faces.find(_.boundary.contains(e))
+      mayBefaceOf_e match {
+        case Some(faceOf_e) => {
+          val indexOf_e = faceOf_e.boundary.indexOf(e);
+          if (indexOf_e <= - 1) { None }
+          else if (indexOf_e >= faceOf_e.boundary.length - 1 ) {Some(faceOf_e.boundary.head)}
+          else { Some(faceOf_e.boundary(indexOf_e + 1)) }}
+        case None => {None}}}   
+  
+  // // given a polygon P and an edge e gives the previous edge of e if e is in P
+  // def predOpt (e : Edge) : Option[Edge] = {
+  //     val indexOf_e = boundary.indexOf(e);
+  //     if (indexOf_e <= - 1) { None }
+  //     else if (indexOf_e == 0) {Some(boundary.last)}
+  //     else { Some(boundary(indexOf_e - 1)) }
+  //   }  
 }
 
 /**
