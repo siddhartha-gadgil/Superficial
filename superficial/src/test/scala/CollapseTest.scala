@@ -42,12 +42,12 @@ object CollapseTest extends TestSuite {
                 assert(doubleMonogon.edges == Set(e, e.flip))
             }
         }
-        "All complexes are " - {
+    }
+    "All complexes are " - {
             "connected" - {
                 assert(doubleTriangle.isConnectedComplex && doubleBigon.isConnectedComplex&& doubleMonogon.isConnectedComplex)
             }
         }
-    }
     }
 }
 

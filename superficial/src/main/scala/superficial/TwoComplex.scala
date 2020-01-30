@@ -407,20 +407,12 @@ trait TwoComplex { twoComplex =>
   //Finds neighbours of a vertex
   def VertexNbr(v: Vertex): Set[Vertex] = {
     val s = (twoComplex.edges.filter(_.initial == v).map(_.terminal)).union(twoComplex.edges.filter(_.terminal == v).map(_.initial))
-    s.union(Set(v))
+    s+v
   }
 
   //Collects a first order neighbourhood of a set onto a set
   def SetNbr(s: Set[Vertex]): Set[Vertex] = {
-    //Accumulates first order neighbours onto a list
-    def ListNbr(s: List[Vertex], accum: List[Vertex]): List[Vertex] = {
-      s match {
-        case x::rest => ListNbr(rest, accum ++ VertexNbr(x))
-        case Nil => accum
-      }
-    
-    }
-    ListNbr(s.toList, List[Vertex]()).toSet
+    s.flatMap(VertexNbr(_))
   }
 
   //Finds the maximal set of neighbours of a given set
@@ -437,7 +429,7 @@ trait TwoComplex { twoComplex =>
   //Checks if the complex is connected
   def isConnectedComplex: Boolean = {
     val v = twoComplex.vertices.toList.head
-    ConnectedComponent(v).equals(twoComplex.vertices)
+    ConnectedComponent(v) == twoComplex.vertices
   }
 }
 
