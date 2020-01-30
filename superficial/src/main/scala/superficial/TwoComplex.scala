@@ -363,10 +363,10 @@ trait TwoComplex { twoComplex =>
       }
     } 
 
-  /* all edges to the left of the edge e */  
-  def allEdgesToTheLeftOf (e : Edge) = takeSum(e, edges.size, rotateLeftOpt(_), Set.empty)
-  /* all edges to the left of the edge e */
-  def allEdgesToTheRightOf (e : Edge) = takeSum(e, edges.size, rotateRightOpt(_), Set.empty)
+  /* all edges to the left of the edge e excluding itself*/  
+  def allEdgesToTheLeftOf (e : Edge) = (takeSum(e, edges.size, rotateLeftOpt(_), Set.empty) - e)
+  /* all edges to the left of the edge e excluding itself*/
+  def allEdgesToTheRightOf (e : Edge) = (takeSum(e, edges.size, rotateRightOpt(_), Set.empty) - e)
   /* set of all edges ending at v */
   def edgesEndingAt (v : Vertex) = twoComplex.edges.filter(_.terminal == v).toSet
 
@@ -400,7 +400,7 @@ trait TwoComplex { twoComplex =>
       if (edgesEndingAt_v.nonEmpty) {
         val picked = edgesEndingAt_v.head // pick an edge
         // take all edges by left and right turns
-        val allAroundPicked = allEdgesToTheLeftOf(picked) ++ allEdgesToTheRightOf(picked) 
+        val allAroundPicked = (allEdgesToTheLeftOf(picked) ++ allEdgesToTheRightOf(picked)) + picked 
         // check if they cover all edges around v
         (edgesEndingAt_v == allAroundPicked)
       }
