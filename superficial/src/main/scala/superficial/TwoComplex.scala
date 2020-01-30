@@ -428,14 +428,18 @@ trait TwoComplex { twoComplex =>
           else if (indexOf_e >= faceOf_e.boundary.length - 1 ) {Some(faceOf_e.boundary.head)}
           else { Some(faceOf_e.boundary(indexOf_e + 1)) }}
         case None => {None}}}   
-  
-  // // given a polygon P and an edge e gives the previous edge of e if e is in P
-  // def predOpt (e : Edge) : Option[Edge] = {
-  //     val indexOf_e = boundary.indexOf(e);
-  //     if (indexOf_e <= - 1) { None }
-  //     else if (indexOf_e == 0) {Some(boundary.last)}
-  //     else { Some(boundary(indexOf_e - 1)) }
-  //   }  
+  // given an edge, find a face whose boundary contains e (if it exists, it is unique); 
+  //take the previous edge along the boundary
+  def predOpt (e : Edge) : Option[Edge] = {
+      val mayBefaceOf_e = twoComplex.faces.find(_.boundary.contains(e))
+      mayBefaceOf_e match {
+        case Some(faceOf_e) => {
+          val indexOf_e = faceOf_e.boundary.indexOf(e);
+          if (indexOf_e <= - 1) { None }
+          else if (indexOf_e == 0 ) {Some(faceOf_e.boundary.last)}
+          else { Some(faceOf_e.boundary(indexOf_e - 1)) }}
+        case None => {None}}}
+    
 }
 
 /**
