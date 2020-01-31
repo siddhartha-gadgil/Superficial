@@ -62,6 +62,7 @@ trait Polygon extends TwoComplex {
 }
 
 object Polygon {
+  /* Checks that for each conseutive edges e1 and e2 e1.terminal == e2.intial */ 
   def checkBoundary(v: Vector[Edge]) =
     v.zip(v.tail).forall { case (e1, e2) => e1.terminal == e2.initial } && (
       v.last.terminal == v.head.initial
@@ -386,15 +387,30 @@ trait TwoComplex { twoComplex =>
     else true // if there are no edges ending at v then there is nothing to check
   }        
 
-  /* Checks if all vertices of the complex is surrounded or doesn't have any incoming edge. 
-  * Because the twocomplex contains both e and e.flip for all edges e, no incoming edges
-  * also implies that no outgoing edges too */
-  def isClosedComplex : Boolean = vertices.toList.foldLeft(true)(_ && twoComplex.isSurroundedVertex(_))
+  /*
+  * Checks if the twoComplex is closed. 
+  */
+  def isClosedSurface : Boolean = {
 
+    // checks if the edge e is in exactly one face
+    def checkEdge (e : Edge): Boolean = {
+      val facesContanining_e = faces.filter(_.boundary.contains(e))
+      (facesContanining_e.size == 1)
+    }
+    
+    // checks if each edge is in exactly one face
+    val condition1 = twoComplex.edges.toList.foldLeft(true)(_ && checkEdge(_)) 
+    // every vertex is in some edge
+    val condition2 = twoComplex.edges.flatMap(ed => Set(ed.initial, ed.terminal)) == twoComplex.vertices
+    // for all veritces one can get all edges surrounding it by going around by either left or right turns (not both) 
+    val condition3 = vertices.toList.foldLeft(true)(_ && twoComplex.isSurroundedVertex(_))
+
+    condition1 && condition2 && condition3
+  }
   /* For a surface with boundary, if we start with an edge e with v == e.terminal, 
   * using left and right rotations, (by iterating) we should get all edges with terminal vertex e.terminal.
   */
-  def checkSurfaceWithBoundary : Boolean = {
+  def isSurfaceWithBoundary : Boolean = {
     def check (v : Vertex) : Boolean = {
       val edgesEndingAt_v = edgesEndingAt(v) // edges around v
       if (edgesEndingAt_v.nonEmpty) {
