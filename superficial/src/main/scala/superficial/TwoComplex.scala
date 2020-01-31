@@ -315,8 +315,8 @@ trait TwoComplex { twoComplex =>
     connectedComponent(v) == twoComplex.vertices
   }
 
-  // given an edge, find a face whose boundary contains e (if it exists, it is unique); 
-  //take the next edge along the boundary
+  /* given an edge, find a face whose boundary contains e (if it exists, it is unique); 
+  * take the next edge along the boundary */
   def succOpt (e : Edge) : Option[Edge] = {
       val mayBefaceOf_e = twoComplex.faces.find(_.boundary.contains(e))
       mayBefaceOf_e flatMap {
@@ -327,8 +327,9 @@ trait TwoComplex { twoComplex =>
           else Some(faceOf_e.boundary(indexOf_e + 1))
       }
   }    
-  // given an edge, find a face whose boundary contains e (if it exists, it is unique); 
-  //take the previous edge along the boundary
+  /* given an edge, find a face whose boundary contains e (if it exists, it is unique); 
+  * take the previous edge along the boundary 
+  */
   def predOpt (e : Edge) : Option[Edge] = {
       val mayBefaceOf_e = twoComplex.faces.find(_.boundary.contains(e))
       mayBefaceOf_e flatMap {
@@ -340,48 +341,77 @@ trait TwoComplex { twoComplex =>
       }
   }        
 
-  // gives the edge with same terminal vertex obtained by left rotation.
+  /* gives the edge with same terminal vertex obtained by left rotation.*/
   def rotateLeftOpt (e : Edge) : Option[Edge] = {
     succOpt(e) flatMap {
       f => Some(f.flip)
     }
   }
 
-  // gives the edge with same terminal vertex obtained by right rotation.
+  /* gives the edge with same terminal vertex obtained by right rotation.*/
   def rotateRightOpt (e : Edge) : Option[Edge] = predOpt(e.flip)
-
-  // checks if we start with an edge e with v == e.terminal, using left rotations, 
-  // (by iterating) we should get all edges with terminal vertex v.
-  // The naming is slightly misleading. Do give suggestions for better names
-
-  def isSurroundedVertex (v : Vertex) : Boolean = {
-    assert( twoComplex.vertices.contains(v), "vertex is not part of the complex")
-    val edgesEndingAt_v = twoComplex.edges.filter(_.terminal == v).toSet // set of all edges ending at v
-    
-    // auxilliary function to start with an edge and take all edges by rotating left
-    def takeSum (e : Edge) (steps : Int) (accum : Set[Edge]) : Set[Edge] = {
+  
+  /* auxilliary function to start with an edge and take all edges by rotating left */
+    def takeSum (e : Edge, steps : Int, opt  : Edge => Option[Edge], accum : Set[Edge]) : Set[Edge] = {
       if (steps <= 0) accum
       else { 
-        val nextEdge = twoComplex.rotateLeftOpt(e)
+        val nextEdge = opt(e)
         nextEdge match {
-          case Some(f) => takeSum(f)(steps - 1)(accum + f)
-          case None => accum     
+          case Some(f) => takeSum(f, steps - 1, opt, accum + f)
+            case None => accum     
         }
       }
-    }
+    } 
 
+  /* all edges to the left of the edge e including itself*/  
+  def allEdgesToTheLeftOf (e : Edge) = takeSum(e, edges.size + 1, rotateLeftOpt(_), Set.empty)
+  /* all edges to the left of the edge e including itself*/
+  def allEdgesToTheRightOf (e : Edge) = takeSum(e, edges.size + 1, rotateRightOpt(_), Set.empty)
+  /* set of all edges ending at v */
+  def edgesEndingAt (v : Vertex) = twoComplex.edges.filter(_.terminal == v).toSet
+
+  /* checks if we start with an edge e with v == e.terminal, using left rotations, 
+   * (by iterating) we should get all edges with terminal vertex v.
+   * The naming is slightly misleading. Do give suggestions for better names
+  */
+  def isSurroundedVertex (v : Vertex) : Boolean = {
+    assert( twoComplex.vertices.contains(v), "vertex is not part of the complex")
+    val edgesEndingAt_v = edgesEndingAt(v) // set of all edges ending at v
+  
     if (edgesEndingAt_v.nonEmpty) {
-      // take all edges by going to the left
-      val allEdgesToTheLeft = takeSum(edgesEndingAt_v.head)(edgesEndingAt_v.size)(Set.empty)
-      // check if that is same as the set of all edges ending at v
-      edgesEndingAt_v == allEdgesToTheLeft 
+      ((edgesEndingAt_v == allEdgesToTheLeftOf(edgesEndingAt_v.head)) 
+       && 
+      (edgesEndingAt_v == allEdgesToTheRightOf(edgesEndingAt_v.head))) 
     }
     else true // if there are no edges ending at v then there is nothing to check
-    
   }        
-    
-}
 
+  /* Checks if all vertices of the complex is surrounded or doesn't have any incoming edge. 
+  * Because the twocomplex contains both e and e.flip for all edges e, no incoming edges
+  * also implies that no outgoing edges too */
+  def isClosedComplex : Boolean = vertices.toList.foldLeft(true)(_ && twoComplex.isSurroundedVertex(_))
+
+  /* For a surface with boundary, if we start with an edge e with v == e.terminal, 
+  * using left and right rotations, (by iterating) we should get all edges with terminal vertex e.terminal.
+  */
+  def checkSurfaceWithBoundary : Boolean = {
+    def check (v : Vertex) : Boolean = {
+      val edgesEndingAt_v = edgesEndingAt(v) // edges around v
+      if (edgesEndingAt_v.nonEmpty) {
+        val picked = edgesEndingAt_v.head // pick an edge
+        // take all edges by left and right turns
+        val allAroundPicked = (allEdgesToTheLeftOf(picked) ++ allEdgesToTheRightOf(picked)) 
+        // check if they cover all edges around v and the picked edge is part of a face
+        ((edgesEndingAt_v == allAroundPicked) &&
+         (twoComplex.faces.find(_.boundary.contains(picked)) != None)) 
+       }
+      else true // if there are no edges ending at v then there is nothing to check 
+    }   
+    // check this for all vertices
+    vertices.toList.foldLeft(true)(_ && check(_))
+  }  
+
+}
 /**
   * A two-complex with all vertices and edges contained in faces, hence determined by its faces.
   */
