@@ -324,7 +324,7 @@ trait TwoComplex { twoComplex =>
         faceOf_e => 
           val indexOf_e = faceOf_e.boundary.indexOf(e)
           if (indexOf_e <= -1) None
-          else if (indexOf_e == faceOf_e.boundary.length) Some(faceOf_e.boundary.head)
+          else if (indexOf_e == faceOf_e.boundary.length - 1) Some(faceOf_e.boundary.head)
           else Some(faceOf_e.boundary(indexOf_e + 1))
       }
   }    
@@ -358,8 +358,8 @@ trait TwoComplex { twoComplex =>
       else { 
         val nextEdge = opt(e)
         nextEdge match {
-          case Some(f) => takeSum(f, steps - 1, opt, accum + f)
-            case None => accum     
+          case Some(f) => takeSum(f, steps - 1, opt, accum + e)
+            case None => (accum + e)    
         }
       }
     } 
@@ -369,8 +369,9 @@ trait TwoComplex { twoComplex =>
   /* all edges to the left of the edge e including itself*/
   def allEdgesToTheRightOf (e : Edge) = takeSum(e, edges.size + 1, rotateRightOpt(_), Set.empty)
   /* set of all edges ending at v */
-  def edgesEndingAt (v : Vertex) = twoComplex.edges.filter(_.terminal == v).toSet
-
+  def edgesEndingAt (v : Vertex) = 
+    ((twoComplex.edges.filter(_.terminal == v).toSet) ++ 
+     (twoComplex.edges.filter(_.initial == v).map(_.flip)))
   /* checks if we start with an edge e with v == e.terminal, using left rotations, 
    * (by iterating) we should get all edges with terminal vertex v.
    * The naming is slightly misleading. Do give suggestions for better names
@@ -402,7 +403,7 @@ trait TwoComplex { twoComplex =>
     val condition1 = twoComplex.edges.toList.foldLeft(true)(_ && checkEdge(_)) 
     // every vertex is in some edge
     val condition2 = twoComplex.edges.flatMap(ed => Set(ed.initial, ed.terminal)) == twoComplex.vertices
-    // for all veritces one can get all edges surrounding it by going around by either left or right turns (not both) 
+    // for all veritces one can get all edges ending at it by going around by either left or right turns (not both) 
     val condition3 = vertices.toList.foldLeft(true)(_ && twoComplex.isSurroundedVertex(_))
 
     condition1 && condition2 && condition3
@@ -411,6 +412,21 @@ trait TwoComplex { twoComplex =>
   Checks if the twoComplex is a surface with boundary
   */
   def isSurfaceWithBoundary : Boolean = {
+
+    // checks if the edge e is in at least m and at most n faces
+    def checkEdge (e : Edge, m : Int, n : Int) : Boolean = {
+      val facesContanining_e = faces.filter(_.boundary.contains(e))
+      ((facesContanining_e.size >= m) && (facesContanining_e.size <= n))
+    }
+
+    // checks if each edge is in at most one face
+    val condition1 = twoComplex.edges.toList.foldLeft(true)(_ && checkEdge(_,0,1))
+
+    // checks if for each edge e, at least e or e.flip is in one of the faces
+    val condition2 = (twoComplex.edges.toList.foldLeft(true)
+      ((acc, ed) => (acc && (checkEdge(ed,1,1) || checkEdge(ed.flip,1,1)))))
+
+    // checks if for the vertex v, one can get all ending at it by going around by left and right turns
     def check (v : Vertex) : Boolean = {
       val edgesEndingAt_v = edgesEndingAt(v) // edges around v
       if (edgesEndingAt_v.nonEmpty) {
@@ -418,13 +434,14 @@ trait TwoComplex { twoComplex =>
         // take all edges by left and right turns
         val allAroundPicked = (allEdgesToTheLeftOf(picked) ++ allEdgesToTheRightOf(picked)) 
         // check if they cover all edges around v and the picked edge is part of a face
-        ((edgesEndingAt_v == allAroundPicked) &&
-         (twoComplex.faces.find(_.boundary.contains(picked)) != None)) 
+        (allAroundPicked == edgesEndingAt_v)       
        }
       else true // if there are no edges ending at v then there is nothing to check 
-    }   
+    } 
     // check this for all vertices
-    vertices.toList.foldLeft(true)(_ && check(_))
+    val condition3 = vertices.toList.foldLeft(true)(_ && check(_))
+    
+    condition1 && condition2 && condition3
   }  
 
 }
