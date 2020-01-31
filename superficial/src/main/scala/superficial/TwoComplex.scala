@@ -62,7 +62,7 @@ trait Polygon extends TwoComplex {
 }
 
 object Polygon {
-  /* Checks that for each conseutive edges e1 and e2 e1.terminal == e2.intial */ 
+  /** Checks that for each conseutive edges e1 and e2 e1.terminal == e2.intial */ 
   def checkBoundary(v: Vector[Edge]) =
     v.zip(v.tail).forall { case (e1, e2) => e1.terminal == e2.initial } && (
       v.last.terminal == v.head.initial
@@ -287,7 +287,12 @@ trait TwoComplex { twoComplex =>
     newComplex
   }
 
-  //Finds neighbours of a vertex
+  /**
+    * Finds neighbours of a vertex
+    *
+    * @param v the vertex
+    * @return set of neighbours
+    */ 
   def vertexNbr(v: Vertex): Set[Vertex] = {
     val s = (twoComplex.edges.filter(_.initial == v).map(_.terminal)).
         union(twoComplex.edges.filter(_.terminal == v).map(_.initial))
@@ -305,136 +310,151 @@ trait TwoComplex { twoComplex =>
     else maxSetNbr(setNbr(s))
   }
 
-  //Finds the connected component of a vertex
+  /**
+    * Finds the connected component of a vertex
+    *
+    * @param v the starting vertex
+    * @return set of initial neighbours
+    */ 
   def connectedComponent(v: Vertex): Set[Vertex] = {
     maxSetNbr(Set(v))
   }
 
-  //Checks if the complex is connected
+  /**
+    * Checks if the complex is connected
+    *
+    * @return connectivity
+    */
   def isConnectedComplex: Boolean = {
-    val v = twoComplex.vertices.toList.head
-    connectedComponent(v) == twoComplex.vertices
+    val vOpt = twoComplex.vertices.toList.headOption
+    vOpt.map{v => connectedComponent(v) == twoComplex.vertices}.getOrElse(true)
   }
 
-  /* given an edge, find a face whose boundary contains e (if it exists, it is unique); 
+  /** given an edge, find a face whose boundary contains e (if it exists, it is unique); 
   * take the next edge along the boundary */
   def succOpt (e : Edge) : Option[Edge] = {
-      val mayBefaceOf_e = twoComplex.faces.find(_.boundary.contains(e))
-      mayBefaceOf_e flatMap {
-        faceOf_e => 
-          val indexOf_e = faceOf_e.boundary.indexOf(e)
-          if (indexOf_e <= -1) None
-          else if (indexOf_e == faceOf_e.boundary.length - 1) Some(faceOf_e.boundary.head)
-          else Some(faceOf_e.boundary(indexOf_e + 1))
+      val mayBefaceOfEdge = twoComplex.faces.find(_.boundary.contains(e))
+      mayBefaceOfEdge flatMap {
+        faceOfEdge => 
+          val indexOfEdge = faceOfEdge.boundary.indexOf(e)
+          if (indexOfEdge <= -1) None
+          else if (indexOfEdge == faceOfEdge.boundary.length - 1) Some(faceOfEdge.boundary.head)
+          else Some(faceOfEdge.boundary(indexOfEdge + 1))
       }
   }    
-  /* given an edge, find a face whose boundary contains e (if it exists, it is unique); 
+  /** given an edge, find a face whose boundary contains e (if it exists, it is unique); 
   * take the previous edge along the boundary 
   */
   def predOpt (e : Edge) : Option[Edge] = {
-      val mayBefaceOf_e = twoComplex.faces.find(_.boundary.contains(e))
-      mayBefaceOf_e flatMap {
-        faceOf_e => 
-          val indexOf_e = faceOf_e.boundary.indexOf(e)
-          if (indexOf_e <= -1) None
-          else if (indexOf_e == 0) Some(faceOf_e.boundary.last)
-          else Some(faceOf_e.boundary(indexOf_e - 1))
+      val mayBefaceOfEdge = twoComplex.faces.find(_.boundary.contains(e))
+      mayBefaceOfEdge flatMap {
+        faceOfEdge => 
+          val indexOfEdge = faceOfEdge.boundary.indexOf(e)
+          if (indexOfEdge <= -1) None
+          else if (indexOfEdge == 0) Some(faceOfEdge.boundary.last)
+          else Some(faceOfEdge.boundary(indexOfEdge - 1))
       }
   }        
 
-  /* gives the edge with same terminal vertex obtained by left rotation.*/
+  /** gives the edge with same terminal vertex obtained by left rotation.*/
   def rotateLeftOpt (e : Edge) : Option[Edge] = {
     succOpt(e) flatMap {
       f => Some(f.flip)
     }
   }
 
-  /* gives the edge with same terminal vertex obtained by right rotation.*/
+  /** gives the edge with same terminal vertex obtained by right rotation.*/
   def rotateRightOpt (e : Edge) : Option[Edge] = predOpt(e.flip)
   
-  /* auxilliary function to start with an edge and take all edges by rotating left */
-    def takeSum (e : Edge, steps : Int, opt  : Edge => Option[Edge], accum : Set[Edge]) : Set[Edge] = {
+  /** auxilliary function to start with an edge and take all edges by rotating left */
+    def orbit (e : Edge, steps : Int, opt  : Edge => Option[Edge], accum : Set[Edge]) : Set[Edge] = {
       if (steps <= 0) accum
       else { 
         val nextEdge = opt(e)
-        nextEdge match {
-          case Some(f) => takeSum(f, steps - 1, opt, accum + e)
-            case None => (accum + e)    
-        }
+        nextEdge.fold(accum + e)(f => orbit(f, steps - 1, opt, accum + e)  )
       }
     } 
 
-  /* all edges to the left of the edge e including itself*/  
-  def allEdgesToTheLeftOf (e : Edge) = takeSum(e, edges.size + 1, rotateLeftOpt(_), Set.empty)
-  /* all edges to the left of the edge e including itself*/
-  def allEdgesToTheRightOf (e : Edge) = takeSum(e, edges.size + 1, rotateRightOpt(_), Set.empty)
-  /* set of all edges ending at v */
+  /**all edges to the left of the edge e including itself*/  
+  def allEdgesToTheLeftOf (e : Edge) = orbit(e, edges.size + 1, rotateLeftOpt(_), Set.empty)
+  /** all edges to the left of the edge e including itself*/
+  def allEdgesToTheRightOf (e : Edge) = orbit(e, edges.size + 1, rotateRightOpt(_), Set.empty)
+  /** set of all edges ending at v */
   def edgesEndingAt (v : Vertex) = 
-    ((twoComplex.edges.filter(_.terminal == v).toSet) ++ 
+    ((twoComplex.edges.filter(_.terminal == v).toSet) ++ // FIXME the second term is not needed for a valid two-complex
      (twoComplex.edges.filter(_.initial == v).map(_.flip)))
-  /* checks if we start with an edge e with v == e.terminal, using left rotations, 
+
+  /** 
+   * checks if we start with an edge e with v == e.terminal, using left rotations, 
    * (by iterating) we should get all edges with terminal vertex v.
    * The naming is slightly misleading. Do give suggestions for better names
   */
-  def isSurroundedVertex (v : Vertex) : Boolean = {
+  def transitiveRotations (v : Vertex) : Boolean = {
     assert( twoComplex.vertices.contains(v), "vertex is not part of the complex")
-    val edgesEndingAt_v = edgesEndingAt(v) // set of all edges ending at v
+    val edgesEndingAtVertex = edgesEndingAt(v) // set of all edges ending at v
   
-    if (edgesEndingAt_v.nonEmpty) {
-      ((edgesEndingAt_v == allEdgesToTheLeftOf(edgesEndingAt_v.head)) 
+    if (edgesEndingAtVertex.nonEmpty) {
+      ((edgesEndingAtVertex == allEdgesToTheLeftOf(edgesEndingAtVertex.head)) 
        && 
-      (edgesEndingAt_v == allEdgesToTheRightOf(edgesEndingAt_v.head))) 
+      (edgesEndingAtVertex == allEdgesToTheRightOf(edgesEndingAtVertex.head))) 
     }
     else true // if there are no edges ending at v then there is nothing to check
-  }        
+  }   
+  
+  /**
+      * Occurences of edges in faces, counting multiplicity
+      *
+      * @param e
+      */
+    def edgeOccurences(e: Edge) : Int = faces.flatMap(_.boundary).count(_ == e)
+
 
   /*
   * Checks if the twoComplex is a closed surface. 
   */
   def isClosedSurface : Boolean = {
-
+    
     // checks if the edge e is in exactly one face
-    def checkEdge (e : Edge): Boolean = {
-      val facesContanining_e = faces.filter(_.boundary.contains(e))
-      (facesContanining_e.size == 1)
-    }
+    def edgeInOneFace (e : Edge): Boolean = {
+     edgeOccurences(e) == 1
+    } 
     
     // checks if each edge is in exactly one face
-    val condition1 = twoComplex.edges.toList.foldLeft(true)(_ && checkEdge(_)) 
+    val condition1 = twoComplex.edges.forall(edgeInOneFace(_)) 
     // every vertex is in some edge
     val condition2 = twoComplex.edges.flatMap(ed => Set(ed.initial, ed.terminal)) == twoComplex.vertices
     // for all veritces one can get all edges ending at it by going around by either left or right turns (not both) 
-    val condition3 = vertices.toList.foldLeft(true)(_ && twoComplex.isSurroundedVertex(_))
+    val condition3 = vertices.toList.foldLeft(true)(_ && twoComplex.transitiveRotations(_))
 
     condition1 && condition2 && condition3
   }
-  /* 
+
+  /** 
   Checks if the twoComplex is a surface with boundary
   */
   def isSurfaceWithBoundary : Boolean = {
 
     // checks if the edge e is in at least m and at most n faces
     def checkEdge (e : Edge, m : Int, n : Int) : Boolean = {
-      val facesContanining_e = faces.filter(_.boundary.contains(e))
-      ((facesContanining_e.size >= m) && (facesContanining_e.size <= n))
+      val facesContaniningEdge = faces.filter(_.boundary.contains(e))
+      ((facesContaniningEdge.size >= m) && (facesContaniningEdge.size <= n))
     }
 
     // checks if each edge is in at most one face
-    val condition1 = twoComplex.edges.toList.foldLeft(true)(_ && checkEdge(_,0,1))
+    val condition1 = twoComplex.edges.forall(e => edgeOccurences(e) <= 1)
 
     // checks if for each edge e, at least e or e.flip is in one of the faces
-    val condition2 = (twoComplex.edges.toList.foldLeft(true)
-      ((acc, ed) => (acc && (checkEdge(ed,1,1) || checkEdge(ed.flip,1,1)))))
+    val condition2 = twoComplex.edges.forall(e => edgeOccurences(e) + edgeOccurences(e.flip) >= 1)
 
     // checks if for the vertex v, one can get all ending at it by going around by left and right turns
     def check (v : Vertex) : Boolean = {
-      val edgesEndingAt_v = edgesEndingAt(v) // edges around v
-      if (edgesEndingAt_v.nonEmpty) {
-        val picked = edgesEndingAt_v.head // pick an edge
+      val edgesEndingAtVertex = edgesEndingAt(v) // edges around v
+      if (edgesEndingAtVertex.nonEmpty) {
+        val picked = edgesEndingAtVertex.head // pick an edge
         // take all edges by left and right turns
         val allAroundPicked = (allEdgesToTheLeftOf(picked) ++ allEdgesToTheRightOf(picked)) 
         // check if they cover all edges around v and the picked edge is part of a face
-        (allAroundPicked == edgesEndingAt_v)       
+        (allAroundPicked == edgesEndingAtVertex)       
        }
       else true // if there are no edges ending at v then there is nothing to check 
     } 
