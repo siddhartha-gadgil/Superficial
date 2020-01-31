@@ -388,7 +388,7 @@ trait TwoComplex { twoComplex =>
   }        
 
   /*
-  * Checks if the twoComplex is closed. 
+  * Checks if the twoComplex is a closed surface. 
   */
   def isClosedSurface : Boolean = {
 
@@ -407,8 +407,8 @@ trait TwoComplex { twoComplex =>
 
     condition1 && condition2 && condition3
   }
-  /* For a surface with boundary, if we start with an edge e with v == e.terminal, 
-  * using left and right rotations, (by iterating) we should get all edges with terminal vertex e.terminal.
+  /* 
+  Checks if the twoComplex is a surface with boundary
   */
   def isSurfaceWithBoundary : Boolean = {
     def check (v : Vertex) : Boolean = {
