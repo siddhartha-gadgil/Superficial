@@ -464,7 +464,45 @@ trait TwoComplex { twoComplex =>
     condition1 && condition2 && condition3
   }  
 
+  /** 
+  Given a vertex v gives the TwoComplex got by adding v to the existing twoComplex.
+  If v is already inside gives the same twoComplex 
+  */
+  def addVertex (v : Vertex) : TwoComplex = {
+    if (twoComplex.vertices.contains(v)) {
+      System.err.println("[Warning] Vertex is already part of the twocomplex")
+    }
+    
+    object newComplex extends TwoComplex {
+      def faces: Set[Polygon] = twoComplex.faces
+      def edges: Set[Edge] = twoComplex.edges
+      def vertices: Set[Vertex] = twoComplex.vertices + v
+    }
+    newComplex
+  }
+
+  /** 
+  Given a set of vertices vs gives the TwoComplex got by adding vs 
+  to the existing twoComplex. If vs is already inside gives the same 
+  twoComplex 
+  */
+
+  def addVertices (vs : Set[Vertex]) : TwoComplex ={
+    if (twoComplex.vertices.intersect(vs).nonEmpty) {
+      System.err.println("The following vertices already belong to the twocomplex" 
+        + twoComplex + "\n" + twoComplex.vertices.intersect(vs))
+    }
+
+    object newComplex extends TwoComplex {
+      def faces: Set[Polygon] = twoComplex.faces
+      def edges: Set[Edge] = twoComplex.edges
+      def vertices: Set[Vertex] = twoComplex.vertices ++ vs
+    }
+    newComplex
+  }
+
 }
+
 /**
   * A two-complex with all vertices and edges contained in faces, hence determined by its faces.
   */
