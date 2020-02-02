@@ -496,7 +496,7 @@ trait TwoComplex { twoComplex =>
 
     object newComplex extends TwoComplex {
       def faces: Set[Polygon] = twoComplex.faces
-      def edges: Set[Edge] = twoComplex.edges ++ eds
+      def edges: Set[Edge] = twoComplex.edges ++ eds ++ eds.map(_.flip)
       def vertices: Set[Vertex] = 
         twoComplex.vertices ++ eds.flatMap(ed => Set(ed.initial, ed.terminal))
     }
@@ -553,7 +553,17 @@ trait TwoComplex { twoComplex =>
     newComplex
   }
 
+  /**
+  Given e takes its successor, then flips and then takes successor again
+  */
+  def slightLeft (e : Edge) : Option[Edge] = rotateLeftOpt(e).flatMap(succOpt) 
+  /**
+  Given e takes its predecessor, then flips and then takes predecessor again
+  */
+  def slightRight (e : Edge) : Option[Edge] = rotateRightOpt(e).flatMap(predOpt)
+
 }
+
 
 /**
   * A two-complex with all vertices and edges contained in faces, hence determined by its faces.
