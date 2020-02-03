@@ -464,7 +464,107 @@ trait TwoComplex { twoComplex =>
     condition1 && condition2 && condition3
   }  
 
+  /** 
+  Given a set of vertices vs gives the TwoComplex got by adding vs 
+  to the existing twoComplex. If vs is already inside gives the same 
+  twoComplex 
+  */
+  def addVertices (vs : Set[Vertex]) : TwoComplex ={
+    if (twoComplex.vertices.intersect(vs).nonEmpty) {
+      System.err.println("[Warning] The following vertices already belong to the twocomplex" 
+        + twoComplex + "\n" + twoComplex.vertices.intersect(vs))
+    }
+
+    object newComplex extends TwoComplex {
+      def faces: Set[Polygon] = twoComplex.faces
+      def edges: Set[Edge] = twoComplex.edges
+      def vertices: Set[Vertex] = twoComplex.vertices ++ vs
+    }
+    newComplex
+  }
+  
+  /** 
+  Given a set of edges eds gives the TwoComplex got by adding eds 
+  to the existing twoComplex.
+  */
+
+  def addEdges (eds : Set[Edge]) : TwoComplex ={
+    if (twoComplex.edges.intersect(eds).nonEmpty) {
+      System.err.println("[Warning] The following edges already belong to the twocomplex" 
+        + twoComplex + "\n" + twoComplex.edges.intersect(eds))
+    }
+
+    object newComplex extends TwoComplex {
+      def faces: Set[Polygon] = twoComplex.faces
+      def edges: Set[Edge] = twoComplex.edges ++ eds ++ eds.map(_.flip)
+      def vertices: Set[Vertex] = 
+        twoComplex.vertices ++ eds.flatMap(ed => Set(ed.initial, ed.terminal))
+    }
+    newComplex
+  }
+
+  /** 
+  Given a set of faces fcs gives the TwoComplex got by adding fcs 
+  to the existing twoComplex.
+  */
+
+  def addfaces (fcs : Set[Polygon]) : TwoComplex = {
+    if (twoComplex.faces.intersect(fcs).nonEmpty) {
+      System.err.println("[Warning] The following edges already belong to the twocomplex" 
+        + twoComplex + "\n" + twoComplex.faces.intersect(fcs))
+    }
+
+    object newComplex extends TwoComplex {
+      def faces: Set[Polygon] = twoComplex.faces ++ fcs
+      def edges: Set[Edge] = twoComplex.edges ++ fcs.flatMap(_.edges)
+      def vertices: Set[Vertex] = 
+        twoComplex.vertices ++ fcs.flatMap(_.vertices)
+    }
+    newComplex
+  }
+
+  /**
+  Gives the result of adding the given set of twocomplexes to the existing one.
+  */
+  def addTwoComplexes (complexes : Set[TwoComplex]) = {
+    object newComplex extends TwoComplex {
+      def faces: Set[Polygon] = twoComplex.faces ++ complexes.flatMap(_.faces)
+      def edges: Set[Edge] = twoComplex.edges ++ complexes.flatMap(_.edges)
+      def vertices: Set[Vertex] = 
+        twoComplex.vertices ++ complexes.flatMap(_.vertices)
+    }
+    newComplex
+  }
+
+  /**
+  Given a set of vertices gives the subcomplex on the vertices
+  */
+  def subComplex (vs : Set[Vertex]) : TwoComplex = {
+    if (!vs.subsetOf(twoComplex.vertices)) {
+      System.err.println("[Warning] The following vertices don't belong to the twoComplex : " + "\n " +
+        vs.filter(!twoComplex.vertices.contains(_)))
+    } 
+
+    object newComplex extends TwoComplex {
+      def faces: Set[Polygon] = twoComplex.faces.filter(_.vertices.subsetOf(vs))
+      def edges: Set[Edge] = twoComplex.edges.filter(ed => (Set(ed.initial, ed.terminal).subsetOf(vs)))
+      def vertices: Set[Vertex] = vs
+    }
+    newComplex
+  }
+
+  /**
+  Given e takes its successor, then flips and then takes successor again
+  */
+  def slightLeft (e : Edge) : Option[Edge] = rotateLeftOpt(e).flatMap(succOpt) 
+  /**
+  Given e takes its predecessor, then flips and then takes predecessor again
+  */
+  def slightRight (e : Edge) : Option[Edge] = rotateRightOpt(e).flatMap(predOpt)
+
 }
+
+
 /**
   * A two-complex with all vertices and edges contained in faces, hence determined by its faces.
   */
