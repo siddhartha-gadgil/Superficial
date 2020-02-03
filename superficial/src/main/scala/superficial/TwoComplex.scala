@@ -219,8 +219,8 @@ trait TwoComplex { twoComplex =>
     )
   
 
-  def edgeIndex(edge: Edge) = {
-    positiveEdges.zipWithIndex
+  def edgeIndex(edge: Edge) : Option[(Int, Boolean)] = {
+    halfEdges.zipWithIndex
       .find { case (e, i) => e == edge || e.flip == edge }
       .map { case (e, i) => (i, e == edge) }
   }
