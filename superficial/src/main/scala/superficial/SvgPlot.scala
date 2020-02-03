@@ -146,4 +146,7 @@ object SvgPlot {
     val file = new File(fileName)
     desktop.browse(new URI("file:///" + file.getAbsolutePath))
   }
+
+  def apply(complex: TwoComplex, radius: Double = 50) : Unit = 
+    viewPage(plotComplex(complex, radius))
 }

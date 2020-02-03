@@ -269,7 +269,7 @@ trait TwoComplex { twoComplex =>
 
     def newPoly(polygon: Polygon): Polygon =
       new Polygon {
-        val sides: Int = polygon.sides
+        val sides: Int = polygon.sides - 1
         val boundary: Vector[Edge] =
           polygon.boundary.filterNot(Set(e, e.flip).contains(_)).map { edge =>
             newEdgeMap(edge)
