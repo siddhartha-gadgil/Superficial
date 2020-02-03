@@ -16,38 +16,39 @@ object SphereComplex {
 
   val doubleTriangle: TwoComplex = TwoComplex.pure(upper, lower)
 
-  val doubleBigon : TwoComplex = doubleTriangle.collapseEdge(A.Positive)
+  val doubleBigon: TwoComplex = doubleTriangle.collapseEdge(A.Positive)
   val doubleMonogon = TwoComplex.allCollapsed(doubleTriangle)
 }
 import SphereComplex._
 
 object CollapseTest extends TestSuite {
-    val tests: Tests = Tests{
-        "collapseA" - {
-            "twoedges" - {
-                assert(doubleBigon.edges.size == 4)
-            }
-            "vertexSet" - {
-                assert(doubleBigon.vertices == Set(X, Z))
-            }
-        "fullCollapse" - {
-            "oneVertex" - {
-                assert(doubleMonogon.vertices.size == 1)
-            }
-            "twoEdges" - {
-                assert(doubleMonogon.edges.size == 2)
-            }
-            "edgesFlipsOfEachOther" - {
-                val e = doubleMonogon.edges.head
-                assert(doubleMonogon.edges == Set(e, e.flip))
-            }
+  val tests: Tests = Tests {
+    "collapseA" - {
+      "twoedges" - {
+        assert(doubleBigon.edges.size == 4)
+      }
+      "vertexSet" - {
+        assert(doubleBigon.vertices == Set(X, Z))
+      }
+      "fullCollapse" - {
+        "oneVertex" - {
+          assert(doubleMonogon.vertices.size == 1)
         }
+        "twoEdges" - {
+          assert(doubleMonogon.edges.size == 2)
+        }
+        "edgesFlipsOfEachOther" - {
+          val e = doubleMonogon.edges.head
+          assert(doubleMonogon.edges == Set(e, e.flip))
+        }
+      }
     }
     "AllComplexes" - {
-            "areConnected" - {
-                assert(doubleTriangle.isConnectedComplex && doubleBigon.isConnectedComplex&& doubleMonogon.isConnectedComplex)
-            }
-        }
+      "areConnected" - {
+        assert(
+          doubleTriangle.isConnectedComplex && doubleBigon.isConnectedComplex && doubleMonogon.isConnectedComplex
+        )
+      }
     }
+  }
 }
-
