@@ -584,54 +584,70 @@ trait TwoComplex { twoComplex =>
    *Given e takes two right rotations and flips it.
    */
   def slightRight (e : Edge) : Option[Edge] = rotateRightOpt(e).flatMap(rotateRightOpt).map(_.flip)
-
+// --------------------------------------------------------------------------------------------------------------------
+  
+  // trial and error area -----------------------------------------------------------  
+      
+// ----------------------------------------------------------------------------------------------------------
   def quadrangulate : TwoComplex = {
  
-    assert(twoComplex.isClosedSurface, "Algorithm only works for closed surfaces")
+    assert(twoComplex.isClosedSurface, "Algorithm only works for closed surfaces")       
 
+    // def addEdgePairs (edge : Edge) : EdgePair = 
+    //   (new EdgePair(barycenters(faceOfEdge(edge)), edge.terminal))
+
+    
+
+    // def newEdgeMap = edgeList.zip(edgeList.map(addEdgePairs)).toMap
+    
+
+    // def sure (maybe : Option[Edge]) : Edge = {
+    //   maybe match {
+    //     case None => ??? // This is fine as we will never get 'None' as Option[Edge]
+    //     case Some(f) => f
+    //   }
+    // } 
+ 
     def addBarycenter (face : Polygon) : Vertex = {
       object bFace extends Vertex
       bFace
     }
 
+    val vertexList = twoComplex.vertices.toList
+    val edgeList = twoComplex.edges.toList
     val faceList = twoComplex.faces.toList
-    val barycenters = faceList.zip(faceList.map(addBarycenter(_))).toMap
-    
+    val barycentersList = faceList.map(addBarycenter(_))
+    val barycenters = faceList.zip(barycentersList).toMap
+    val facesWithVertices = 
+      faceList.flatMap(f => vertexList.map(v => (f, v))).filter(el => el._1.vertices.contains(el._2))
     def faceOfEdge (edge : Edge) : Polygon = {
       twoComplex.faces.find(_.boundary.contains(edge)) match {
-        case None => ??? // This case will not arise as the twoComplex is a closed surface
-        case Some(f) => f
+          case None => ??? // This case will not arise as the twoComplex is a closed surface
+          case Some(f) => f
       }
     }
-    def addEdgePairs (edge : Edge) : EdgePair = 
-      (new EdgePair(barycenters(faceOfEdge(edge)), edge.terminal))
+    def addEdgePairs (f : Polygon, v : Vertex) : EdgePair = 
+      (new EdgePair(barycenters(f), v))  
 
-    def edgeList = twoComplex.edges.toList
-    def newEdgeMap = edgeList.zip(edgeList.map(addEdgePairs)).toMap
-    
-    def sure (maybe : Option[Edge]) : Edge = {
-      maybe match {
-        case None => ??? // This is fine as we will never get 'None' as Option[Edge]
-        case Some(f) => f
-      }
-    } 
- 
-    def addFace (edge : Edge) : Polygon = {
+    val newEdgePairsList = facesWithVertices.map(el => addEdgePairs(el._1, el._2))    
+    val newEdgeMap1 = facesWithVertices.zip(newEdgePairsList).toMap 
+
+    def addFace (edge : Edge) = {
        Polygon.apply(
-         Vector(newEdgeMap(edge).Positive,
-                newEdgeMap(sure(predOpt(edge.flip))).Negative,
-                newEdgeMap(edge.flip).Positive,
-                newEdgeMap(sure(predOpt(edge))).Negative))
+         Vector(newEdgeMap1(faceOfEdge(edge), edge.terminal).Positive,
+                newEdgeMap1(faceOfEdge(edge.flip), edge.terminal).Negative,
+                newEdgeMap1(faceOfEdge(edge.flip), edge.initial).Positive,
+                newEdgeMap1(faceOfEdge(edge), edge.initial).Negative))
         
-    }
-
-    val newFaces = positiveEdges.map(addFace).toSet
-
-    object newComplex extends PureTwoComplex {
-      val faces = newFaces
     }  
-    newComplex
-  }
+
+    val newFaces = halfEdges.map(addFace)
+    
+    object quad extends PureTwoComplex {
+      val faces = newFaces
+    }
+    quad
+  }  
 }
 
 
