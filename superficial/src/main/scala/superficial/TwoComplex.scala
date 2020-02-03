@@ -586,36 +586,51 @@ trait TwoComplex { twoComplex =>
   def slightRight (e : Edge) : Option[Edge] = rotateRightOpt(e).flatMap(rotateRightOpt).map(_.flip)
 
   def quadrangulate : TwoComplex = {
+ 
+    assert(twoComplex.isClosedSurface, "Algorithm only works for closed surfaces")
 
     def addBarycenter (face : Polygon) : Vertex = {
       object bFace extends Vertex
       bFace
     }
 
-    val barycenters = twoComplex.faces.zip(twoComplex.faces.map(addBarycenter(_))).toMap
+    val faceList = twoComplex.faces.toList
+    val barycenters = faceList.zip(faceList.map(addBarycenter(_))).toMap
     
     def faceOfEdge (edge : Edge) : Polygon = {
       twoComplex.faces.find(_.boundary.contains(edge)) match {
-        case None => ??? //will add an error message later. Or just add th condition that the twocomplex is a closed surface
+        case None => ??? // This case will not arise as the twoComplex is a closed surface
         case Some(f) => f
       }
     }
     def addEdgePairs (edge : Edge) : EdgePair = 
       (new EdgePair(barycenters(faceOfEdge(edge)), edge.terminal))
 
-    def newEdgeMap = edges.zip(edges.map(addEdgePairs))
+    def edgeList = twoComplex.edges.toList
+    def newEdgeMap = edgeList.zip(edgeList.map(addEdgePairs)).toMap
     
-    // doesn't work as predOpt maps to Option[Edge] it is better to have an sure map from Option[type] to type
+    def sure (maybe : Option[Edge]) : Edge = {
+      maybe match {
+        case None => ??? // This is fine as we will never get 'None' as Option[Edge]
+        case Some(f) => f
+      }
+    } 
+ 
     def addFace (edge : Edge) : Polygon = {
-      // apply(newEdgeMap(edge).Positive,
-      //       newEdgeMap(predOpt(edge.flip)).Negative,
-      //       newEdgeMap(edge.flip).Positive,
-      //       newEdgeMap(predOpt(edge)).Negative)
-      ???
+       Polygon.apply(
+         Vector(newEdgeMap(edge).Positive,
+                newEdgeMap(sure(predOpt(edge.flip))).Negative,
+                newEdgeMap(edge.flip).Positive,
+                newEdgeMap(sure(predOpt(edge))).Negative))
+        
     }
 
+    val newFaces = positiveEdges.map(addFace).toSet
 
-    ???  
+    object newComplex extends PureTwoComplex {
+      val faces = newFaces
+    }  
+    newComplex
   }
 }
 
