@@ -2,7 +2,7 @@ package superficial
 
 import utest._
 
-import SphereComplex._
+import SphereComplex._, Examples._
 
 object Connectivity extends TestSuite {
   val tests: Tests = Tests {
@@ -23,5 +23,8 @@ object Connectivity extends TestSuite {
             assert(surface.isConnectedComplex)
         }
     }
+    "wedgeOfTori" - {
+          assert(wedgeTori.isConnectedComplex)
+      }
   }
 }

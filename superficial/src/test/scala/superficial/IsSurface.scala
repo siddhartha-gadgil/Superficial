@@ -20,6 +20,10 @@ object IsSurface extends TestSuite {
         val poly = Polygon(1 + rnd.nextInt(10))
         assert(!poly.isClosedSurface)
       }
+
+      "wedgeOfTori" - {
+          assert(!wedgeTori.isClosedSurface)
+      }
     }
 
   }
