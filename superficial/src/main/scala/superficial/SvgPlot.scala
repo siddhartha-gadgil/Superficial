@@ -19,9 +19,19 @@ object SvgPlot {
       y2.toInt.toString
     } stroke={colour} stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line>
 
+  def drawCircle(
+    cx: Double,
+    cy: Double,
+    colour: String,
+    r: Double = 3
+  ) = 
+    <circle cx={cx.toInt.toString} cy={cy.toInt.toString} r={r.toInt.toString} fill={colour}/>
+
   def getColour(n: Int) =
     s"hsl(${(n * 81) % 360}, 100%, 50%)"
-  // colours(n % (colours.size))
+  
+  def shiftColour(n: Int) =
+    s"hsl(${(40 +  (n * 81)) % 360}, 100%, 50%)"
 
   def hexagonSides(
       offset: (Double, Double) = (0, 0),
@@ -52,8 +62,9 @@ object SvgPlot {
         val x2 = x + (radius) + (cos((j + 1) * theta) * radius)
         val y1 = y + (radius) + (sin(j * theta) * radius)
         val y2 = y + (radius) + (sin((j + 1) * theta) * radius)
-        if (pos) lineArrow(x1, y1, x2, y2, getColour(ind), (ind + 1).toString)
-        else lineArrow(x2, y2, x1, y1, getColour(ind), (ind + 1).toString)
+        val circle = drawCircle(x1, y1, shiftColour(complex.vertexIndex(e.initial).get))
+        if (pos) lineArrow(x1, y1, x2, y2, getColour(ind), (ind + 1).toString) :+ circle
+        else lineArrow(x2, y2, x1, y1, getColour(ind), (ind + 1).toString) :+ circle
     }
   }
 

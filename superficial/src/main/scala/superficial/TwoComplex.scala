@@ -17,6 +17,8 @@ trait Polygon extends TwoComplex {
 
   val boundary: Vector[Edge]
 
+  lazy val basePoint : Vertex = boundary.head.initial // override for empty boundary
+
   def checkBoundary =
     Polygon.checkBoundary(boundary) // not asserted here because of possible delayed initialization
 
@@ -86,14 +88,22 @@ object Polygon {
       (indices map (PolygonVertex(self, _))).toSet     
   }
 
-  def apply(v: Vector[Edge]): Polygon = {
-    assert(checkBoundary(v), s"boundary $v not a loop")
+  def apply(bdy: Vector[Edge]): Polygon = {
+    require(bdy.nonEmpty, s"use `degenerate` method for empty polygon")
+    assert(checkBoundary(bdy), s"boundary $bdy not a loop")
     new Polygon {
-      val sides: Int = v.size
-      val boundary: Vector[Edge] = v
-      val vertices: Set[Vertex] = v.map(_.initial).toSet
+      val sides: Int = bdy.size
+      val boundary: Vector[Edge] = bdy
+      val vertices: Set[Vertex] = bdy.map(_.initial).toSet
     }
     
+  }
+
+  def degenerate(v: Vertex): Polygon = new Polygon {
+    val sides: Int = 0
+    val boundary: Vector[Edge] = Vector()
+    val vertices: Set[Vertex] = Set(v)
+    override lazy val basePoint: Vertex = v
   }
 
   case class Symbolic(name: String, boundary: Vector[Edge]) extends Polygon {
@@ -134,7 +144,7 @@ object TwoComplex {
       val faces: Set[Polygon] = fs.toSet
     }
   }
-  case class Impl(vertices: Set[Vertex], edges: Set[Edge], faces: Set[Polygon])
+  case class Concrete(vertices: Set[Vertex], edges: Set[Edge], faces: Set[Polygon])
       extends TwoComplex
 
   @annotation.tailrec
@@ -164,12 +174,13 @@ object TwoComplex {
     val firstTail = first.boundary.drop(firstHead.size + 1) // edges after e
     val secondHead = second.boundary.takeWhile(_ != e.flip) // edges before e
     val secondTail = second.boundary.drop(secondHead.size + 1) // edges after e
-    Polygon(firstHead ++ secondTail ++ secondHead ++ firstTail)
+    val bdy = firstHead ++ secondTail ++ secondHead ++ firstTail 
+    if (bdy.nonEmpty) Polygon(bdy) else Polygon.degenerate(e.initial)
   }.ensuring(poly => poly.checkPoly)
 
   def symbolic(vertexNames: String*)(edgeMap: (String, (String, String))*)(
-      faceMap: (String, Vector[(String, Boolean)])*
-): TwoComplex = {
+      faceMap: (String, Seq[(String, Boolean)])*
+  ): TwoComplex = {
     val vertices: Set[Vertex] = vertexNames.toSet.map(Vertex.Symbolic(_))
     val edges: Set[Edge] =
       edgeMap.toMap.flatMap {
@@ -188,9 +199,9 @@ object TwoComplex {
           val edges = for {
             (name, pos) <- vec
           } yield (getEdge(name, pos).get)
-          Polygon.Symbolic(face, edges)
+          Polygon.Symbolic(face, edges.toVector)
       }.toSet
-    Impl(vertices, edges, faces)
+    Concrete(vertices, edges, faces)
   }
 }
 
@@ -226,6 +237,10 @@ trait TwoComplex { twoComplex =>
   }
 
   def vertices: Set[Vertex]
+
+  lazy val indexedVertices = vertices.zipWithIndex // for fixing order
+
+  def vertexIndex(v: Vertex) = indexedVertices.find(_._1 == v).map(_._2)
 
   def facesWithEdge(edge: Edge): Set[Polygon] =
     faces.filter((face) => face.edges.contains(edge))
@@ -654,7 +669,7 @@ trait TwoComplex { twoComplex =>
        */
 
     def vectorEdgesToTheRightOf(e: Edge) = vectorOrbit(e, rotateRightOpt(_), Vector[Edge]())
-    
+
 // --------------------------------------------------------------------------------------------------------------------
   
   // trial and error area -----------------------------------------------------------  
