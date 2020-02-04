@@ -169,7 +169,7 @@ object TwoComplex {
 
   def symbolic(vertexNames: String*)(edgeMap: (String, (String, String))*)(
       faceMap: (String, Vector[(String, Boolean)])*
-  ): TwoComplex = {
+): TwoComplex = {
     val vertices: Set[Vertex] = vertexNames.toSet.map(Vertex.Symbolic(_))
     val edges: Set[Edge] =
       edgeMap.toMap.flatMap {
@@ -384,6 +384,11 @@ trait TwoComplex { twoComplex =>
     ((twoComplex.edges.filter(_.terminal == v).toSet) ++ // FIXME the second term is not needed for a valid two-complex
      (twoComplex.edges.filter(_.initial == v).map(_.flip)))
 
+  /**
+   * The degree of a vertex
+   */
+  def degree(v: Vertex): Int = edgesEndingAt(v).size
+
   /** 
    * checks if we start with an edge e with v == e.terminal, using left rotations, 
    * (by iterating) we should get all edges with terminal vertex v.
@@ -553,6 +558,19 @@ trait TwoComplex { twoComplex =>
     newComplex
   }
 
+
+  /**
+    * Turns left in an EdgePath
+    *
+    * @param e
+    * @return
+    */
+  def turnLeft(e: Edge): Option[Edge] = succOpt(e)
+
+  /**
+   * Turns right in an EdgePath
+   */
+  def turnRight(e: Edge): Option[Edge] = rotateRightOpt(e).flatMap(x => Some(x.flip))
   /**
   Given e takes its successor, then flips and then takes successor again
   */
@@ -562,6 +580,58 @@ trait TwoComplex { twoComplex =>
   */
   def slightRight (e : Edge) : Option[Edge] = rotateRightOpt(e).flatMap(predOpt)
 
+
+  /**
+   * Forced versions of turning operations, for geodesics and edgepaths
+   */
+  def L(e: Edge): Edge = {
+    assert(turnLeft(e) != None , s"No left turn from edge $e")
+    turnLeft(e) match {
+      case Some(edge) => edge
+    }
+  }
+
+  def R(e: Edge): Edge = {
+    assert(turnRight(e) != None, s"No right turn from edge $e")
+    turnRight(e) match {
+      case Some(edge) => edge
+    }
+  }
+
+  def SL(e: Edge): Edge = {
+    assert(slightLeft(e) != None, s"No slight left from edge $e")
+    slightLeft(e) match {
+      case Some(edge) => edge
+    }
+  }
+
+  def SR(e: Edge): Edge = {
+    assert(slightRight(e) != None, s"No slight right from edge $e")
+    slightRight(e) match {
+      case Some(edge) => edge
+    }
+  }
+
+  /**
+    * Vector of edges to the left of an edge, modified version of orbit
+    */
+    def vectorOrbit (e : Edge, opt: (Edge => Option[Edge]), accum : Vector[Edge]) : Vector[Edge] = {
+        val nextEdge = opt(e)
+        if ((nextEdge != None) && (! accum.contains(nextEdge))) vectorOrbit(nextEdge.get, opt, accum :+ nextEdge.get)
+        else accum.map(_.flip)
+      }
+  
+    /**
+     * Vector of edges to the left of an edge
+     */
+
+     def vectorEdgesToTheLeftOf(e: Edge) = vectorOrbit(e, rotateLeftOpt(_), Vector[Edge]())
+
+     /**
+       * Vector of edges to the right of an edge
+       */
+
+    def vectorEdgesToTheRightOf(e: Edge) = vectorOrbit(e, rotateRightOpt(_), Vector[Edge]())
 }
 
 
