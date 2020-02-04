@@ -238,6 +238,10 @@ trait TwoComplex { twoComplex =>
 
   def vertices: Set[Vertex]
 
+  lazy val indexedVertices = vertices.zipWithIndex // for fixing order
+
+  def vertexIndex(v: Vertex) = indexedVertices.find(_._1 == v).map(_._2)
+
   def facesWithEdge(edge: Edge): Set[Polygon] =
     faces.filter((face) => face.edges.contains(edge))
 
