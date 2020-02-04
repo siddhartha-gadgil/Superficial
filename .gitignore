@@ -40,3 +40,4 @@ project/plugins/project/
 .bloop/
 docs/_site
 public/
+image-*
