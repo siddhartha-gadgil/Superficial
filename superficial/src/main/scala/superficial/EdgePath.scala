@@ -25,6 +25,7 @@ sealed trait EdgePath{ edgePath =>
       * @return
       */
     def +(e: Edge): EdgePath = Append(edgePath, e)
+
 }
 
 object EdgePath{
@@ -197,4 +198,19 @@ object EdgePath{
         
     }
 
+    /**
+      * Checks if an EdgePath is a Geodesic in a Non Positive Quadrangulation
+      *
+      * @param path
+      * @param nonPosQuad
+      * @return
+      */
+    def isGeodesic(path: EdgePath, nonPosQuad: NonPosQuad): Boolean = {
+        assert(edgeVectors(path).toSet.subsetOf(nonPosQuad.edges), s"$path is not a path in the non-positive quadrangulation $nonPosQuad")
+
+        val turnVect = turnPath(path, nonPosQuad)
+
+        (findLeftBracketsTurnPath(turnVect).isEmpty) && (findRightBracketsTurnPath(turnVect).isEmpty)
+
+    }
 }

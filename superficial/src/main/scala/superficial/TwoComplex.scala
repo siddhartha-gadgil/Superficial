@@ -669,7 +669,7 @@ trait TwoComplex { twoComplex =>
        */
 
     def vectorEdgesToTheRightOf(e: Edge) = vectorOrbit(e, rotateRightOpt(_), Vector[Edge]())
-    
+
 // --------------------------------------------------------------------------------------------------------------------
   
   // trial and error area -----------------------------------------------------------  
