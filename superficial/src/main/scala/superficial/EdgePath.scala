@@ -26,6 +26,14 @@ sealed trait EdgePath{ edgePath =>
       */
     def +(e: Edge): EdgePath = Append(edgePath, e)
 
+    /**
+      * Checks whether the EdgePath is in a given Two Complex
+      *
+      * @param twoComplex
+      * @return
+      */
+    def inTwoComplex(twoComplex: TwoComplex): Boolean = edgeVectors(edgePath).toSet.subsetOf(twoComplex.edges)
+
 }
 
 object EdgePath{
