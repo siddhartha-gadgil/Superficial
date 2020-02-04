@@ -2,6 +2,10 @@ package superficial
 import scala.xml._
 import math._
 import scala.collection.immutable
+import scala.collection.convert.impl.IntVectorStepper
+import java.io._
+import java.awt.Desktop
+import java.net.URI
 
 object SvgPlot {
   def drawLine(
@@ -15,9 +19,19 @@ object SvgPlot {
       y2.toInt.toString
     } stroke={colour} stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line>
 
+  def drawCircle(
+    cx: Double,
+    cy: Double,
+    colour: String,
+    r: Double = 3
+  ) = 
+    <circle cx={cx.toInt.toString} cy={cy.toInt.toString} r={r.toInt.toString} fill={colour}/>
+
   def getColour(n: Int) =
     s"hsl(${(n * 81) % 360}, 100%, 50%)"
-  // colours(n % (colours.size))
+  
+  def shiftColour(n: Int) =
+    s"hsl(${(40 +  (n * 81)) % 360}, 100%, 50%)"
 
   def hexagonSides(
       offset: (Double, Double) = (0, 0),
@@ -33,30 +47,39 @@ object SvgPlot {
     }
   }
 
-  def pantsHexagonSides(
-      hex: PantsHexagon,
+  def faceSides(
+      face: Polygon,
       complex: TwoComplex,
       offset: (Double, Double) = (0, 0),
       radius: Double = 100
-  ): immutable.Seq[Elem] = {
-    hex.boundary.zipWithIndex.flatMap {
+  ): Vector[Elem] = {
+    val theta = 2* Pi / face.sides
+    face.boundary.zipWithIndex.flatMap {
       case (e, j) =>
         val (ind, pos) = complex.edgeIndex(e).get
         val (x, y) = offset
-        val x1 = x + (radius) + (cos(j * Pi / 3) * radius)
-        val x2 = x + (radius) + (cos((j + 1) * Pi / 3) * radius)
-        val y1 = y + (radius) + (sin(j * Pi / 3) * radius)
-        val y2 = y + (radius) + (sin((j + 1) * Pi / 3) * radius)
-        if (pos) lineArrow(x1, y1, x2, y2, getColour(ind), (ind + 1).toString)
-        else lineArrow(x2, y2, x1, y1, getColour(ind), (ind + 1).toString)
+        val x1 = x + (radius) + (cos(j * theta) * radius)
+        val x2 = x + (radius) + (cos((j + 1) * theta) * radius)
+        val y1 = y + (radius) + (sin(j * theta) * radius)
+        val y2 = y + (radius) + (sin((j + 1) * theta) * radius)
+        val circle = drawCircle(x1, y1, shiftColour(complex.vertexIndex(e.initial).get))
+        if (pos) lineArrow(x1, y1, x2, y2, getColour(ind), (ind + 1).toString) :+ circle
+        else lineArrow(x2, y2, x1, y1, getColour(ind), (ind + 1).toString) :+ circle
     }
   }
 
-  def allHexagonSides(complex: PantsSurface) = {
+  def allHexagonSides(complex: PantsSurface) : Vector[Elem] = {
     complex.faces.toVector.collect { case ph: PantsHexagon => ph }.flatMap {
       hex =>
         val offset = (150.0 * (hex.pants) + 25.0, if (hex.top) 25.0 else 175.0)
-        pantsHexagonSides(hex, complex, offset, 50)
+        faceSides(hex, complex, offset, 50)
+    }
+  }
+
+  def faceRowSides(complex: TwoComplex, r: Double = 50) = {
+    def offset(n: Int) = (r/2 + (3 * r * n), r/2)
+    complex.faces.toVector.zipWithIndex.flatMap{
+      case (face, n) => faceSides(face, complex, offset(n), r)
     }
   }
 
@@ -98,16 +121,43 @@ object SvgPlot {
     )
   }
 
-  def svgPlot(elems: Seq[Elem], width: Int = 1000, height: Int = 400): Elem =
+  def svgPlot(elems: Seq[Elem], width: Double = 1000, height: Double = 400): Elem =
     <svg version="1.1"
            baseProfile="full"
-           viewBox={s"0 0 $width $height"}
+           viewBox={s"0 0 ${width.toInt} ${height.toInt}"}
            xmlns="http://www.w3.org/2000/svg">
            {elems} </svg>
 
-  val eg: Elem = svgPlot(hexagonSides())
+  lazy val eg: Elem = svgPlot(hexagonSides())
 
-  def plotSurface(complex: PantsSurface) =
+  def plotPantsSurface(complex: PantsSurface) =
     svgPlot(allHexagonSides(complex), 150 * math.max(complex.numPants, 4), 300)
 
+
+  def plotComplex(complex: TwoComplex, radius: Double = 50) : Elem = 
+    svgPlot(faceRowSides(complex,radius), complex.faces.size * radius * 3 , radius * 3)
+
+  def writeFile(text: String, fileName: String, append: Boolean = false) = {
+    val writer = new FileWriter(fileName, append)
+    writer.write(text)
+    writer.close
+  }
+
+  val desktop = Desktop.getDesktop()
+
+  def viewPage(content: Node) = {
+    val fileName = s"image-${content.hashCode()}.html"
+    val html =
+      <html>
+      <body>
+      {content}
+      </body>
+      </html>
+    writeFile(html.toString, fileName)
+    val file = new File(fileName)
+    desktop.browse(new URI("file:///" + file.getAbsolutePath))
+  }
+
+  def apply(complex: TwoComplex, radius: Double = 50) : Unit = 
+    viewPage(plotComplex(complex, radius))
 }

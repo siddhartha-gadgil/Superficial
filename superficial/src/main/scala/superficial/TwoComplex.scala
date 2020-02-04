@@ -17,6 +17,8 @@ trait Polygon extends TwoComplex {
 
   val boundary: Vector[Edge]
 
+  lazy val basePoint : Vertex = boundary.head.initial // override for empty boundary
+
   def checkBoundary =
     Polygon.checkBoundary(boundary) // not asserted here because of possible delayed initialization
 
@@ -86,14 +88,22 @@ object Polygon {
       (indices map (PolygonVertex(self, _))).toSet     
   }
 
-  def apply(v: Vector[Edge]): Polygon = {
-    assert(checkBoundary(v), s"boundary $v not a loop")
+  def apply(bdy: Vector[Edge]): Polygon = {
+    require(bdy.nonEmpty, s"use `degenerate` method for empty polygon")
+    assert(checkBoundary(bdy), s"boundary $bdy not a loop")
     new Polygon {
-      val sides: Int = v.size
-      val boundary: Vector[Edge] = v
-      val vertices: Set[Vertex] = v.map(_.initial).toSet
+      val sides: Int = bdy.size
+      val boundary: Vector[Edge] = bdy
+      val vertices: Set[Vertex] = bdy.map(_.initial).toSet
     }
     
+  }
+
+  def degenerate(v: Vertex): Polygon = new Polygon {
+    val sides: Int = 0
+    val boundary: Vector[Edge] = Vector()
+    val vertices: Set[Vertex] = Set(v)
+    override lazy val basePoint: Vertex = v
   }
 
   case class Symbolic(name: String, boundary: Vector[Edge]) extends Polygon {
@@ -134,7 +144,7 @@ object TwoComplex {
       val faces: Set[Polygon] = fs.toSet
     }
   }
-  case class Impl(vertices: Set[Vertex], edges: Set[Edge], faces: Set[Polygon])
+  case class Concrete(vertices: Set[Vertex], edges: Set[Edge], faces: Set[Polygon])
       extends TwoComplex
 
   @annotation.tailrec
@@ -164,11 +174,30 @@ object TwoComplex {
     val firstTail = first.boundary.drop(firstHead.size + 1) // edges after e
     val secondHead = second.boundary.takeWhile(_ != e.flip) // edges before e
     val secondTail = second.boundary.drop(secondHead.size + 1) // edges after e
-    Polygon(firstHead ++ secondTail ++ secondHead ++ firstTail)
+    val bdy = firstHead ++ secondTail ++ secondHead ++ firstTail 
+    if (bdy.nonEmpty) Polygon(bdy) else Polygon.degenerate(e.initial)
   }.ensuring(poly => poly.checkPoly)
 
+  /**
+    * Symbolic two-complexes, i.e. two-complexes with vertices, edges and faces determined by their names.
+    * 
+    * For example, here is how a torus is constructed.
+    * 
+    * {{{
+    * TwoComplex.symbolic(
+    *     "x")(
+    *     "a" -> ("x", "x"), "b" -> ("x", "x"))(
+    *     "face" -> Seq("a" -> true, "b" -> true, "a" -> false, "b" -> false)
+    *     ) 
+    * }}}
+    *
+    * @param vertexNames names of vertices separated by commas,
+    * @param edgeMap edgepair names mapped to initial and terminal vertices
+    * @param faceMap face-names mapped to pairs (edge-name, isPositivelyOriented)
+    * @return two-complex determined by the data
+    */
   def symbolic(vertexNames: String*)(edgeMap: (String, (String, String))*)(
-      faceMap: (String, Vector[(String, Boolean)])*
+      faceMap: (String, Seq[(String, Boolean)])*
   ): TwoComplex = {
     val vertices: Set[Vertex] = vertexNames.toSet.map(Vertex.Symbolic(_))
     val edges: Set[Edge] =
@@ -188,9 +217,9 @@ object TwoComplex {
           val edges = for {
             (name, pos) <- vec
           } yield (getEdge(name, pos).get)
-          Polygon.Symbolic(face, edges)
+          Polygon.Symbolic(face, edges.toVector)
       }.toSet
-    Impl(vertices, edges, faces)
+    Concrete(vertices, edges, faces)
   }
 }
 
@@ -219,13 +248,17 @@ trait TwoComplex { twoComplex =>
     )
   
 
-  def edgeIndex(edge: Edge) = {
-    positiveEdges.zipWithIndex
+  def edgeIndex(edge: Edge) : Option[(Int, Boolean)] = {
+    halfEdges.zipWithIndex
       .find { case (e, i) => e == edge || e.flip == edge }
       .map { case (e, i) => (i, e == edge) }
   }
 
   def vertices: Set[Vertex]
+
+  lazy val indexedVertices = vertices.zipWithIndex // for fixing order
+
+  def vertexIndex(v: Vertex) = indexedVertices.find(_._1 == v).map(_._2)
 
   def facesWithEdge(edge: Edge): Set[Polygon] =
     faces.filter((face) => face.edges.contains(edge))
@@ -269,7 +302,7 @@ trait TwoComplex { twoComplex =>
 
     def newPoly(polygon: Polygon): Polygon =
       new Polygon {
-        val sides: Int = polygon.sides
+        val sides: Int = polygon.sides - 1
         val boundary: Vector[Edge] =
           polygon.boundary.filterNot(Set(e, e.flip).contains(_)).map { edge =>
             newEdgeMap(edge)
@@ -400,6 +433,11 @@ trait TwoComplex { twoComplex =>
   def edgesEndingAt (v : Vertex) = 
     ((twoComplex.edges.filter(_.terminal == v).toSet) ++ // FIXME the second term is not needed for a valid two-complex
      (twoComplex.edges.filter(_.initial == v).map(_.flip)))
+
+  /**
+   * The degree of a vertex
+   */
+  def degree(v: Vertex): Int = edgesEndingAt(v).size
 
   /** 
    * checks if we start with an edge e with v == e.terminal, using left rotations, 
@@ -576,6 +614,19 @@ trait TwoComplex { twoComplex =>
     newComplex
   }
 
+
+  /**
+    * Turns left in an EdgePath
+    *
+    * @param e
+    * @return
+    */
+  def turnLeft(e: Edge): Option[Edge] = succOpt(e)
+
+  /**
+   * Turns right in an EdgePath
+   */
+  def turnRight(e: Edge): Option[Edge] = rotateRightOpt(e).flatMap(x => Some(x.flip))
   /**
    *Given e rotates left twice and flips it. This is same as rotating left once and then taking the successor. 
    */
@@ -584,6 +635,51 @@ trait TwoComplex { twoComplex =>
    *Given e takes two right rotations and flips it.
    */
   def slightRight (e : Edge) : Option[Edge] = rotateRightOpt(e).flatMap(rotateRightOpt).map(_.flip)
+
+/**
+   * Forced versions of turning operations, for geodesics and edgepaths
+   */
+  def L(e: Edge): Edge = {
+    assert(turnLeft(e) != None , s"No left turn from edge $e")
+    turnLeft(e).get
+  }
+
+  def R(e: Edge): Edge = {
+    assert(turnRight(e) != None, s"No right turn from edge $e")
+    turnRight(e).get
+  }
+
+  def SL(e: Edge): Edge = {
+    assert(slightLeft(e) != None, s"No slight left from edge $e")
+    slightLeft(e).get
+  }
+
+  def SR(e: Edge): Edge = {
+    assert(slightRight(e) != None, s"No slight right from edge $e")
+    slightRight(e).get
+  }
+
+  /**
+    * Vector of edges to the left of an edge, modified version of orbit
+    */
+    def vectorOrbit (e : Edge, opt: (Edge => Option[Edge]), accum : Vector[Edge]) : Vector[Edge] = {
+        val nextEdge = opt(e)
+        if ((nextEdge != None) && (! accum.contains(nextEdge))) vectorOrbit(nextEdge.get, opt, accum :+ nextEdge.get)
+        else accum.map(_.flip)
+      }
+  
+    /**
+     * Vector of edges to the left of an edge
+     */
+
+     def vectorEdgesToTheLeftOf(e: Edge) = vectorOrbit(e, rotateLeftOpt(_), Vector[Edge]())
+
+     /**
+       * Vector of edges to the right of an edge
+       */
+
+    def vectorEdgesToTheRightOf(e: Edge) = vectorOrbit(e, rotateRightOpt(_), Vector[Edge]())
+
 // --------------------------------------------------------------------------------------------------------------------
   
   // trial and error area -----------------------------------------------------------  
@@ -613,6 +709,8 @@ trait TwoComplex { twoComplex =>
       bFace
     }
 
+
+  
     val vertexList = twoComplex.vertices.toList
     val edgeList = twoComplex.edges.toList
     val faceList = twoComplex.faces.toList
