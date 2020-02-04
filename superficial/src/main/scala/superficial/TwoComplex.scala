@@ -178,6 +178,24 @@ object TwoComplex {
     if (bdy.nonEmpty) Polygon(bdy) else Polygon.degenerate(e.initial)
   }.ensuring(poly => poly.checkPoly)
 
+  /**
+    * Symbolic two-complexes, i.e. two-complexes with vertices, edges and faces determined by their names.
+    * 
+    * For example, here is how a torus is constructed.
+    * 
+    * {{{
+    * TwoComplex.symbolic(
+    *     "x")(
+    *     "a" -> ("x", "x"), "b" -> ("x", "x"))(
+    *     "face" -> Seq("a" -> true, "b" -> true, "a" -> false, "b" -> false)
+    *     ) 
+    * }}}
+    *
+    * @param vertexNames names of vertices separated by commas,
+    * @param edgeMap edgepair names mapped to initial and terminal vertices
+    * @param faceMap face-names mapped to pairs (edge-name, isPositivelyOriented)
+    * @return two-complex determined by the data
+    */
   def symbolic(vertexNames: String*)(edgeMap: (String, (String, String))*)(
       faceMap: (String, Seq[(String, Boolean)])*
   ): TwoComplex = {
@@ -623,30 +641,22 @@ trait TwoComplex { twoComplex =>
    */
   def L(e: Edge): Edge = {
     assert(turnLeft(e) != None , s"No left turn from edge $e")
-    turnLeft(e) match {
-      case Some(edge) => edge
-    }
+    turnLeft(e).get
   }
 
   def R(e: Edge): Edge = {
     assert(turnRight(e) != None, s"No right turn from edge $e")
-    turnRight(e) match {
-      case Some(edge) => edge
-    }
+    turnRight(e).get
   }
 
   def SL(e: Edge): Edge = {
     assert(slightLeft(e) != None, s"No slight left from edge $e")
-    slightLeft(e) match {
-      case Some(edge) => edge
-    }
+    slightLeft(e).get
   }
 
   def SR(e: Edge): Edge = {
     assert(slightRight(e) != None, s"No slight right from edge $e")
-    slightRight(e) match {
-      case Some(edge) => edge
-    }
+    slightRight(e).get
   }
 
   /**
