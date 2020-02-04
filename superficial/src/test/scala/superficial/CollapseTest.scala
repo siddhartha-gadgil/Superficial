@@ -26,12 +26,5 @@ object CollapseTest extends TestSuite {
         }
       }
     }
-    "AllSphereComplexes" - {
-      "areConnected" - {
-        assert(
-          doubleTriangle.isConnectedComplex && doubleBigon.isConnectedComplex && doubleMonogon.isConnectedComplex
-        )
-      }
-    }
   }
 }

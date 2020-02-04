@@ -15,3 +15,7 @@ object Triangles {
     val edges = Set(A.Positive, B.Positive, C.Positive)
   }
 }
+
+object Examples{
+  val disConnected = TwoComplex.symbolic("x", "y")("a" -> ("x", "x"), "b"-> ("y", "y"))()
+}
