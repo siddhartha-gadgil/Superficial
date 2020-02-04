@@ -601,12 +601,12 @@ trait TwoComplex { twoComplex =>
     // def newEdgeMap = edgeList.zip(edgeList.map(addEdgePairs)).toMap
     
 
-    // def sure (maybe : Option[Edge]) : Edge = {
-    //   maybe match {
-    //     case None => ??? // This is fine as we will never get 'None' as Option[Edge]
-    //     case Some(f) => f
-    //   }
-    // } 
+    def sure (maybe : Option[Edge]) : Edge = {
+      maybe match {
+        case None => ??? // This is fine as we will never get 'None' as Option[Edge]
+        case Some(f) => f
+      }
+    } 
  
     def addBarycenter (face : Polygon) : Vertex = {
       object bFace extends Vertex
@@ -618,26 +618,26 @@ trait TwoComplex { twoComplex =>
     val faceList = twoComplex.faces.toList
     val barycentersList = faceList.map(addBarycenter(_))
     val barycenters = faceList.zip(barycentersList).toMap
-    val facesWithVertices = 
-      faceList.flatMap(f => vertexList.map(v => (f, v))).filter(el => el._1.vertices.contains(el._2))
+    val facesWithEdges = 
+      faceList.flatMap(f => edgeList.map(e => (f, e))).filter(el => el._1.edges.contains(el._2))
     def faceOfEdge (edge : Edge) : Polygon = {
       twoComplex.faces.find(_.boundary.contains(edge)) match {
           case None => ??? // This case will not arise as the twoComplex is a closed surface
           case Some(f) => f
       }
     }
-    def addEdgePairs (f : Polygon, v : Vertex) : EdgePair = 
-      (new EdgePair(barycenters(f), v))  
+    def addEdgePairs (f : Polygon, e : Edge) : EdgePair = 
+      (new EdgePair(barycenters(f), e.terminal))  
 
-    val newEdgePairsList = facesWithVertices.map(el => addEdgePairs(el._1, el._2))    
-    val newEdgeMap1 = facesWithVertices.zip(newEdgePairsList).toMap 
+    val newEdgePairsList = facesWithEdges.map(el => addEdgePairs(el._1, el._2))    
+    val newEdgeMap1 = facesWithEdges.zip(newEdgePairsList).toMap 
 
     def addFace (edge : Edge) = {
        Polygon.apply(
-         Vector(newEdgeMap1(faceOfEdge(edge), edge.terminal).Positive,
-                newEdgeMap1(faceOfEdge(edge.flip), edge.terminal).Negative,
-                newEdgeMap1(faceOfEdge(edge.flip), edge.initial).Positive,
-                newEdgeMap1(faceOfEdge(edge), edge.initial).Negative))
+         Vector(newEdgeMap1(faceOfEdge(edge), edge).Positive,
+                newEdgeMap1(faceOfEdge(edge.flip), sure(predOpt(edge.flip))).Negative,
+                newEdgeMap1(faceOfEdge(edge.flip), edge.flip).Positive,
+                newEdgeMap1(faceOfEdge(edge), sure(predOpt(edge))).Negative))
         
     }  
 
