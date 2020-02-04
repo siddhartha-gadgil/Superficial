@@ -330,8 +330,10 @@ trait TwoComplex { twoComplex =>
     vOpt.map{v => connectedComponent(v) == twoComplex.vertices}.getOrElse(true)
   }
 
-  /** given an edge, find a face whose boundary contains e (if it exists, it is unique); 
-  * take the next edge along the boundary */
+  /** 
+   *given an edge, find a face whose boundary contains e (if it exists, it is unique); 
+   * take the next edge along the boundary
+   */
   def succOpt (e : Edge) : Option[Edge] = {
       val mayBefaceOfEdge = twoComplex.faces.find(_.boundary.contains(e))
       mayBefaceOfEdge flatMap {
@@ -342,9 +344,10 @@ trait TwoComplex { twoComplex =>
           else Some(faceOfEdge.boundary(indexOfEdge + 1))
       }
   }    
-  /** given an edge, find a face whose boundary contains e (if it exists, it is unique); 
-  * take the previous edge along the boundary 
-  */
+  /** 
+   *given an edge, find a face whose boundary contains e (if it exists, it is unique); 
+   * take the previous edge along the boundary 
+   */
   def predOpt (e : Edge) : Option[Edge] = {
       val mayBefaceOfEdge = twoComplex.faces.find(_.boundary.contains(e))
       mayBefaceOfEdge flatMap {
@@ -356,30 +359,44 @@ trait TwoComplex { twoComplex =>
       }
   }        
 
-  /** gives the edge with same terminal vertex obtained by left rotation.*/
+  /** 
+   *gives the edge with same terminal vertex obtained by left rotation.
+   */
   def rotateLeftOpt (e : Edge) : Option[Edge] = {
     succOpt(e) flatMap {
       f => Some(f.flip)
     }
   }
 
-  /** gives the edge with same terminal vertex obtained by right rotation.*/
+  /** 
+   *gives the edge with same terminal vertex obtained by right rotation.
+   */
   def rotateRightOpt (e : Edge) : Option[Edge] = predOpt(e.flip)
   
-  /** auxilliary function to start with an edge and take all edges by rotating left */
-    def orbit (e : Edge, steps : Int, opt  : Edge => Option[Edge], accum : Set[Edge]) : Set[Edge] = {
-      if (steps <= 0) accum
-      else { 
-        val nextEdge = opt(e)
-        nextEdge.fold(accum + e)(f => orbit(f, steps - 1, opt, accum + e)  )
-      }
-    } 
+  /** 
+   *auxilliary function to start with an edge and take all edges by rotating left 
+   */
+  def orbit (e : Edge, steps : Int, opt  : Edge => Option[Edge], accum : Set[Edge]) : Set[Edge] = {
+    if (steps <= 0) accum
+    else { 
+     val nextEdge = opt(e)
+     nextEdge.fold(accum + e)(f => orbit(f, steps - 1, opt, accum + e)  )
+    }
+  } 
 
-  /**all edges to the left of the edge e including itself*/  
+  /**
+   *all edges to the left of the edge e including itself
+   */  
   def allEdgesToTheLeftOf (e : Edge) = orbit(e, edges.size + 1, rotateLeftOpt(_), Set.empty)
-  /** all edges to the left of the edge e including itself*/
+  
+  /** 
+   *all edges to the left of the edge e including itself
+   */
   def allEdgesToTheRightOf (e : Edge) = orbit(e, edges.size + 1, rotateRightOpt(_), Set.empty)
-  /** set of all edges ending at v */
+  
+  /** 
+   *set of all edges ending at v 
+   */
   def edgesEndingAt (v : Vertex) = 
     ((twoComplex.edges.filter(_.terminal == v).toSet) ++ // FIXME the second term is not needed for a valid two-complex
      (twoComplex.edges.filter(_.initial == v).map(_.flip)))
@@ -407,16 +424,24 @@ trait TwoComplex { twoComplex =>
   }   
   
   /**
-      * Occurences of edges in faces, counting multiplicity
-      *
-      * @param e
-      */
-    def edgeOccurences(e: Edge) : Int = faces.flatMap(_.boundary).count(_ == e)
+   * Occurences of edges in faces, counting multiplicity
+   *
+   * @param e
+   */
+  def edgeOccurences(e: Edge) : Int = faces.flatMap(_.boundary).count(_ == e)
 
+  /**
+   * Checks if the given edge is at the boundary. That is exactly one of
+   * e and e.flip is inside a face of the twocomplex
+   */
+  def isEdgeAtBoundary (e : Edge) : Boolean = {
+    ( (edgeOccurences(e) == 0) && (edgeOccurences(e.flip) >= 1)
+    ||(edgeOccurences(e) >= 1) && (edgeOccurences(e.flip) == 0))
+  }
 
   /*
-  * Checks if the twoComplex is a closed surface. 
-  */
+   * Checks if the twoComplex is a closed surface. 
+   */
   def isClosedSurface : Boolean = {
     
     // checks if the edge e is in exactly one face
@@ -435,8 +460,8 @@ trait TwoComplex { twoComplex =>
   }
 
   /** 
-  Checks if the twoComplex is a surface with boundary
-  */
+   *Checks if the twoComplex is a surface with boundary
+   */
   def isSurfaceWithBoundary : Boolean = {
 
     // checks if the edge e is in at least m and at most n faces
@@ -470,10 +495,10 @@ trait TwoComplex { twoComplex =>
   }  
 
   /** 
-  Given a set of vertices vs gives the TwoComplex got by adding vs 
-  to the existing twoComplex. If vs is already inside gives the same 
-  twoComplex 
-  */
+   *Given a set of vertices vs gives the TwoComplex got by adding vs 
+   *to the existing twoComplex. If vs is already inside gives the same 
+   *twoComplex 
+   */
   def addVertices (vs : Set[Vertex]) : TwoComplex ={
     if (twoComplex.vertices.intersect(vs).nonEmpty) {
       System.err.println("[Warning] The following vertices already belong to the twocomplex" 
@@ -489,10 +514,9 @@ trait TwoComplex { twoComplex =>
   }
   
   /** 
-  Given a set of edges eds gives the TwoComplex got by adding eds 
-  to the existing twoComplex.
-  */
-
+   *Given a set of edges eds gives the TwoComplex got by adding eds 
+   *and there flips to the existing twoComplex.
+   */
   def addEdges (eds : Set[Edge]) : TwoComplex ={
     if (twoComplex.edges.intersect(eds).nonEmpty) {
       System.err.println("[Warning] The following edges already belong to the twocomplex" 
@@ -509,10 +533,9 @@ trait TwoComplex { twoComplex =>
   }
 
   /** 
-  Given a set of faces fcs gives the TwoComplex got by adding fcs 
-  to the existing twoComplex.
-  */
-
+   *Given a set of faces fcs gives the TwoComplex got by adding fcs 
+   *to the existing twoComplex.
+   */
   def addfaces (fcs : Set[Polygon]) : TwoComplex = {
     if (twoComplex.faces.intersect(fcs).nonEmpty) {
       System.err.println("[Warning] The following edges already belong to the twocomplex" 
@@ -529,8 +552,8 @@ trait TwoComplex { twoComplex =>
   }
 
   /**
-  Gives the result of adding the given set of twocomplexes to the existing one.
-  */
+   *Gives the result of adding the given set of twocomplexes to the existing one.
+   */
   def addTwoComplexes (complexes : Set[TwoComplex]) = {
     object newComplex extends TwoComplex {
       def faces: Set[Polygon] = twoComplex.faces ++ complexes.flatMap(_.faces)
@@ -542,8 +565,8 @@ trait TwoComplex { twoComplex =>
   }
 
   /**
-  Given a set of vertices gives the subcomplex on the vertices
-  */
+   *Given a set of vertices gives the subcomplex on the vertices
+   */
   def subComplex (vs : Set[Vertex]) : TwoComplex = {
     if (!vs.subsetOf(twoComplex.vertices)) {
       System.err.println("[Warning] The following vertices don't belong to the twoComplex : " + "\n " +
@@ -572,16 +595,15 @@ trait TwoComplex { twoComplex =>
    */
   def turnRight(e: Edge): Option[Edge] = rotateRightOpt(e).flatMap(x => Some(x.flip))
   /**
-  Given e takes its successor, then flips and then takes successor again
-  */
+   *Given e rotates left twice and flips it. This is same as rotating left once and then taking the successor. 
+   */
   def slightLeft (e : Edge) : Option[Edge] = rotateLeftOpt(e).flatMap(succOpt) 
   /**
-  Given e takes its predecessor, then flips and then takes predecessor again
-  */
-  def slightRight (e : Edge) : Option[Edge] = rotateRightOpt(e).flatMap(predOpt)
+   *Given e takes two right rotations and flips it.
+   */
+  def slightRight (e : Edge) : Option[Edge] = rotateRightOpt(e).flatMap(rotateRightOpt).map(_.flip)
 
-
-  /**
+/**
    * Forced versions of turning operations, for geodesics and edgepaths
    */
   def L(e: Edge): Edge = {
@@ -632,6 +654,73 @@ trait TwoComplex { twoComplex =>
        */
 
     def vectorEdgesToTheRightOf(e: Edge) = vectorOrbit(e, rotateRightOpt(_), Vector[Edge]())
+    
+// --------------------------------------------------------------------------------------------------------------------
+  
+  // trial and error area -----------------------------------------------------------  
+      
+// ----------------------------------------------------------------------------------------------------------
+  def quadrangulate : TwoComplex = {
+ 
+    assert(twoComplex.isClosedSurface, "Algorithm only works for closed surfaces")       
+
+    // def addEdgePairs (edge : Edge) : EdgePair = 
+    //   (new EdgePair(barycenters(faceOfEdge(edge)), edge.terminal))
+
+    
+
+    // def newEdgeMap = edgeList.zip(edgeList.map(addEdgePairs)).toMap
+    
+
+    // def sure (maybe : Option[Edge]) : Edge = {
+    //   maybe match {
+    //     case None => ??? // This is fine as we will never get 'None' as Option[Edge]
+    //     case Some(f) => f
+    //   }
+    // } 
+ 
+    def addBarycenter (face : Polygon) : Vertex = {
+      object bFace extends Vertex
+      bFace
+    }
+
+
+  
+    val vertexList = twoComplex.vertices.toList
+    val edgeList = twoComplex.edges.toList
+    val faceList = twoComplex.faces.toList
+    val barycentersList = faceList.map(addBarycenter(_))
+    val barycenters = faceList.zip(barycentersList).toMap
+    val facesWithVertices = 
+      faceList.flatMap(f => vertexList.map(v => (f, v))).filter(el => el._1.vertices.contains(el._2))
+    def faceOfEdge (edge : Edge) : Polygon = {
+      twoComplex.faces.find(_.boundary.contains(edge)) match {
+          case None => ??? // This case will not arise as the twoComplex is a closed surface
+          case Some(f) => f
+      }
+    }
+    def addEdgePairs (f : Polygon, v : Vertex) : EdgePair = 
+      (new EdgePair(barycenters(f), v))  
+
+    val newEdgePairsList = facesWithVertices.map(el => addEdgePairs(el._1, el._2))    
+    val newEdgeMap1 = facesWithVertices.zip(newEdgePairsList).toMap 
+
+    def addFace (edge : Edge) = {
+       Polygon.apply(
+         Vector(newEdgeMap1(faceOfEdge(edge), edge.terminal).Positive,
+                newEdgeMap1(faceOfEdge(edge.flip), edge.terminal).Negative,
+                newEdgeMap1(faceOfEdge(edge.flip), edge.initial).Positive,
+                newEdgeMap1(faceOfEdge(edge), edge.initial).Negative))
+        
+    }  
+
+    val newFaces = halfEdges.map(addFace)
+    
+    object quad extends PureTwoComplex {
+      val faces = newFaces
+    }
+    quad
+  }  
 }
 
 
