@@ -17,5 +17,5 @@ object Triangles {
 }
 
 object Examples{
-  val disConnected = TwoComplex.symbolic("x", "y")("a" -> ("x", "x"), "b"-> ("y", "y"))()
+  val disjointLoops = TwoComplex.symbolic("x", "y")("a" -> ("x", "x"), "b"-> ("y", "y"))()
 }

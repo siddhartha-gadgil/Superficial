@@ -14,12 +14,12 @@ object Connectivity extends TestSuite {
       }
     }
     "Connectivity" - {
-        "twoLoops" -{
-            assert(!Examples.disConnected.isConnectedComplex)
+        "disjointLoops" -{
+            assert(!Examples.disjointLoops.isConnectedComplex)
         } 
         "genusRandom" - {
             val rnd = new util.Random
-            val surface = new StandardSurface(rnd.nextInt(10))
+            val surface = new StandardSurface(1 + rnd.nextInt(10))
             assert(surface.isConnectedComplex)
         }
     }
