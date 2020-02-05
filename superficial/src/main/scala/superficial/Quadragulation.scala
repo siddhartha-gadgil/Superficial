@@ -52,23 +52,33 @@ object Quadrangulation {
        face.get
     }
     
-    def createFace (edge : Edge) : Polygon = {
+    // creates the face corresponding the edge. Also gives an edgepath homotopic to the edge preserving endpoints
+    def createFace (edge : Edge) : (Polygon, (Edge, EdgePath))= {
       val face = faceOfEdge(edge)
       val flipFace = faceOfEdge(edge.flip)
       val indexOfEdge = face.boundary.indexOf(edge)
       val indexOfFlip = flipFace.boundary.indexOf(edge.flip)
       val periOfFace = face.boundary.length
       val periOfFlip = flipFace.boundary.length
+      val edgePath = // from edge.intial to barycenter of face of edge to edge.terminal
+        Append(Append(Constant(edge.initial),
+          (newEdgeMap1(face, mod(indexOfEdge - 1, periOfFace)).Negative)),
+          (newEdgeMap1(face, indexOfEdge).Positive)) 
 
-      Polygon.apply(Vector(
-        newEdgeMap1(face, indexOfEdge).Positive,
-        newEdgeMap1(flipFace, mod(indexOfFlip - 1, periOfFlip)).Negative,
-        newEdgeMap1(flipFace, indexOfFlip).Positive,
-        newEdgeMap1(face, mod(indexOfEdge - 1, periOfFace)).Negative
+      val newFace = Polygon.apply(Vector(
+        newEdgeMap1(face, indexOfEdge).Positive, // from barycenter of face of edge to edge.terminal
+        newEdgeMap1(flipFace, mod(indexOfFlip - 1, periOfFlip)).Negative, // from edge.terminal to barycenter of face of edge.flip
+        newEdgeMap1(flipFace, indexOfFlip).Positive, // from barycenter of face of edge.flip to edge.intial
+        newEdgeMap1(face, mod(indexOfEdge - 1, periOfFace)).Negative // from edge.intial to barycenter of face of edge
       ))
+
+      (newFace, (edge, edgePath))
     }  
 
-    val newFaces = twoComplex.halfEdges.map(createFace)
+    val newFacesAndEdgePathMaps = twoComplex.halfEdges.map(createFace)
+    val newFaces = newFacesAndEdgePathMaps.map(el => el._1)
+    val edgeToEdgePathMap = newFacesAndEdgePathMaps.map(el => el._2).toMap
+
     object quad extends PureTwoComplex {
       val faces = newFaces
     }
