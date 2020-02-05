@@ -227,9 +227,9 @@ object TwoComplex {
   *  A polyheadral two complex, with faces polygons, a collection of edges and
   */
 trait TwoComplex { twoComplex =>
-  def faces: Set[Polygon]
+  val faces: Set[Polygon]
 
-  def edges: Set[Edge] // these come in pairs, related by flip (reversing orientation)
+  val edges: Set[Edge] // these come in pairs, related by flip (reversing orientation)
 
   def checkComplex =
     faces.forall(_.checkBoundary) && edges.forall(_.checkFlip) && edges
@@ -254,7 +254,9 @@ trait TwoComplex { twoComplex =>
       .map { case (e, i) => (i, e == edge) }
   }
 
-  def vertices: Set[Vertex]
+  val vertices: Set[Vertex]
+
+  lazy val chi = vertices.size - (edges.size / 2) + faces.size
 
   lazy val indexedVertices = vertices.zipWithIndex // for fixing order
 
@@ -312,9 +314,9 @@ trait TwoComplex { twoComplex =>
       }
 
     object newComplex extends TwoComplex {
-      def edges: Set[Edge] = newEdgeMap.values.toSet
-      def faces: Set[Polygon] = twoComplex.faces.map(newPoly(_))
-      def vertices: Set[Vertex] = twoComplex.vertices - e.terminal
+      val edges: Set[Edge] = newEdgeMap.values.toSet
+      val faces: Set[Polygon] = twoComplex.faces.map(newPoly(_))
+      val vertices: Set[Vertex] = twoComplex.vertices - e.terminal
       override def toString(): String = s"$twoComplex/$e @ $hashCode"
     }
     newComplex
@@ -539,9 +541,9 @@ trait TwoComplex { twoComplex =>
     }
 
     object newComplex extends TwoComplex {
-      def faces: Set[Polygon] = twoComplex.faces
-      def edges: Set[Edge] = twoComplex.edges
-      def vertices: Set[Vertex] = twoComplex.vertices ++ vs
+      val faces: Set[Polygon] = twoComplex.faces
+      val edges: Set[Edge] = twoComplex.edges
+      val vertices: Set[Vertex] = twoComplex.vertices ++ vs
     }
     newComplex
   }
@@ -557,9 +559,9 @@ trait TwoComplex { twoComplex =>
     }
 
     object newComplex extends TwoComplex {
-      def faces: Set[Polygon] = twoComplex.faces
-      def edges: Set[Edge] = twoComplex.edges ++ eds ++ eds.map(_.flip)
-      def vertices: Set[Vertex] = 
+      val faces: Set[Polygon] = twoComplex.faces
+      val edges: Set[Edge] = twoComplex.edges ++ eds ++ eds.map(_.flip)
+      val vertices: Set[Vertex] = 
         twoComplex.vertices ++ eds.flatMap(ed => Set(ed.initial, ed.terminal))
     }
     newComplex
@@ -576,9 +578,9 @@ trait TwoComplex { twoComplex =>
     }
 
     object newComplex extends TwoComplex {
-      def faces: Set[Polygon] = twoComplex.faces ++ fcs
-      def edges: Set[Edge] = twoComplex.edges ++ fcs.flatMap(_.edges)
-      def vertices: Set[Vertex] = 
+      val faces: Set[Polygon] = twoComplex.faces ++ fcs
+      val edges: Set[Edge] = twoComplex.edges ++ fcs.flatMap(_.edges)
+      val vertices: Set[Vertex] = 
         twoComplex.vertices ++ fcs.flatMap(_.vertices)
     }
     newComplex
@@ -589,9 +591,9 @@ trait TwoComplex { twoComplex =>
    */
   def addTwoComplexes (complexes : Set[TwoComplex]) = {
     object newComplex extends TwoComplex {
-      def faces: Set[Polygon] = twoComplex.faces ++ complexes.flatMap(_.faces)
-      def edges: Set[Edge] = twoComplex.edges ++ complexes.flatMap(_.edges)
-      def vertices: Set[Vertex] = 
+      val faces: Set[Polygon] = twoComplex.faces ++ complexes.flatMap(_.faces)
+      val edges: Set[Edge] = twoComplex.edges ++ complexes.flatMap(_.edges)
+      val vertices: Set[Vertex] = 
         twoComplex.vertices ++ complexes.flatMap(_.vertices)
     }
     newComplex
@@ -607,9 +609,9 @@ trait TwoComplex { twoComplex =>
     } 
 
     object newComplex extends TwoComplex {
-      def faces: Set[Polygon] = twoComplex.faces.filter(_.vertices.subsetOf(vs))
-      def edges: Set[Edge] = twoComplex.edges.filter(ed => (Set(ed.initial, ed.terminal).subsetOf(vs)))
-      def vertices: Set[Vertex] = vs
+      val faces: Set[Polygon] = twoComplex.faces.filter(_.vertices.subsetOf(vs))
+      val edges: Set[Edge] = twoComplex.edges.filter(ed => (Set(ed.initial, ed.terminal).subsetOf(vs)))
+      val vertices: Set[Vertex] = vs
     }
     newComplex
   }
@@ -640,22 +642,22 @@ trait TwoComplex { twoComplex =>
    * Forced versions of turning operations, for geodesics and edgepaths
    */
   def L(e: Edge): Edge = {
-    assert(turnLeft(e) != None , s"No left turn from edge $e")
+    require(turnLeft(e) != None , s"No left turn from edge $e")
     turnLeft(e).get
   }
 
   def R(e: Edge): Edge = {
-    assert(turnRight(e) != None, s"No right turn from edge $e")
+    require(turnRight(e) != None, s"No right turn from edge $e")
     turnRight(e).get
   }
 
   def SL(e: Edge): Edge = {
-    assert(slightLeft(e) != None, s"No slight left from edge $e")
+    require(slightLeft(e) != None, s"No slight left from edge $e")
     slightLeft(e).get
   }
 
   def SR(e: Edge): Edge = {
-    assert(slightRight(e) != None, s"No slight right from edge $e")
+    require(slightRight(e) != None, s"No slight right from edge $e")
     slightRight(e).get
   }
 
@@ -687,43 +689,48 @@ trait TwoComplex { twoComplex =>
 // ----------------------------------------------------------------------------------------------------------
   def quadrangulate : TwoComplex = {
  
-    assert(twoComplex.isClosedSurface, "Algorithm only works for closed surfaces")       
+    require(twoComplex.isClosedSurface, "Algorithm only works for closed surfaces")       
 
     val faceList = twoComplex.faces.toList
-    val facesWithIndexes = faceList.flatMap(f => ((0 to (f.boundary.length - 1)).map(ind => (f, ind))))
+    val facesWithIndexes :  List[(Polygon, Int)] = faceList.flatMap(f => ((0 to (f.boundary.length - 1)).map(ind => (f, ind))))
 
-    def addBarycenter (face : Polygon) : Vertex = {
+    def createBarycenter (face : Polygon) : Vertex = {
       object bFace extends Vertex
       bFace
     } 
 
-    val barycentersList = faceList.map(addBarycenter(_))
+    val barycentersList = faceList.map(createBarycenter(_))
     val barycenters = faceList.zip(barycentersList).toMap
 
-    def addEdgePairs (face : Polygon, index : Int) : EdgePair = {
+    def createEdgePairs (face : Polygon, index : Int) : EdgePair = {
       new EdgePair(barycenters(face), face.boundary(index).terminal)
     }
 
-    val newEdgePairsList = facesWithIndexes.map(el => addEdgePairs(el._1, el._2))
-    val newEdgeMap1 = facesWithIndexes.zip(newEdgePairsList).toMap
+    val newEdgeMap1 : Map[(Polygon, Int),EdgePair] = 
+      facesWithIndexes.map{
+        case (poly, j) => (poly, j) -> createEdgePairs(poly, j)
+      }.toMap
+
     def mod (m : Int, n : Int) = ((m % n) + n) % n 
   
     val vertexList = twoComplex.vertices.toList
     val edgeList = twoComplex.edges.toList
 
-    def faceOfEdge (edge : Edge) : (Polygon) = {
+    def faceOfEdge (edge : Edge) : Polygon = {
        val face = faces.find(_.boundary.contains(edge))
        assert(face != None, "For a closed surface each edge should be in at least one face")
        face.get
     }
     
-    def addFace (edge : Edge) : Polygon = {
+    def createFace (edge : Edge) : Polygon = {
       val face = faceOfEdge(edge)
       val flipFace = faceOfEdge(edge.flip)
       val indexOfEdge = face.boundary.indexOf(edge)
       val indexOfFlip = flipFace.boundary.indexOf(edge.flip)
       val periOfFace = face.boundary.length
       val periOfFlip = flipFace.boundary.length
+
+
 
       Polygon.apply(Vector(
         newEdgeMap1(face, indexOfEdge).Positive,
@@ -733,8 +740,7 @@ trait TwoComplex { twoComplex =>
       ))
     }  
 
-    val newFaces = halfEdges.map(addFace)
-    
+    val newFaces = halfEdges.map(createFace)
     object quad extends PureTwoComplex {
       val faces = newFaces
     }

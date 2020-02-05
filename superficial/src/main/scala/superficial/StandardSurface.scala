@@ -1,9 +1,9 @@
 package superficial
 
 class StandardSurface(genus: Int) extends TwoComplex{surface =>
-    def faces: Set[Polygon] = Set(face)
-    def edges: Set[Edge] = face.edges
-    def vertices: Set[Vertex] = Set(vertex)
+    lazy val faces: Set[Polygon] = Set(face)
+    lazy val edges: Set[Edge] = face.edges
+    lazy val vertices: Set[Vertex] = Set(vertex)
 
     lazy val face : Polygon = Polygon(boundary)
 
