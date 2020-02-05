@@ -689,54 +689,48 @@ trait TwoComplex { twoComplex =>
  
     assert(twoComplex.isClosedSurface, "Algorithm only works for closed surfaces")       
 
-    // def addEdgePairs (edge : Edge) : EdgePair = 
-    //   (new EdgePair(barycenters(faceOfEdge(edge)), edge.terminal))
+    val faceList = twoComplex.faces.toList
+    val facesWithIndexes = faceList.flatMap(f => ((0 to (f.boundary.length - 1)).map(ind => (f, ind))))
 
-    
-
-    // def newEdgeMap = edgeList.zip(edgeList.map(addEdgePairs)).toMap
-    
-
-    def sure (maybe : Option[Edge]) : Edge = {
-      maybe match {
-        case None => ??? // This is fine as we will never get 'None' as Option[Edge]
-        case Some(f) => f
-      }
-    } 
- 
     def addBarycenter (face : Polygon) : Vertex = {
       object bFace extends Vertex
       bFace
+    } 
+
+    val barycentersList = faceList.map(addBarycenter(_))
+    val barycenters = faceList.zip(barycentersList).toMap
+
+    def addEdgePairs (face : Polygon, index : Int) : EdgePair = {
+      new EdgePair(barycenters(face), face.boundary(index).terminal)
     }
 
-
+    val newEdgePairsList = facesWithIndexes.map(el => addEdgePairs(el._1, el._2))
+    val newEdgeMap1 = facesWithIndexes.zip(newEdgePairsList).toMap
+    def mod (m : Int, n : Int) = ((m % n) + n) % n 
   
     val vertexList = twoComplex.vertices.toList
     val edgeList = twoComplex.edges.toList
-    val faceList = twoComplex.faces.toList
-    val barycentersList = faceList.map(addBarycenter(_))
-    val barycenters = faceList.zip(barycentersList).toMap
-    val facesWithEdges = 
-      faceList.flatMap(f => edgeList.map(e => (f, e))).filter(el => el._1.edges.contains(el._2))
-    def faceOfEdge (edge : Edge) : Polygon = {
-      twoComplex.faces.find(_.boundary.contains(edge)) match {
-          case None => ??? // This case will not arise as the twoComplex is a closed surface
-          case Some(f) => f
-      }
+
+    def faceOfEdge (edge : Edge) : (Polygon) = {
+       val face = faces.find(_.boundary.contains(edge))
+       assert(face != None, "For a closed surface each edge should be in at least one face")
+       face.get
     }
-    def addEdgePairs (f : Polygon, e : Edge) : EdgePair = 
-      (new EdgePair(barycenters(f), e.terminal))  
+    
+    def addFace (edge : Edge) : Polygon = {
+      val face = faceOfEdge(edge)
+      val flipFace = faceOfEdge(edge.flip)
+      val indexOfEdge = face.boundary.indexOf(edge)
+      val indexOfFlip = flipFace.boundary.indexOf(edge.flip)
+      val periOfFace = face.boundary.length
+      val periOfFlip = flipFace.boundary.length
 
-    val newEdgePairsList = facesWithEdges.map(el => addEdgePairs(el._1, el._2))    
-    val newEdgeMap1 = facesWithEdges.zip(newEdgePairsList).toMap 
-
-    def addFace (edge : Edge) = {
-       Polygon.apply(
-         Vector(newEdgeMap1(faceOfEdge(edge), edge).Positive,
-                newEdgeMap1(faceOfEdge(edge.flip), sure(predOpt(edge.flip))).Negative,
-                newEdgeMap1(faceOfEdge(edge.flip), edge.flip).Positive,
-                newEdgeMap1(faceOfEdge(edge), sure(predOpt(edge))).Negative))
-        
+      Polygon.apply(Vector(
+        newEdgeMap1(face, indexOfEdge).Positive,
+        newEdgeMap1(flipFace, mod(indexOfFlip - 1, periOfFlip)).Negative,
+        newEdgeMap1(flipFace, indexOfFlip).Positive,
+        newEdgeMap1(face, mod(indexOfEdge - 1, periOfFace)).Negative
+      ))
     }  
 
     val newFaces = halfEdges.map(addFace)
