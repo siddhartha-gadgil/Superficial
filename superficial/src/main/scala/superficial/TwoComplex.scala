@@ -227,9 +227,9 @@ object TwoComplex {
   *  A polyheadral two complex, with faces polygons, a collection of edges and
   */
 trait TwoComplex { twoComplex =>
-  def faces: Set[Polygon]
+  val faces: Set[Polygon]
 
-  def edges: Set[Edge] // these come in pairs, related by flip (reversing orientation)
+  val edges: Set[Edge] // these come in pairs, related by flip (reversing orientation)
 
   def checkComplex =
     faces.forall(_.checkBoundary) && edges.forall(_.checkFlip) && edges
@@ -254,7 +254,7 @@ trait TwoComplex { twoComplex =>
       .map { case (e, i) => (i, e == edge) }
   }
 
-  def vertices: Set[Vertex]
+  val vertices: Set[Vertex]
 
   lazy val indexedVertices = vertices.zipWithIndex // for fixing order
 
@@ -640,22 +640,22 @@ trait TwoComplex { twoComplex =>
    * Forced versions of turning operations, for geodesics and edgepaths
    */
   def L(e: Edge): Edge = {
-    assert(turnLeft(e) != None , s"No left turn from edge $e")
+    require(turnLeft(e) != None , s"No left turn from edge $e")
     turnLeft(e).get
   }
 
   def R(e: Edge): Edge = {
-    assert(turnRight(e) != None, s"No right turn from edge $e")
+    require(turnRight(e) != None, s"No right turn from edge $e")
     turnRight(e).get
   }
 
   def SL(e: Edge): Edge = {
-    assert(slightLeft(e) != None, s"No slight left from edge $e")
+    require(slightLeft(e) != None, s"No slight left from edge $e")
     slightLeft(e).get
   }
 
   def SR(e: Edge): Edge = {
-    assert(slightRight(e) != None, s"No slight right from edge $e")
+    require(slightRight(e) != None, s"No slight right from edge $e")
     slightRight(e).get
   }
 
@@ -687,7 +687,7 @@ trait TwoComplex { twoComplex =>
 // ----------------------------------------------------------------------------------------------------------
   def quadrangulate : TwoComplex = {
  
-    assert(twoComplex.isClosedSurface, "Algorithm only works for closed surfaces")       
+    require(twoComplex.isClosedSurface, "Algorithm only works for closed surfaces")       
 
     val faceList = twoComplex.faces.toList
     val facesWithIndexes :  List[(Polygon, Int)] = faceList.flatMap(f => ((0 to (f.boundary.length - 1)).map(ind => (f, ind))))
@@ -728,8 +728,6 @@ trait TwoComplex { twoComplex =>
       val periOfFace = face.boundary.length
       val periOfFlip = flipFace.boundary.length
 
-      assert(faces.contains(face), s"$face not in $faces")
-
 
 
       Polygon.apply(Vector(
@@ -741,9 +739,6 @@ trait TwoComplex { twoComplex =>
     }  
 
     val newFaces = halfEdges.map(createFace)
-    
-    println(newFaces)
-
     object quad extends PureTwoComplex {
       val faces = newFaces
     }
