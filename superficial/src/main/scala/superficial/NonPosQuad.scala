@@ -42,4 +42,11 @@ trait NonPosQuad extends TwoComplex {nonPosQuad =>
 
 object NonPosQuad{
 
+  def apply(twoComplex: TwoComplex): NonPosQuad = {
+    assert(twoComplex.isClosedSurface)
+    assert(twoComplex.faces.forall(_.sides == 4))
+    assert(twoComplex.vertices.forall(twoComplex.degree(_) >= 5))
+    twoComplex.asInstanceOf[NonPosQuad]
+  }
+
 }
