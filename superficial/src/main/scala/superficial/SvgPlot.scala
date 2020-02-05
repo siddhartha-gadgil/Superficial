@@ -155,7 +155,7 @@ object SvgPlot {
       </html>
     writeFile(html.toString, fileName)
     val file = new File(fileName)
-    desktop.browse(new URI("file:///" + file.getAbsolutePath))
+    desktop.browse(new URI("file",  file.getAbsolutePath, ""))
   }
 
   def apply(complex: TwoComplex, radius: Double = 50) : Unit = 
