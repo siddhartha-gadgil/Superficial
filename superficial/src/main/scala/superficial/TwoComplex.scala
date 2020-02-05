@@ -256,6 +256,8 @@ trait TwoComplex { twoComplex =>
 
   val vertices: Set[Vertex]
 
+  lazy val chi = vertices.size - (edges.size / 2) + faces.size
+
   lazy val indexedVertices = vertices.zipWithIndex // for fixing order
 
   def vertexIndex(v: Vertex) = indexedVertices.find(_._1 == v).map(_._2)
