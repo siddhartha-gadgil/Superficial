@@ -7,11 +7,13 @@ import SphereComplex._, Examples._
 object IsSurface extends TestSuite {
   val tests: Tests = Tests {
     "ClosedSurfaceCheck" - {
-      "genusRandom" - {
-        val rnd = new util.Random
-        val surface = new StandardSurface(1 + rnd.nextInt(10))
-        assert(surface.isClosedSurface)
-      }
+      "variouGenera" - {
+          (0 to 10).foreach{
+            j => 
+              val surface = new StandardSurface(1 + j)
+              assert(surface.isClosedSurface)
+          }            
+        }
       "disjointLoops" - {
         assert(!disjointLoops.isClosedSurface)
       }

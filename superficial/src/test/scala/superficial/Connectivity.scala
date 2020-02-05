@@ -17,10 +17,12 @@ object Connectivity extends TestSuite {
         "disjointLoops" -{
             assert(!Examples.disjointLoops.isConnectedComplex)
         } 
-        "genusRandom" - {
-            val rnd = new util.Random
-            val surface = new StandardSurface(1 + rnd.nextInt(10))
-            assert(surface.isConnectedComplex)
+        "variouGenera" - {
+          (0 to 10).foreach{
+            j => 
+              val surface = new StandardSurface(1 + j)
+              assert(surface.isConnectedComplex)
+          }            
         }
     }
     "wedgeOfTori" - {
