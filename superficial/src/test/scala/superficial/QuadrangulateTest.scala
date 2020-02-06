@@ -10,7 +10,7 @@ object QuadrangulateTest extends TestSuite {
       (0 to 10).foreach { j =>
         val g = j + 1
         val base = new StandardSurface(1 + j)
-        val surface = base.quadrangulate
+        val surface = base.quadrangulate._1
         assert(surface.checkComplex)
         assert(surface.isClosedSurface)
         assert(surface.isConnectedComplex)
@@ -21,7 +21,7 @@ object QuadrangulateTest extends TestSuite {
       }
     }
     "doubleBigon" - {
-      val surface = doubleBigon.quadrangulate
+      val surface = doubleBigon.quadrangulate._1
       assert(surface.checkComplex)
       assert(surface.isClosedSurface)
       assert(surface.isConnectedComplex)
@@ -29,7 +29,7 @@ object QuadrangulateTest extends TestSuite {
       assert(surface.chi == 2)
     }
     "doubleMonogon" - {
-      val surface = doubleMonogon.quadrangulate
+      val surface = doubleMonogon.quadrangulate._1
       assert(surface.checkComplex)
       assert(surface.isClosedSurface)
       assert(surface.isConnectedComplex)
@@ -37,7 +37,7 @@ object QuadrangulateTest extends TestSuite {
       assert(surface.chi == 2)
     }
     "doubleTriangle" - {
-      val surface = doubleTriangle.quadrangulate
+      val surface = doubleTriangle.quadrangulate._1
       assert(surface.checkComplex)
       assert(surface.isClosedSurface)
       assert(surface.isConnectedComplex)
