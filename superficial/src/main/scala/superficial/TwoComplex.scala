@@ -638,27 +638,51 @@ trait TwoComplex { twoComplex =>
    */
   def slightRight (e : Edge) : Option[Edge] = rotateRightOpt(e).flatMap(rotateRightOpt).map(_.flip)
 
-/**
-   * Forced versions of turning operations, for geodesics and edgepaths
+  /**
+   * Forced version of turnLeft, for geodesics and edgepaths
    */
   def L(e: Edge): Edge = {
     require(turnLeft(e) != None , s"No left turn from edge $e")
     turnLeft(e).get
   }
-
+  /**
+   * Forced version of turnRight, for geodesics and edgepaths
+   */
   def R(e: Edge): Edge = {
     require(turnRight(e) != None, s"No right turn from edge $e")
     turnRight(e).get
   }
 
+  /**
+   * Forced version of slightLeft, for geodesics and edgepaths
+   */
   def SL(e: Edge): Edge = {
     require(slightLeft(e) != None, s"No slight left from edge $e")
     slightLeft(e).get
   }
 
+  /**
+   * Forced version of slightRight, for geodesics and edgepaths
+   */
   def SR(e: Edge): Edge = {
     require(slightRight(e) != None, s"No slight right from edge $e")
     slightRight(e).get
+  }
+
+  /**
+   * Forced swivelLeft, for geodesics and edgepaths
+   */
+  def SwL(e: Edge): Edge = {
+    require(turnRight(e.flip) != None, s"Can't swivel left from edge $e")
+    turnRight(e.flip).get
+  }
+
+  /**
+   * Forced swivelRight, for geodesics and edgepaths
+   */
+  def SwR(e: Edge): Edge = {
+    require(turnLeft(e.flip) != None, s"Can't swivel right from edge $e")
+    turnLeft(e.flip).get
   }
 
   /**
@@ -667,20 +691,20 @@ trait TwoComplex { twoComplex =>
     def vectorOrbit (e : Edge, opt: (Edge => Option[Edge]), accum : Vector[Edge]) : Vector[Edge] = {
         val nextEdge = opt(e)
         if ((nextEdge != None) && (! accum.contains(nextEdge))) vectorOrbit(nextEdge.get, opt, accum :+ nextEdge.get)
-        else accum.map(_.flip)
+        else accum
       }
   
     /**
-     * Vector of edges to the left of an edge
+     * Vector of flips of edges to the left of an edge
      */
 
-     def vectorEdgesToTheLeftOf(e: Edge) = vectorOrbit(e, rotateLeftOpt(_), Vector[Edge]())
+     def vectorLeftTurns(e: Edge) = vectorOrbit(e, rotateLeftOpt(_), Vector[Edge](e)).map(_.flip)
 
      /**
-       * Vector of edges to the right of an edge
+       * Vector of flips of edges to the right of an edge
        */
 
-    def vectorEdgesToTheRightOf(e: Edge) = vectorOrbit(e, rotateRightOpt(_), Vector[Edge]())
+    def vectorRightTurns(e: Edge) = vectorOrbit(e, rotateRightOpt(_), Vector[Edge](e)).map(_.flip)
 
 // --------------------------------------------------------------------------------------------------------------------
   
