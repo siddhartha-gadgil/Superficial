@@ -14,7 +14,7 @@ trait Quadrilateral extends Polygon {
 }
 
 trait Quadrangulation extends TwoComplex {
-  
+
 }
 
 object Quadrangulation {
@@ -112,17 +112,4 @@ object Quadrangulation {
     assert(isQuadrangulation(quad), s"The result of the algorithm doesn't give a quadragulation")
     (quad, forwardEdgePathMap)
   }
-
-  /*
-   * Assumption - quad is the quadragulation of twoComplex
-   *
-  */ 
-  def forwardEdgePathMap (twoComplex : TwoComplex, quad : TwoComplex, path : EdgePath) : EdgePath = {
-    
-    val barycenters = quad.vertices -- twoComplex.vertices // because barycenters are the new vertices 
-
-
-    ???
-  }
-
 }
