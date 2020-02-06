@@ -94,7 +94,9 @@ object Quadrangulation {
 
     val newFacesAndEdgePathMaps = twoComplex.halfEdges.map(createFace)
     val newFaces = newFacesAndEdgePathMaps.map(el => el._1)
-    val edgeToEdgePathMap = newFacesAndEdgePathMaps.map(el => el._2).toMap
+    val halfOfEdgePathMap = newFacesAndEdgePathMaps.map(el => el._2)
+    val otherHalfOfEdgePathMap = halfOfEdgePathMap.map(el => (el._1.flip, el._2.reverse))
+    val edgeToEdgePathMap = (halfOfEdgePathMap ++ otherHalfOfEdgePathMap).toMap
 
     def forwardEdgePathMap (edgePath : EdgePath) : EdgePath = {
       require(edgePath.inTwoComplex(twoComplex), "The given edgepath is not part of the original twoComplex")
@@ -111,5 +113,5 @@ object Quadrangulation {
     }
     assert(isQuadrangulation(quad), s"The result of the algorithm doesn't give a quadragulation")
     (quad, forwardEdgePathMap)
-  }
+  } 
 }

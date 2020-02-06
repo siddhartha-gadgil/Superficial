@@ -34,6 +34,13 @@ sealed trait EdgePath{ edgePath =>
       */
     def inTwoComplex(twoComplex: TwoComplex): Boolean = edgeVectors(edgePath).toSet.subsetOf(twoComplex.edges)
 
+    def reverse : (EdgePath) = {
+      edgePath match {
+        case Constant(vertex) => Constant(vertex)
+        case Append(init,last) => Append(Constant(last.terminal), last.flip).++(init.reverse)
+      }
+    }
+
 }
 
 object EdgePath{
