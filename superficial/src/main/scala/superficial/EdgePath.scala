@@ -123,14 +123,19 @@ object EdgePath{
     }
 
     /**
-      * Gives a vector of integers corresponding to turns in an EdgePath
+      * Gives a vector of integers corresponding to turns in a non-trivial EdgePath
       *
       * @param path
       * @return
       */
-    def turnPath(path: EdgePath, nonPosQuad: NonPosQuad): Vector[Int] = {
-        val v = edgeVectors(path)
-        v.zip(v.tail :+ v.head).map(v=> nonPosQuad.turnIndex(v._1,v._2))
+    def turnPath(path: EdgePath, nonPosQuad: NonPosQuad): (Edge, Vector[Int]) = {
+        require(! edgeVectors(path).isEmpty, s"The edge path $path is empty")
+        val v: Vector[Edge] = edgeVectors(path)
+        v match{
+            case y +: z +: ys => (v.head, v.zip(v.tail :+ v.head).map(v=> nonPosQuad.turnIndex(v._1,v._2)))
+            case Vector(y) => (y, Vector[Int]())
+        }
+        
     }
 
     /**
@@ -140,74 +145,73 @@ object EdgePath{
       * @param e
       * @return
       */
-    def turnPathToEdgePath(v: Vector[Int], e: Edge, nonPosQuad: NonPosQuad): EdgePath = {
-        def accumTurnPathToEdgePath(vect: Vector[Int], edge: Edge, accum: EdgePath): EdgePath = {
+    def turnPathToEdgePath(edge: Edge, v: Vector[Int], nonPosQuad: NonPosQuad): EdgePath = {
+        def accumTurnPathToEdgePath(edge: Edge, vect: Vector[Int], accum: EdgePath): EdgePath = {
             if (! vect.isEmpty) {
                 val e = nonPosQuad.turnEdge(edge, vect.head)
-                accumTurnPathToEdgePath(vect.tail, e, Append(accum, e))
+                accumTurnPathToEdgePath(e, vect.tail, Append(accum, e))
             }
             else accum
         }
-        accumTurnPathToEdgePath(v, e, Append(Constant(e.initial), e))
+        accumTurnPathToEdgePath(edge, v, Append(Constant(edge.initial), edge))
     }
 
     /**
-      * Finds indices of the beginning and end of left brackets in an EdgePath
-      *
-      * @param v
-      * @param e
-      * @return
-      */
-    def findLeftBracketsTurnPath(v: Vector[Int]): Vector[(Int,Int)] = {
-        def checkSegment(turnVect: Vector[Int], indices: (Int,Int), accum: Vector[(Int,Int)]): Vector[(Int,Int)] = {
-            if (! turnVect.isEmpty) {
-                if (turnVect.head == 2) checkSegment(turnVect.tail, (indices._1, indices._2+1), accum)
-                else if (turnVect.head == 1) checkSegment(turnVect.tail, (indices._2, indices._2+1), accum :+ indices)
-                else traversePath(turnVect.tail, indices._2+1, accum)
-            }
-            else accum 
-        }
-
-        def traversePath(turnVect: Vector[Int], index: Int, accum: Vector[(Int,Int)]): Vector[(Int,Int)] = {
-            if (! turnVect.isEmpty) {
-                if (turnVect.head == 1) checkSegment(turnVect.tail,(index, index+1), accum)
-                else traversePath(turnVect.tail, index, accum)
-            }
-            else accum
-        }
-        traversePath(v, 0, Vector[(Int,Int)]())
-
-    }
-
-    /**
-      * Finds indices of the beginning and end of left brackets in an EdgePath
+      * Finds indices of the beginning and end (the left turns) of the first left bracket in an EdgePath
       *
       * @param v
       * @return
       */
-    def findRightBracketsTurnPath(v: Vector[Int]): Vector[(Int,Int)] = {
-        def checkSegment(turnVect: Vector[Int], indices: (Int,Int), accum: Vector[(Int, Int)]): Vector[(Int, Int)] = {
+    def findFirstLeftBracketTurnPath(v: Vector[Int]): Option[(Int,Int)] = {
+        def checkSegment(turnVect: Vector[Int], indices: (Int,Int)): Option[(Int,Int)] = {
             if (! turnVect.isEmpty) {
-                if (turnVect.head == -2) checkSegment(turnVect.tail, (indices._1, indices._2+1), accum)
-                else if (turnVect.head == -1) checkSegment(turnVect.tail, (indices._2, indices._2+1), accum :+ indices)
-                else traversePath(turnVect.tail, indices._2+1, accum)
+                if (turnVect.head == 2) checkSegment(turnVect.tail, (indices._1, indices._2+1))
+                else if (turnVect.head == 1) Some(indices)
+                else traversePath(turnVect.tail, indices._2+1)
             }
-            else accum 
+            else None 
         }
 
-        def traversePath(turnVect: Vector[Int], index: Int, accum: Vector[(Int,Int)]): Vector[(Int, Int)] = {
+        def traversePath(turnVect: Vector[Int], index: Int): Option[(Int,Int)] = {
             if (! turnVect.isEmpty) {
-                if (turnVect.head == -1) checkSegment(turnVect.tail,(index, index+1), accum)
-                else traversePath(turnVect.tail, index, accum)
+                if (turnVect.head == 1) checkSegment(turnVect.tail,(index, index+1))
+                else traversePath(turnVect.tail, index)
             }
-            else accum
+            else None
         }
-        traversePath(v, 0, Vector[(Int,Int)]())
+        traversePath(v, 0)
+
+    }
+
+    /**
+      * Finds indices of the beginning and end (the right turns) of the first right bracket in an EdgePath
+      *
+      * @param v
+      * @return
+      */
+    def findFirstRightBracketTurnPath(v: Vector[Int]): Option[(Int,Int)] = {
+        def checkSegment(turnVect: Vector[Int], indices: (Int,Int)): Option[(Int,Int)] = {
+            if (! turnVect.isEmpty) {
+                if (turnVect.head == -2) checkSegment(turnVect.tail, (indices._1, indices._2+1))
+                else if (turnVect.head == -1) Some(indices)
+                else traversePath(turnVect.tail, indices._2+1)
+            }
+            else None 
+        }
+
+        def traversePath(turnVect: Vector[Int], index: Int): Option[(Int,Int)] = {
+            if (! turnVect.isEmpty) {
+                if (turnVect.head == -1) checkSegment(turnVect.tail,(index, index+1))
+                else traversePath(turnVect.tail, index+1)
+            }
+            else None
+        }
+        traversePath(v, 0)
         
     }
 
     /**
-      * Checks if an EdgePath is a Geodesic in a Non Positive Quadrangulation
+      * Checks if an EdgePath is a geodesic in a non positive quadrangulation
       *
       * @param path
       * @param nonPosQuad
@@ -216,9 +220,147 @@ object EdgePath{
     def isGeodesic(path: EdgePath, nonPosQuad: NonPosQuad): Boolean = {
         assert(edgeVectors(path).toSet.subsetOf(nonPosQuad.edges), s"$path is not a path in the non-positive quadrangulation $nonPosQuad")
 
-        val turnVect = turnPath(path, nonPosQuad)
+        val turnVect = turnPath(path, nonPosQuad)._2
 
-        (findLeftBracketsTurnPath(turnVect).isEmpty) && (findRightBracketsTurnPath(turnVect).isEmpty)
+        (isReduced(path)) && (findFirstLeftBracketTurnPath(turnVect) == None) && (findFirstRightBracketTurnPath(turnVect) == None)
 
+    }
+
+    /**
+      * Converts a turnPath to standard form, with (1,2,-1,-2) <-> (L,SL,R,SR)
+      *
+      * @param edge
+      * @param turnVect
+      * @param nonPosQuad
+      * @return
+      */
+    def turnPathStandardForm(edge: Edge, turnVect: Vector[Int], nonPosQuad: NonPosQuad): Vector[Int] = turnPath(turnPathToEdgePath(edge, turnVect, nonPosQuad), nonPosQuad)._2
+
+    /**
+      * Reduces a turnPath
+      *
+      * @param edge
+      * @param turnVect
+      * @param nonPosQuad
+      * @return
+      */
+    def turnPathReduce(edge: Edge, turnVect: Vector[Int], nonPosQuad: NonPosQuad): (Edge, Vector[Int]) = {
+        if(turnVect.contains(0)) {
+            if(turnVect.head == 0) turnPathReduce(nonPosQuad.turnEdge(edge, turnVect(1)), turnVect.tail, nonPosQuad)
+            else {
+                val i = turnVect.indexOf(0)
+                turnPathReduce(edge, ((turnVect.slice(0,i-1) :+ (turnVect(i-1)+turnVect(i+1))) ++ turnVect.slice(i+2,turnVect.size-1)), nonPosQuad)
+            }
+        }
+        else (edge, turnPathStandardForm(edge, turnVect, nonPosQuad))
+    }
+
+    /**
+      * Helper function for turning a turnPath into a geodesic
+      *
+      * @param e
+      * @param turnVect
+      * @param nonPosQuad
+      * @return
+      */
+    def turnPathToGeodesicHelper(edge: Edge, turnVect: Vector[Int], nonPosQuad: NonPosQuad): (Edge, Vector[Int], NonPosQuad) = {
+        def rectifyBracket(edge: Edge, vect: Vector[Int], bracket: (Int,Int), correction: Int): Vector[Int] = {
+            if(bracket._1 == 0){
+                if(bracket._2 == vect.size -1) {
+                    val nvect = vect.slice(1, vect.size - 1).map(-_) // SL <-> SR
+                    nvect
+                }
+                else {
+                    val nvect = 
+                    turnPathStandardForm(edge,
+                    //Correcting the bracket and the first turn after the bracket
+                    (vect.slice(1, bracket._2).map(-_) :+ (vect(bracket._2+1) + correction)), 
+                    nonPosQuad) ++ 
+                    //Rest of the turnPath
+                    vect.slice(bracket._2 +2, vect.size -1 )
+                    nvect
+                }
+            }
+            else {
+                val nvect = turnPathStandardForm(edge,
+                //Correcting the last turn before the bracket, the bracket and the first turn after the bracket
+                ((vect.slice(0, bracket._1-1) :+ (vect(bracket._1-1)+correction)) ++ 
+                (vect.slice(bracket._1+1, bracket._2).map(-_) :+ (vect(bracket._2+1) + correction))),
+                nonPosQuad) ++
+                //Rest of the turnPath
+                vect.slice(bracket._2 + 2, vect.size-1)
+                nvect
+            }
+            
+        }
+        val (e, tvect) = turnPathReduce(edge, turnVect, nonPosQuad)
+        val leftBracket = findFirstLeftBracketTurnPath(tvect)
+        leftBracket match {
+            case None => {
+                val rightBracket = findFirstRightBracketTurnPath(tvect)
+                rightBracket match {
+                    case None => (e, tvect, nonPosQuad)
+                    case Some(value) => {
+                        val rbracket = value
+                        if(rbracket._1 == 0) turnPathToGeodesicHelper(
+                            nonPosQuad.SwL(e),
+                            rectifyBracket(nonPosQuad.SwL(e), tvect, rbracket, -1),
+                            nonPosQuad)
+                        else turnPathToGeodesicHelper(
+                        e,
+                        rectifyBracket(e, tvect, rbracket, -1),
+                        nonPosQuad)
+                    }
+                }
+            } 
+            case Some(value) => {
+                        val lbracket = value
+                        if(lbracket._1 == 0) turnPathToGeodesicHelper(e,
+                            rectifyBracket(nonPosQuad.SwR(e), tvect, lbracket, 1),
+                            nonPosQuad)
+                        else turnPathToGeodesicHelper(e,    
+                        rectifyBracket(e, tvect, lbracket, 1),
+                        nonPosQuad)
+            }
+        }
+    }
+
+    /**
+      * Converts a turnPath to a geodesic
+      *
+      * @param e
+      * @param turnVect
+      * @param nonPosQuad
+      * @return
+      */
+    def turnPathToGeodesic(e: Edge, turnVect: Vector[Int], nonPosQuad: NonPosQuad): (Edge, Vector[Int]) = {
+        val v = turnPathToGeodesicHelper(e, turnVect, nonPosQuad)
+        (v._1, v._2)
+    }
+
+    /**
+      * Reduces an EdgePath
+      *
+      * @param path
+      * @param nonPosQuad
+      * @return
+      */
+      def edgePathReduce(path: EdgePath, nonPosQuad: NonPosQuad): EdgePath = {
+          val (e, tvect) = turnPath(path, nonPosQuad)
+          val (edge, turnVect) = turnPathReduce(e, tvect, nonPosQuad)
+          turnPathToEdgePath(edge, turnVect, nonPosQuad)
+      }
+
+    /**
+      * Homotopes an EdgePath to a geodesic
+      *
+      * @param path
+      * @param nonPosQuad
+      * @return
+      */
+    def edgePathToGeodesic(path: EdgePath, nonPosQuad: NonPosQuad): EdgePath = {
+        val (e, tvect) = turnPath(path, nonPosQuad)
+        val geodesic = turnPathToGeodesic(e, tvect, nonPosQuad)
+        turnPathToEdgePath(geodesic._1, geodesic._2, nonPosQuad)
     }
 }
