@@ -17,7 +17,7 @@ object Quadrangulation {
    *paths in the quadragulation. 
   */
 
-  def quadrangulate (twoComplex : TwoComplex, path : EdgePath) : (TwoComplex, EdgePath) = {
+  def quadrangulate (twoComplex : TwoComplex) : (TwoComplex, EdgePath => EdgePath) = {
  
     require(twoComplex.isClosedSurface, "Algorithm only works for closed surfaces")       
 
@@ -79,12 +79,21 @@ object Quadrangulation {
     val newFaces = newFacesAndEdgePathMaps.map(el => el._1)
     val edgeToEdgePathMap = newFacesAndEdgePathMaps.map(el => el._2).toMap
 
+    def forwardEdgePathMap (edgePath : EdgePath) : EdgePath = {
+      require(edgePath.inTwoComplex(twoComplex), "The given edgepath is not part of the original twoComplex")
+      val newPath = edgePath match {
+        case Constant(vertex) => Constant(vertex)
+        case Append(init, last) => forwardEdgePathMap(init).++(edgeToEdgePathMap(last))
+      }
+      assert(newPath.inTwoComplex(quad), "The resulting edgepath is not part of the quadrangulation of the original complex")
+      newPath
+    }
+
     object quad extends PureTwoComplex {
       val faces = newFaces
     }
     assert(isQuadrangulation(quad), s"The result of the algorithm doesn't give a quadragulation")
-    //quad
-    ???
+    (quad, forwardEdgePathMap)
   }
 
   /*
