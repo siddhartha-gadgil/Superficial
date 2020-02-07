@@ -2,7 +2,7 @@
 <html>
 <head><meta charset="utf-8" />
 
-<title>Pictures</title>
+<title>QuadsEdgePaths</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
@@ -13116,7 +13116,7 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Standard-surfaces,-visualization">Standard surfaces, visualization<a class="anchor-link" href="#Standard-surfaces,-visualization">&#182;</a></h1><p>This is to illustrate constructing and visualizing surfaces in a notebook.</p>
+<h2 id="Quadrangulations-and-Edge-paths">Quadrangulations and Edge paths<a class="anchor-link" href="#Quadrangulations-and-Edge-paths">&#182;</a></h2><p>This is a demo of code due to Arka Ghosh and Chinmaya Kausik</p>
 
 </div>
 </div>
@@ -13126,7 +13126,7 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[1]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-scala"><pre><span></span><span class="k">import</span> <span class="nn">$cp.bin.</span><span class="n">`superficial-6e81b70e5d.jar`</span>
+<div class=" highlight hl-scala"><pre><span></span><span class="k">import</span> <span class="nn">$cp.bin.</span><span class="n">`superficial-59af60d121.jar`</span>
 <span class="k">import</span> <span class="nn">superficial._</span>
 </pre></div>
 
@@ -13162,7 +13162,7 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[2]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-scala"><pre><span></span><span class="k">val</span> <span class="n">genus2</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">StandardSurface</span><span class="o">(</span><span class="mi">2</span><span class="o">)</span>
+<div class=" highlight hl-scala"><pre><span></span><span class="k">import</span> <span class="nn">SphereComplex._</span>
 </pre></div>
 
     </div>
@@ -13181,7 +13181,7 @@ div#notebook {
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre><span class="ansi-cyan-fg">genus2</span>: <span class="ansi-green-fg">StandardSurface</span> = superficial.StandardSurface@ba2d0d7</pre>
+<pre><span class="ansi-green-fg">import </span><span class="ansi-cyan-fg">SphereComplex._</span></pre>
 </div>
 
 </div>
@@ -13195,7 +13195,7 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[3]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-scala"><pre><span></span><span class="k">val</span> <span class="n">pic</span> <span class="k">=</span> <span class="nc">SvgPlot</span><span class="o">.</span><span class="n">plotComplex</span><span class="o">(</span><span class="n">genus2</span><span class="o">)</span>
+<div class=" highlight hl-scala"><pre><span></span><span class="k">import</span> <span class="nn">Triangles._</span>
 </pre></div>
 
     </div>
@@ -13214,46 +13214,7 @@ div#notebook {
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre><span class="ansi-cyan-fg">pic</span>: <span class="ansi-green-fg">xml</span>.<span class="ansi-green-fg">Elem</span> = <span class="ansi-yellow-fg">Seq</span>(
-  <span class="ansi-yellow-fg">Seq</span>(
-    <span class="ansi-yellow-fg">Seq</span>(
-      <span class="ansi-yellow-fg">Seq</span>(
-        <span class="ansi-yellow-fg">Seq</span>(
-          <span class="ansi-yellow-fg">Seq</span>(
-            <span class="ansi-yellow-fg">Seq</span>(
-              <span class="ansi-yellow-fg">Seq</span>(
-                <span class="ansi-yellow-fg">Seq</span>(
-                  <span class="ansi-yellow-fg">Seq</span>(
-                    <span class="ansi-yellow-fg">Seq</span>(
-                      <span class="ansi-yellow-fg">Seq</span>(
-                        <span class="ansi-yellow-fg">Seq</span>(
-                          <span class="ansi-yellow-fg">Seq</span>(
-                            <span class="ansi-yellow-fg">Seq</span>(
-                              <span class="ansi-yellow-fg">Seq</span>(
-                                <span class="ansi-yellow-fg">Seq</span>(
-                                  <span class="ansi-yellow-fg">Seq</span>(
-                                    <span class="ansi-yellow-fg">Seq</span>(
-                                      <span class="ansi-yellow-fg">Seq</span>(
-                                        <span class="ansi-yellow-fg">Seq</span>(
-                                          <span class="ansi-yellow-fg">Seq</span>(
-                                            <span class="ansi-yellow-fg">Seq</span>(
-                                              <span class="ansi-yellow-fg">Seq</span>(
-                                                <span class="ansi-yellow-fg">Seq</span>(
-                                                  <span class="ansi-yellow-fg">Seq</span>(
-                                                    <span class="ansi-yellow-fg">Seq</span>(
-                                                      <span class="ansi-yellow-fg">Seq</span>(
-                                                        <span class="ansi-yellow-fg">Seq</span>(
-                                                          <span class="ansi-yellow-fg">Seq</span>(
-                                                            <span class="ansi-yellow-fg">Seq</span>(
-                                                              <span class="ansi-yellow-fg">Seq</span>(
-                                                                <span class="ansi-yellow-fg">Seq</span>(
-                                                                  <span class="ansi-yellow-fg">Seq</span>(
-                                                                    <span class="ansi-yellow-fg">Seq</span>(
-                                                                      <span class="ansi-yellow-fg">Seq</span>(
-                                                                        <span class="ansi-yellow-fg">Seq</span>(
-                                                                          <span class="ansi-yellow-fg">Seq</span>(
-                                                                            <span class="ansi-yellow-fg">Seq</span>(
-...</pre>
+<pre><span class="ansi-green-fg">import </span><span class="ansi-cyan-fg">Triangles._</span></pre>
 </div>
 
 </div>
@@ -13267,7 +13228,7 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[4]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-scala"><pre><span></span><span class="k">import</span> <span class="nn">almond.interpreter.api._</span>
+<div class=" highlight hl-scala"><pre><span></span><span class="k">import</span> <span class="nn">NonPosQuad._</span>
 </pre></div>
 
     </div>
@@ -13286,7 +13247,8 @@ div#notebook {
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre><span class="ansi-green-fg">import </span><span class="ansi-cyan-fg">almond.interpreter.api._</span></pre>
+<pre><span class="ansi-green-fg">import </span><span class="ansi-cyan-fg">NonPosQuad._
+</span></pre>
 </div>
 
 </div>
@@ -13300,7 +13262,7 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[5]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-scala"><pre><span></span><span class="k">val</span> <span class="n">picData</span> <span class="k">=</span> <span class="nc">DisplayData</span><span class="o">.</span><span class="n">svg</span><span class="o">(</span><span class="n">pic</span><span class="o">.</span><span class="n">toString</span><span class="o">)</span>
+<div class=" highlight hl-scala"><pre><span></span><span class="k">import</span> <span class="nn">EdgePath._</span>
 </pre></div>
 
     </div>
@@ -13319,10 +13281,8 @@ div#notebook {
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre><span class="ansi-cyan-fg">picData</span>: <span class="ansi-green-fg">DisplayData</span> = <span class="ansi-yellow-fg">DisplayData</span>(
-  <span class="ansi-yellow-fg">Map</span>(
-    <span class="ansi-green-fg">&#34;image/svg+xml&#34;</span> -&gt; <span class="ansi-green-fg">&#34;&#34;&#34;&lt;svg version=&#34;1.1&#34; baseProfile=&#34;full&#34; viewBox=&#34;0 0 150 150&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;
-           &lt;line x1=&#34;125&#34; x2=&#34;110&#34; y1=&#34;75&#34; y2=&#34;110&#34; stroke=&#34;hsl(0, 100%, 50%)&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;114&#34; x2=&#34;112&#34; y1=&#34;101&#34; y2=&#34;97&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;114&#34; x2=&#34;117&#34; y1=&#34;101&#34; y2=&#34;99&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;text x=&#34;121&#34; y=&#34;83&#34;&gt;1&lt;/text&gt;&lt;circle cx=&#34;125&#34; cy=&#34;75&#34; r=&#34;3&#34; fill=&#34;hsl(40, 100%, 50%)&#34;/&gt;&lt;line x1=&#34;75&#34; x2=&#34;110&#34; y1=&#34;125&#34; y2=&#34;110&#34; stroke=&#34;hsl(162, 100%, 50%)&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;101&#34; x2=&#34;99&#34; y1=&#34;114&#34; y2=&#34;117&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;101&#34; x2=&#34;97&#34; y1=&#34;114&#34; y2=&#34;112&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;text x=&#34;83&#34; y=&#34;121&#34;&gt;3&lt;/text&gt;&lt;circle cx=&#34;110&#34; cy=&#34;110&#34; r=&#34;3&#34; fill=&#34;hsl(40, 100%, 50%)&#34;/&gt;&lt;line x1=&#34;39&#34; x2=&#34;75&#34; y1=&#34;110&#34; y2=&#34;125&#34; stroke=&#34;hsl(0, 100%, 50%)&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;66&#34; x2=&#34;62&#34; y1=&#34;121&#34; y2=&#34;122&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;66&#34; x2=&#34;64&#34; y1=&#34;121&#34; y2=&#34;117&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;text x=&#34;48&#34; y=&#34;114&#34;&gt;1&lt;/text&gt;&lt;circle cx=&#34;75&#34; cy=&#34;125&#34; r=&#34;3&#34; fill=&#34;hsl(40, 100%, 50%)&#34;/&gt;&lt;line x1=&#34;39&#34; x2=&#34;25&#34; y1=&#34;110&#34; y2=&#34;75&#34; stroke=&#34;hsl(162, 100%, 50%)&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;28&#34; x2=&#34;32&#34; y1=&#34;83&#34; y2=&#34;85&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;28&#34; x2=&#34;27&#34; y1=&#34;83&#34; y2=&#34;87&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;text x=&#34;35&#34; y=&#34;101&#34;&gt;3&lt;/text&gt;&lt;circle cx=&#34;39&#34; cy=&#34;110&#34; r=&#34;3&#34; fill=&#34;hsl(40, 100%, 50%)&#34;/&gt;&lt;line x1=&#34;25&#34; x2=&#34;39&#34; y1=&#34;75&#34; y2=&#34;39&#34; stroke=&#34;hsl(243, 100%, 50%)&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;35&#34; x2=&#34;37&#34; y1=&#34;48&#34; y2=&#34;52&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;35&#34; x2=&#34;32&#34; y1=&#34;48&#34; y2=&#34;50&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;text x=&#34;28&#34; y=&#34;66&#34;&gt;4&lt;/text&gt;&lt;circle cx=&#34;25&#34; cy=&#34;75&#34; r=&#34;3&#34; fill=&#34;hsl(40, 100%, 50%)&#34;/&gt;&lt;line x1=&#34;39&#34; x2=&#34;74&#34; y1=&#34;39&#34; y2=&#34;25&#34; stroke=&#34;hsl(81, 100%, 50%)&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;66&#34; x2=&#34;64&#34; y1=&#34;28&#34; y2=&#34;32&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;66&#34; x2=&#34;62&#34; y1=&#34;28&#34; y2=&#34;27&#34; stroke=&#34;black&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;text x=&#34;48&#34; y=&#34;35&#34;&gt;2&lt;/text&gt;&lt;circle cx=&#34;39&#34; cy=&#34;39&#34; r=&#34;3&#34; fill=&#34;hsl(40, 100%, 50%)&#34;/&gt;&lt;line x1=&#34;110&#34; x2=&#34;74&#34; y1=&#34;39&#34; y2=&#34;25&#34; stroke=&#34;hsl(243, 100%, 50%)&#34; stroke-width=&#34;1&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;/line&gt;&lt;line x1=&#34;83&#34; x2=&#34;87&#34; y</span>...</pre>
+<pre><span class="ansi-green-fg">import </span><span class="ansi-cyan-fg">EdgePath._
+</span></pre>
 </div>
 
 </div>
@@ -13336,7 +13296,7 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[6]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-scala"><pre><span></span><span class="n">kernel</span><span class="o">.</span><span class="n">publish</span><span class="o">.</span><span class="n">display</span><span class="o">(</span><span class="n">picData</span><span class="o">)</span>
+<div class=" highlight hl-scala"><pre><span></span><span class="k">import</span> <span class="nn">Quadrangulation._</span>
 </pre></div>
 
     </div>
@@ -13349,13 +13309,13 @@ div#notebook {
 
 <div class="output_area">
 
-    <div class="prompt"></div>
+    <div class="prompt output_prompt">Out[6]:</div>
 
 
 
-<div class="output_svg output_subarea ">
-<svg version="1.1" baseProfile="full" viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
-           <line x1="125" x2="110" y1="75" y2="110" stroke="hsl(0, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="114" x2="112" y1="101" y2="97" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="114" x2="117" y1="101" y2="99" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="121" y="83">1</text><circle cx="125" cy="75" r="3" fill="hsl(40, 100%, 50%)"/><line x1="75" x2="110" y1="125" y2="110" stroke="hsl(162, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="101" x2="99" y1="114" y2="117" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="101" x2="97" y1="114" y2="112" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="83" y="121">3</text><circle cx="110" cy="110" r="3" fill="hsl(40, 100%, 50%)"/><line x1="39" x2="75" y1="110" y2="125" stroke="hsl(0, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="66" x2="62" y1="121" y2="122" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="66" x2="64" y1="121" y2="117" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="48" y="114">1</text><circle cx="75" cy="125" r="3" fill="hsl(40, 100%, 50%)"/><line x1="39" x2="25" y1="110" y2="75" stroke="hsl(162, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="28" x2="32" y1="83" y2="85" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="28" x2="27" y1="83" y2="87" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="35" y="101">3</text><circle cx="39" cy="110" r="3" fill="hsl(40, 100%, 50%)"/><line x1="25" x2="39" y1="75" y2="39" stroke="hsl(243, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="35" x2="37" y1="48" y2="52" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="35" x2="32" y1="48" y2="50" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="28" y="66">4</text><circle cx="25" cy="75" r="3" fill="hsl(40, 100%, 50%)"/><line x1="39" x2="74" y1="39" y2="25" stroke="hsl(81, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="66" x2="64" y1="28" y2="32" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="66" x2="62" y1="28" y2="27" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="48" y="35">2</text><circle cx="39" cy="39" r="3" fill="hsl(40, 100%, 50%)"/><line x1="110" x2="74" y1="39" y2="25" stroke="hsl(243, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="83" x2="87" y1="28" y2="27" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="83" x2="85" y1="28" y2="32" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="101" y="35">4</text><circle cx="74" cy="25" r="3" fill="hsl(40, 100%, 50%)"/><line x1="125" x2="110" y1="74" y2="39" stroke="hsl(81, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="114" x2="117" y1="48" y2="50" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="114" x2="112" y1="48" y2="52" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="121" y="66">2</text><circle cx="110" cy="39" r="3" fill="hsl(40, 100%, 50%)"/> </svg>
+
+<div class="output_text output_subarea output_execute_result">
+<pre><span class="ansi-green-fg">import </span><span class="ansi-cyan-fg">Quadrangulation._</span></pre>
 </div>
 
 </div>
@@ -13369,7 +13329,7 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[7]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-scala"><pre><span></span><span class="k">val</span> <span class="n">q</span> <span class="k">=</span> <span class="n">genus2</span><span class="o">.</span><span class="n">quadrangulate</span>
+<div class=" highlight hl-scala"><pre><span></span><span class="k">import</span> <span class="nn">StandardSurface._</span>
 </pre></div>
 
     </div>
@@ -13388,7 +13348,8 @@ div#notebook {
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre><span class="ansi-cyan-fg">q</span>: <span class="ansi-green-fg">TwoComplex</span> = superficial.TwoComplex$quad$1$@1ca04c4e</pre>
+<pre><span class="ansi-green-fg">import </span><span class="ansi-cyan-fg">StandardSurface._
+</span></pre>
 </div>
 
 </div>
@@ -13402,7 +13363,338 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[8]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-scala"><pre><span></span><span class="n">kernel</span><span class="o">.</span><span class="n">publish</span><span class="o">.</span><span class="n">display</span><span class="o">(</span><span class="nc">DisplayData</span><span class="o">.</span><span class="n">svg</span><span class="o">(</span><span class="nc">SvgPlot</span><span class="o">.</span><span class="n">plotComplex</span><span class="o">(</span><span class="n">q</span><span class="o">).</span><span class="n">toString</span><span class="o">))</span>
+<div class=" highlight hl-scala"><pre><span></span><span class="k">import</span> <span class="nn">SvgPlot._</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[8]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre><span class="ansi-green-fg">import </span><span class="ansi-cyan-fg">SvgPlot._
+</span></pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[9]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-scala"><pre><span></span><span class="k">import</span> <span class="nn">almond.interpreter.api._</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[9]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre><span class="ansi-green-fg">import </span><span class="ansi-cyan-fg">almond.interpreter.api._</span></pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[10]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-scala"><pre><span></span><span class="k">def</span> <span class="n">showPlot</span><span class="o">(</span><span class="n">c</span><span class="k">:</span> <span class="kt">TwoComplex</span><span class="o">)</span> <span class="k">=</span> <span class="n">kernel</span><span class="o">.</span><span class="n">publish</span><span class="o">.</span><span class="n">display</span><span class="o">(</span><span class="nc">DisplayData</span><span class="o">.</span><span class="n">svg</span><span class="o">(</span><span class="nc">SvgPlot</span><span class="o">.</span><span class="n">plotComplex</span><span class="o">(</span><span class="n">c</span><span class="o">).</span><span class="n">toString</span><span class="o">))</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[10]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>defined <span class="ansi-green-fg">function</span> <span class="ansi-cyan-fg">showPlot</span></pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[12]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-scala"><pre><span></span><span class="n">showPlot</span><span class="o">(</span><span class="n">doubleBigon</span><span class="o">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+<div class="output_svg output_subarea ">
+<svg version="1.1" baseProfile="full" viewBox="0 0 300 150" xmlns="http://www.w3.org/2000/svg">
+           <line x1="125" x2="25" y1="75" y2="75" stroke="hsl(0, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="50" x2="53" y1="75" y2="72" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="50" x2="53" y1="75" y2="78" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="100" y="75">1</text><circle cx="125" cy="75" r="3" fill="hsl(40, 100%, 50%)"/><line x1="25" x2="125" y1="75" y2="74" stroke="hsl(81, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="100" x2="97" y1="74" y2="77" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="100" x2="97" y1="74" y2="71" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="50" y="75">2</text><circle cx="25" cy="75" r="3" fill="hsl(121, 100%, 50%)"/><line x1="175" x2="275" y1="75" y2="75" stroke="hsl(81, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="250" x2="247" y1="75" y2="78" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="250" x2="247" y1="75" y2="72" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="200" y="75">2</text><circle cx="275" cy="75" r="3" fill="hsl(40, 100%, 50%)"/><line x1="275" x2="175" y1="74" y2="75" stroke="hsl(0, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="200" x2="203" y1="75" y2="72" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="200" x2="203" y1="75" y2="78" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="250" y="74">1</text><circle cx="175" cy="75" r="3" fill="hsl(121, 100%, 50%)"/> </svg>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-scala"><pre><span></span><span class="n">showPlot</span><span class="o">(</span><span class="n">quadrangulate</span><span class="o">(</span><span class="n">doubleBigon</span><span class="o">).</span><span class="n">_1</span><span class="o">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+<div class="output_svg output_subarea ">
+<svg version="1.1" baseProfile="full" viewBox="0 0 300 150" xmlns="http://www.w3.org/2000/svg">
+           <line x1="125" x2="75" y1="75" y2="125" stroke="hsl(0, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="87" x2="87" y1="112" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="87" x2="91" y1="112" y2="112" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="112" y="87">1</text><circle cx="125" cy="75" r="3" fill="hsl(40, 100%, 50%)"/><line x1="25" x2="75" y1="75" y2="125" stroke="hsl(81, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="62" x2="58" y1="112" y2="112" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="62" x2="62" y1="112" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="37" y="87">2</text><circle cx="75" cy="125" r="3" fill="hsl(121, 100%, 50%)"/><line x1="25" x2="74" y1="75" y2="25" stroke="hsl(162, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="62" x2="62" y1="37" y2="41" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="62" x2="58" y1="37" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="37" y="62">3</text><circle cx="25" cy="75" r="3" fill="hsl(202, 100%, 50%)"/><line x1="125" x2="74" y1="74" y2="25" stroke="hsl(243, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="87" x2="91" y1="37" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="87" x2="87" y1="37" y2="41" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="112" y="62">4</text><circle cx="74" cy="25" r="3" fill="hsl(283, 100%, 50%)"/><line x1="275" x2="225" y1="75" y2="125" stroke="hsl(243, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="237" x2="237" y1="112" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="237" x2="241" y1="112" y2="112" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="262" y="87">4</text><circle cx="275" cy="75" r="3" fill="hsl(40, 100%, 50%)"/><line x1="175" x2="225" y1="75" y2="125" stroke="hsl(162, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="212" x2="208" y1="112" y2="112" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="212" x2="212" y1="112" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="187" y="87">3</text><circle cx="225" cy="125" r="3" fill="hsl(283, 100%, 50%)"/><line x1="175" x2="225" y1="75" y2="25" stroke="hsl(81, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="212" x2="212" y1="37" y2="41" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="212" x2="208" y1="37" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="187" y="62">2</text><circle cx="175" cy="75" r="3" fill="hsl(202, 100%, 50%)"/><line x1="275" x2="225" y1="74" y2="25" stroke="hsl(0, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="237" x2="241" y1="37" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="237" x2="237" y1="37" y2="41" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="262" y="62">1</text><circle cx="225" cy="25" r="3" fill="hsl(121, 100%, 50%)"/> </svg>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[14]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-scala"><pre><span></span><span class="n">showPlot</span><span class="o">(</span><span class="n">doubleTriangle</span><span class="o">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+<div class="output_svg output_subarea ">
+<svg version="1.1" baseProfile="full" viewBox="0 0 300 150" xmlns="http://www.w3.org/2000/svg">
+           <line x1="125" x2="50" y1="75" y2="118" stroke="hsl(0, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="68" x2="69" y1="107" y2="103" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="68" x2="72" y1="107" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="106" y="85">1</text><circle cx="125" cy="75" r="3" fill="hsl(40, 100%, 50%)"/><line x1="50" x2="49" y1="118" y2="31" stroke="hsl(81, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="49" x2="52" y1="53" y2="56" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="49" x2="46" y1="53" y2="56" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="50" y="96">2</text><circle cx="50" cy="118" r="3" fill="hsl(121, 100%, 50%)"/><line x1="49" x2="125" y1="31" y2="74" stroke="hsl(162, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="106" x2="102" y1="64" y2="65" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="106" x2="105" y1="64" y2="60" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="68" y="42">3</text><circle cx="49" cy="31" r="3" fill="hsl(202, 100%, 50%)"/><line x1="200" x2="275" y1="118" y2="75" stroke="hsl(162, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="256" x2="255" y1="85" y2="89" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="256" x2="252" y1="85" y2="84" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="218" y="107">3</text><circle cx="275" cy="75" r="3" fill="hsl(40, 100%, 50%)"/><line x1="199" x2="200" y1="31" y2="118" stroke="hsl(81, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="200" x2="197" y1="96" y2="93" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="200" x2="203" y1="96" y2="93" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="199" y="53">2</text><circle cx="200" cy="118" r="3" fill="hsl(202, 100%, 50%)"/><line x1="275" x2="199" y1="74" y2="31" stroke="hsl(0, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="218" x2="222" y1="42" y2="41" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="218" x2="219" y1="42" y2="46" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="256" y="64">1</text><circle cx="199" cy="31" r="3" fill="hsl(121, 100%, 50%)"/> </svg>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[15]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-scala"><pre><span></span><span class="n">showPlot</span><span class="o">(</span><span class="n">quadrangulate</span><span class="o">(</span><span class="n">doubleTriangle</span><span class="o">).</span><span class="n">_1</span><span class="o">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+<div class="output_svg output_subarea ">
+<svg version="1.1" baseProfile="full" viewBox="0 0 450 150" xmlns="http://www.w3.org/2000/svg">
+           <line x1="125" x2="75" y1="75" y2="125" stroke="hsl(0, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="87" x2="87" y1="112" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="87" x2="91" y1="112" y2="112" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="112" y="87">1</text><circle cx="125" cy="75" r="3" fill="hsl(121, 100%, 50%)"/><line x1="25" x2="75" y1="75" y2="125" stroke="hsl(81, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="62" x2="58" y1="112" y2="112" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="62" x2="62" y1="112" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="37" y="87">2</text><circle cx="75" cy="125" r="3" fill="hsl(202, 100%, 50%)"/><line x1="25" x2="74" y1="75" y2="25" stroke="hsl(162, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="62" x2="62" y1="37" y2="41" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="62" x2="58" y1="37" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="37" y="62">3</text><circle cx="25" cy="75" r="3" fill="hsl(283, 100%, 50%)"/><line x1="125" x2="74" y1="74" y2="25" stroke="hsl(243, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="87" x2="91" y1="37" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="87" x2="87" y1="37" y2="41" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="112" y="62">4</text><circle cx="74" cy="25" r="3" fill="hsl(40, 100%, 50%)"/><line x1="275" x2="225" y1="75" y2="125" stroke="hsl(324, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="237" x2="237" y1="112" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="237" x2="241" y1="112" y2="112" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="262" y="87">5</text><circle cx="275" cy="75" r="3" fill="hsl(121, 100%, 50%)"/><line x1="175" x2="225" y1="75" y2="125" stroke="hsl(45, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="212" x2="208" y1="112" y2="112" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="212" x2="212" y1="112" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="187" y="87">6</text><circle cx="225" cy="125" r="3" fill="hsl(4, 100%, 50%)"/><line x1="175" x2="225" y1="75" y2="25" stroke="hsl(81, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="212" x2="212" y1="37" y2="41" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="212" x2="208" y1="37" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="187" y="62">2</text><circle cx="175" cy="75" r="3" fill="hsl(283, 100%, 50%)"/><line x1="275" x2="225" y1="74" y2="25" stroke="hsl(0, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="237" x2="241" y1="37" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="237" x2="237" y1="37" y2="41" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="262" y="62">1</text><circle cx="225" cy="25" r="3" fill="hsl(202, 100%, 50%)"/><line x1="425" x2="375" y1="75" y2="125" stroke="hsl(243, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="387" x2="387" y1="112" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="387" x2="391" y1="112" y2="112" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="412" y="87">4</text><circle cx="425" cy="75" r="3" fill="hsl(121, 100%, 50%)"/><line x1="325" x2="375" y1="75" y2="125" stroke="hsl(162, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="362" x2="358" y1="112" y2="112" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="362" x2="362" y1="112" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="337" y="87">3</text><circle cx="375" cy="125" r="3" fill="hsl(40, 100%, 50%)"/><line x1="325" x2="375" y1="75" y2="25" stroke="hsl(45, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="362" x2="362" y1="37" y2="41" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="362" x2="358" y1="37" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="337" y="62">6</text><circle cx="325" cy="75" r="3" fill="hsl(283, 100%, 50%)"/><line x1="425" x2="375" y1="74" y2="25" stroke="hsl(324, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="387" x2="391" y1="37" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="387" x2="387" y1="37" y2="41" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="412" y="62">5</text><circle cx="375" cy="25" r="3" fill="hsl(4, 100%, 50%)"/> </svg>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[16]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-scala"><pre><span></span><span class="k">val</span> <span class="n">genus2</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">StandardSurface</span><span class="o">(</span><span class="mi">2</span><span class="o">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[16]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre><span class="ansi-cyan-fg">genus2</span>: <span class="ansi-green-fg">StandardSurface</span> = superficial.StandardSurface@5bd01cc7</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[17]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-scala"><pre><span></span><span class="k">val</span> <span class="n">quad</span> <span class="k">=</span> <span class="n">quadrangulate</span><span class="o">(</span><span class="n">genus2</span><span class="o">).</span><span class="n">_1</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[17]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre><span class="ansi-cyan-fg">quad</span>: <span class="ansi-green-fg">TwoComplex</span> = superficial.Quadrangulation$quad$1$@7569521b</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[18]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-scala"><pre><span></span><span class="n">showPlot</span><span class="o">(</span><span class="n">genus2</span><span class="o">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+<div class="output_svg output_subarea ">
+<svg version="1.1" baseProfile="full" viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+           <line x1="125" x2="110" y1="75" y2="110" stroke="hsl(0, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="114" x2="112" y1="101" y2="97" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="114" x2="117" y1="101" y2="99" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="121" y="83">1</text><circle cx="125" cy="75" r="3" fill="hsl(40, 100%, 50%)"/><line x1="110" x2="75" y1="110" y2="125" stroke="hsl(243, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="83" x2="85" y1="121" y2="117" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="83" x2="87" y1="121" y2="122" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="101" y="114">4</text><circle cx="110" cy="110" r="3" fill="hsl(40, 100%, 50%)"/><line x1="39" x2="75" y1="110" y2="125" stroke="hsl(0, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="66" x2="62" y1="121" y2="122" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="66" x2="64" y1="121" y2="117" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="48" y="114">1</text><circle cx="75" cy="125" r="3" fill="hsl(40, 100%, 50%)"/><line x1="25" x2="39" y1="75" y2="110" stroke="hsl(243, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="35" x2="32" y1="101" y2="99" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="35" x2="37" y1="101" y2="97" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="28" y="83">4</text><circle cx="39" cy="110" r="3" fill="hsl(40, 100%, 50%)"/><line x1="39" x2="25" y1="39" y2="75" stroke="hsl(81, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="28" x2="27" y1="66" y2="62" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="28" x2="32" y1="66" y2="64" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="35" y="48">2</text><circle cx="25" cy="75" r="3" fill="hsl(40, 100%, 50%)"/><line x1="74" x2="39" y1="25" y2="39" stroke="hsl(162, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="48" x2="50" y1="35" y2="32" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="48" x2="52" y1="35" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="66" y="28">3</text><circle cx="39" cy="39" r="3" fill="hsl(40, 100%, 50%)"/><line x1="74" x2="110" y1="25" y2="39" stroke="hsl(81, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="101" x2="97" y1="35" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="101" x2="99" y1="35" y2="32" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="83" y="28">2</text><circle cx="74" cy="25" r="3" fill="hsl(40, 100%, 50%)"/><line x1="110" x2="125" y1="39" y2="74" stroke="hsl(162, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="121" x2="117" y1="66" y2="64" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="121" x2="122" y1="66" y2="62" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="114" y="48">3</text><circle cx="110" cy="39" r="3" fill="hsl(40, 100%, 50%)"/> </svg>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[20]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-scala"><pre><span></span><span class="n">showPlot</span><span class="o">(</span><span class="n">quad</span><span class="o">)</span>
 </pre></div>
 
     </div>
@@ -13421,7 +13713,7 @@ div#notebook {
 
 <div class="output_svg output_subarea ">
 <svg version="1.1" baseProfile="full" viewBox="0 0 600 150" xmlns="http://www.w3.org/2000/svg">
-           <line x1="125" x2="75" y1="75" y2="125" stroke="hsl(0, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="87" x2="87" y1="112" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="87" x2="91" y1="112" y2="112" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="112" y="87">1</text><circle cx="125" cy="75" r="3" fill="hsl(40, 100%, 50%)"/><line x1="25" x2="75" y1="75" y2="125" stroke="hsl(81, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="62" x2="58" y1="112" y2="112" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="62" x2="62" y1="112" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="37" y="87">2</text><circle cx="75" cy="125" r="3" fill="hsl(121, 100%, 50%)"/><line x1="25" x2="74" y1="75" y2="25" stroke="hsl(162, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="62" x2="62" y1="37" y2="41" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="62" x2="58" y1="37" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="37" y="62">3</text><circle cx="25" cy="75" r="3" fill="hsl(40, 100%, 50%)"/><line x1="125" x2="74" y1="74" y2="25" stroke="hsl(243, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="87" x2="91" y1="37" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="87" x2="87" y1="37" y2="41" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="112" y="62">4</text><circle cx="74" cy="25" r="3" fill="hsl(121, 100%, 50%)"/><line x1="275" x2="225" y1="75" y2="125" stroke="hsl(324, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="237" x2="237" y1="112" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="237" x2="241" y1="112" y2="112" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="262" y="87">5</text><circle cx="275" cy="75" r="3" fill="hsl(40, 100%, 50%)"/><line x1="175" x2="225" y1="75" y2="125" stroke="hsl(45, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="212" x2="208" y1="112" y2="112" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="212" x2="212" y1="112" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="187" y="87">6</text><circle cx="225" cy="125" r="3" fill="hsl(121, 100%, 50%)"/><line x1="175" x2="225" y1="75" y2="25" stroke="hsl(243, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="212" x2="212" y1="37" y2="41" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="212" x2="208" y1="37" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="187" y="62">4</text><circle cx="175" cy="75" r="3" fill="hsl(40, 100%, 50%)"/><line x1="275" x2="225" y1="74" y2="25" stroke="hsl(126, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="237" x2="241" y1="37" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="237" x2="237" y1="37" y2="41" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="262" y="62">7</text><circle cx="225" cy="25" r="3" fill="hsl(121, 100%, 50%)"/><line x1="425" x2="375" y1="75" y2="125" stroke="hsl(207, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="387" x2="387" y1="112" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="387" x2="391" y1="112" y2="112" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="412" y="87">8</text><circle cx="425" cy="75" r="3" fill="hsl(40, 100%, 50%)"/><line x1="325" x2="375" y1="75" y2="125" stroke="hsl(0, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="362" x2="358" y1="112" y2="112" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="362" x2="362" y1="112" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="337" y="87">1</text><circle cx="375" cy="125" r="3" fill="hsl(121, 100%, 50%)"/><line x1="325" x2="375" y1="75" y2="25" stroke="hsl(81, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="362" x2="362" y1="37" y2="41" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="362" x2="358" y1="37" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="337" y="62">2</text><circle cx="325" cy="75" r="3" fill="hsl(40, 100%, 50%)"/><line x1="425" x2="375" y1="74" y2="25" stroke="hsl(162, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="387" x2="391" y1="37" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="387" x2="387" y1="37" y2="41" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="412" y="62">3</text><circle cx="375" cy="25" r="3" fill="hsl(121, 100%, 50%)"/><line x1="575" x2="525" y1="75" y2="125" stroke="hsl(126, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="537" x2="537" y1="112" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="537" x2="541" y1="112" y2="112" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="562" y="87">7</text><circle cx="575" cy="75" r="3" fill="hsl(40, 100%, 50%)"/><line x1="475" x2="525" y1="75" y2="125" stroke="hsl(324, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="512" x2="508" y1="112" y2="112" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="512" x2="512" y1="112" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="487" y="87">5</text><circle cx="525" cy="125" r="3" fill="hsl(121, 100%, 50%)"/><line x1="475" x2="525" y1="75" y2="25" stroke="hsl(45, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="512" x2="512" y1="37" y2="41" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="512" x2="508" y1="37" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="487" y="62">6</text><circle cx="475" cy="75" r="3" fill="hsl(40, 100%, 50%)"/><line x1="575" x2="525" y1="74" y2="25" stroke="hsl(207, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="537" x2="541" y1="37" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="537" x2="537" y1="37" y2="41" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="562" y="62">8</text><circle cx="525" cy="25" r="3" fill="hsl(121, 100%, 50%)"/> </svg>
+           <line x1="125" x2="75" y1="75" y2="125" stroke="hsl(0, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="87" x2="87" y1="112" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="87" x2="91" y1="112" y2="112" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="112" y="87">1</text><circle cx="125" cy="75" r="3" fill="hsl(40, 100%, 50%)"/><line x1="25" x2="75" y1="75" y2="125" stroke="hsl(81, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="62" x2="58" y1="112" y2="112" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="62" x2="62" y1="112" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="37" y="87">2</text><circle cx="75" cy="125" r="3" fill="hsl(121, 100%, 50%)"/><line x1="25" x2="74" y1="75" y2="25" stroke="hsl(162, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="62" x2="62" y1="37" y2="41" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="62" x2="58" y1="37" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="37" y="62">3</text><circle cx="25" cy="75" r="3" fill="hsl(40, 100%, 50%)"/><line x1="125" x2="74" y1="74" y2="25" stroke="hsl(243, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="87" x2="91" y1="37" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="87" x2="87" y1="37" y2="41" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="112" y="62">4</text><circle cx="74" cy="25" r="3" fill="hsl(121, 100%, 50%)"/><line x1="275" x2="225" y1="75" y2="125" stroke="hsl(324, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="237" x2="237" y1="112" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="237" x2="241" y1="112" y2="112" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="262" y="87">5</text><circle cx="275" cy="75" r="3" fill="hsl(40, 100%, 50%)"/><line x1="175" x2="225" y1="75" y2="125" stroke="hsl(45, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="212" x2="208" y1="112" y2="112" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="212" x2="212" y1="112" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="187" y="87">6</text><circle cx="225" cy="125" r="3" fill="hsl(121, 100%, 50%)"/><line x1="175" x2="225" y1="75" y2="25" stroke="hsl(126, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="212" x2="212" y1="37" y2="41" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="212" x2="208" y1="37" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="187" y="62">7</text><circle cx="175" cy="75" r="3" fill="hsl(40, 100%, 50%)"/><line x1="275" x2="225" y1="74" y2="25" stroke="hsl(207, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="237" x2="241" y1="37" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="237" x2="237" y1="37" y2="41" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="262" y="62">8</text><circle cx="225" cy="25" r="3" fill="hsl(121, 100%, 50%)"/><line x1="425" x2="375" y1="75" y2="125" stroke="hsl(243, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="387" x2="387" y1="112" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="387" x2="391" y1="112" y2="112" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="412" y="87">4</text><circle cx="425" cy="75" r="3" fill="hsl(40, 100%, 50%)"/><line x1="325" x2="375" y1="75" y2="125" stroke="hsl(126, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="362" x2="358" y1="112" y2="112" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="362" x2="362" y1="112" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="337" y="87">7</text><circle cx="375" cy="125" r="3" fill="hsl(121, 100%, 50%)"/><line x1="325" x2="375" y1="75" y2="25" stroke="hsl(207, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="362" x2="362" y1="37" y2="41" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="362" x2="358" y1="37" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="337" y="62">8</text><circle cx="325" cy="75" r="3" fill="hsl(40, 100%, 50%)"/><line x1="425" x2="375" y1="74" y2="25" stroke="hsl(324, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="387" x2="391" y1="37" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="387" x2="387" y1="37" y2="41" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="412" y="62">5</text><circle cx="375" cy="25" r="3" fill="hsl(121, 100%, 50%)"/><line x1="575" x2="525" y1="75" y2="125" stroke="hsl(81, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="537" x2="537" y1="112" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="537" x2="541" y1="112" y2="112" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="562" y="87">2</text><circle cx="575" cy="75" r="3" fill="hsl(40, 100%, 50%)"/><line x1="475" x2="525" y1="75" y2="125" stroke="hsl(162, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="512" x2="508" y1="112" y2="112" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="512" x2="512" y1="112" y2="108" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="487" y="87">3</text><circle cx="525" cy="125" r="3" fill="hsl(121, 100%, 50%)"/><line x1="475" x2="525" y1="75" y2="25" stroke="hsl(45, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="512" x2="512" y1="37" y2="41" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="512" x2="508" y1="37" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="487" y="62">6</text><circle cx="475" cy="75" r="3" fill="hsl(40, 100%, 50%)"/><line x1="575" x2="525" y1="74" y2="25" stroke="hsl(0, 100%, 50%)" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="537" x2="541" y1="37" y2="37" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><line x1="537" x2="537" y1="37" y2="41" stroke="black" stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line><text x="562" y="62">1</text><circle cx="525" cy="25" r="3" fill="hsl(121, 100%, 50%)"/> </svg>
 </div>
 
 </div>
@@ -13430,13 +13722,289 @@ div#notebook {
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>We can rerun stuff after correcting, by using <code>./mill -w superficial.bin</code> to recompile on change, and restarting kernel to load a fresh version.</p>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[22]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-scala"><pre><span></span><span class="n">quad</span><span class="o">.</span><span class="n">edges</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[22]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre><span class="ansi-cyan-fg">res21</span>: <span class="ansi-green-fg">Set</span>[<span class="ansi-green-fg">Edge</span>] = <span class="ansi-yellow-fg">HashSet</span>(
+  superficial.EdgePair@4bd51a4c.negative,
+  superficial.EdgePair@43413e75.negative,
+  superficial.EdgePair@7f1f8d08.negative,
+  superficial.EdgePair@3031e846.negative,
+  superficial.EdgePair@5f0d2c37.negative,
+  superficial.EdgePair@3d386e1e.negative,
+  superficial.EdgePair@3e4cc37c.negative,
+  superficial.EdgePair@1807f2b.negative,
+  superficial.EdgePair@4bd51a4c.positive,
+  superficial.EdgePair@43413e75.positive,
+  superficial.EdgePair@7f1f8d08.positive,
+  superficial.EdgePair@3031e846.positive,
+  superficial.EdgePair@5f0d2c37.positive,
+  superficial.EdgePair@3d386e1e.positive,
+  superficial.EdgePair@3e4cc37c.positive,
+  superficial.EdgePair@1807f2b.positive
+)</pre>
+</div>
+
+</div>
 
 </div>
 </div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[23]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-scala"><pre><span></span><span class="k">val</span> <span class="n">eds</span> <span class="k">=</span> <span class="n">quad</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">toVector</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[23]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre><span class="ansi-cyan-fg">eds</span>: <span class="ansi-green-fg">Vector</span>[<span class="ansi-green-fg">Edge</span>] = <span class="ansi-yellow-fg">Vector</span>(
+  superficial.EdgePair@4bd51a4c.negative,
+  superficial.EdgePair@43413e75.negative,
+  superficial.EdgePair@7f1f8d08.negative,
+  superficial.EdgePair@3031e846.negative,
+  superficial.EdgePair@5f0d2c37.negative,
+  superficial.EdgePair@3d386e1e.negative,
+  superficial.EdgePair@3e4cc37c.negative,
+  superficial.EdgePair@1807f2b.negative,
+  superficial.EdgePair@4bd51a4c.positive,
+  superficial.EdgePair@43413e75.positive,
+  superficial.EdgePair@7f1f8d08.positive,
+  superficial.EdgePair@3031e846.positive,
+  superficial.EdgePair@5f0d2c37.positive,
+  superficial.EdgePair@3d386e1e.positive,
+  superficial.EdgePair@3e4cc37c.positive,
+  superficial.EdgePair@1807f2b.positive
+)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[24]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-scala"><pre><span></span><span class="n">eds</span><span class="o">.</span><span class="n">map</span><span class="o">(</span><span class="k">_</span><span class="o">.</span><span class="n">initial</span><span class="o">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[24]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre><span class="ansi-cyan-fg">res23</span>: <span class="ansi-green-fg">Vector</span>[<span class="ansi-green-fg">Vertex</span>] = <span class="ansi-yellow-fg">Vector</span>(
+  superficial.Vertex@5d8c7cd9,
+  superficial.Vertex@5d8c7cd9,
+  superficial.Vertex@5d8c7cd9,
+  superficial.Vertex@5d8c7cd9,
+  superficial.Vertex@5d8c7cd9,
+  superficial.Vertex@5d8c7cd9,
+  superficial.Vertex@5d8c7cd9,
+  superficial.Vertex@5d8c7cd9,
+  superficial.Quadrangulation$bFace$1$@6fc6261b,
+  superficial.Quadrangulation$bFace$1$@6fc6261b,
+  superficial.Quadrangulation$bFace$1$@6fc6261b,
+  superficial.Quadrangulation$bFace$1$@6fc6261b,
+  superficial.Quadrangulation$bFace$1$@6fc6261b,
+  superficial.Quadrangulation$bFace$1$@6fc6261b,
+  superficial.Quadrangulation$bFace$1$@6fc6261b,
+  superficial.Quadrangulation$bFace$1$@6fc6261b
+)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[25]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-scala"><pre><span></span><span class="n">eds</span><span class="o">(</span><span class="mi">0</span><span class="o">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[25]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre><span class="ansi-cyan-fg">res24</span>: <span class="ansi-green-fg">Edge</span> = superficial.EdgePair@4bd51a4c.negative</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[28]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-scala"><pre><span></span><span class="k">val</span> <span class="n">randomPath</span> <span class="k">=</span> <span class="n">turnPathToEdgePath</span><span class="o">(</span><span class="n">eds</span><span class="o">(</span><span class="mi">0</span><span class="o">),</span> <span class="nc">Vector</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span><span class="mi">2</span><span class="o">,</span><span class="mi">3</span><span class="o">,</span><span class="mi">4</span><span class="o">,</span><span class="mi">5</span><span class="o">,</span><span class="mi">6</span><span class="o">),</span> <span class="nc">NonPosQuad</span><span class="o">(</span><span class="n">quad</span><span class="o">))</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_text output_error">
+<pre>
+<span class="ansi-red-fg">java.lang.ClassCastException: superficial.Quadrangulation$quad$1$ cannot be cast to superficial.NonPosQuad</span>
+  superficial.NonPosQuad$.apply(<span class="ansi-green-fg">NonPosQuad.scala</span>:<span class="ansi-green-fg">54</span>)
+  ammonite.$sess.cmd27$Helper.&lt;init&gt;(<span class="ansi-green-fg">cmd27.sc</span>:<span class="ansi-green-fg">1</span>)
+  ammonite.$sess.cmd27$.&lt;clinit&gt;(<span class="ansi-green-fg">cmd27.sc</span>:<span class="ansi-green-fg">7</span>)</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[29]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-scala"><pre><span></span><span class="nc">NonPosQuad</span><span class="o">(</span><span class="k">_</span><span class="o">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[29]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre><span class="ansi-cyan-fg">res28</span>: <span class="ansi-green-fg">TwoComplex</span> =&gt; <span class="ansi-green-fg">NonPosQuad</span> = ammonite.$sess.cmd28$Helper$$Lambda$2458/1371042092@495d160b</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[30]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-scala"><pre><span></span><span class="nc">NonPosQuad</span><span class="o">(</span><span class="n">quad</span><span class="o">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_text output_error">
+<pre>
+<span class="ansi-red-fg">java.lang.ClassCastException: superficial.Quadrangulation$quad$1$ cannot be cast to superficial.NonPosQuad</span>
+  superficial.NonPosQuad$.apply(<span class="ansi-green-fg">NonPosQuad.scala</span>:<span class="ansi-green-fg">54</span>)
+  ammonite.$sess.cmd29$Helper.&lt;init&gt;(<span class="ansi-green-fg">cmd29.sc</span>:<span class="ansi-green-fg">1</span>)
+  ammonite.$sess.cmd29$.&lt;clinit&gt;(<span class="ansi-green-fg">cmd29.sc</span>:<span class="ansi-green-fg">7</span>)</pre>
+</div>
+</div>
+
+</div>
+</div>
+
 </div>
     </div>
   </div>
