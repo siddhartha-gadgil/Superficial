@@ -34,6 +34,13 @@ sealed trait EdgePath{ edgePath =>
       */
     def inTwoComplex(twoComplex: TwoComplex): Boolean = edgeVectors(edgePath).toSet.subsetOf(twoComplex.edges)
 
+    def reverse : (EdgePath) = {
+      edgePath match {
+        case Constant(vertex) => Constant(vertex)
+        case Append(init,last) => Append(Constant(last.terminal), last.flip).++(init.reverse)
+      }
+    }
+
 }
 
 object EdgePath{
@@ -108,6 +115,25 @@ object EdgePath{
             case Constant(initial) => true
         }
     }
+
+    /**
+      * Enumerate all edge-paths of a given length in a complex satisfying a predicate, assumed hereditary,
+      * i.e., if an edge-path satisfies a predicate so should sub-paths. Typical use is generating reduced paths.
+      *
+      * @param complex the two complex in which we consider paths
+      * @param length length of paths to generate
+      * @param predicate condition to be satisfied
+      * @return
+      */
+    def enumerate(complex: TwoComplex, length: Int, predicate: EdgePath => Boolean = (_) => true) : LazyList[EdgePath] = 
+    {
+        if (length == 0) complex.vertices.map(Constant(_)).to(LazyList)
+        else for {
+            init <- enumerate(complex, length - 1, predicate)
+            edge <- complex.edges
+            if edge.initial == init.terminal
+        } yield Append(init, edge)
+    }.filter(predicate)
 
     /**
       * Gives a vector of edges corresponding to an EdgePath
