@@ -51,11 +51,12 @@ object NonPosQuad{
     assert(twoComplex.isClosedSurface)
     assert(twoComplex.faces.forall(_.sides == 4))
     assert(twoComplex.vertices.forall(twoComplex.degree(_) >= 5))
-    object newComplex extends TwoComplex {
+    object newComplex extends NonPosQuad {
       val edges = twoComplex.edges
       val faces = twoComplex.faces
-      val vertices = twoComplex.vertices
+      val vertices = twoComplex.vertices 
     }
+    newComplex
   }
 
 }
