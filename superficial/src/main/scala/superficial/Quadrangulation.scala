@@ -113,7 +113,7 @@ object Quadrangulation {
     
     // This maps paths of length two which are not spurs to corresponding edges.
     // These paths need to be from a pre-existing vertex to another pre-existing vertex, i.e 
-    // vertices which are not barycenters
+    // vertices which are not barycenters and succesive edge on a quadrilateral
     val edgePathToEdgeMap = newFacesAndEdgePathMaps.flatMap(el => (el._2)._2).toMap
 
     def forwardEdgePathMap (edgePath : EdgePath) : EdgePath = {
