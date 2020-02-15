@@ -40,6 +40,7 @@ sealed trait EdgePath{ edgePath =>
         case Append(init,last) => Append(Constant(last.terminal), last.flip).++(init.reverse)
       }
     }
+
 }
 
 object EdgePath{
