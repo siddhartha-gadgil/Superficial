@@ -3,6 +3,7 @@ package superficial
 import Polygon.Index
 import scala.collection.immutable.Nil
 import superficial.Generator.a
+import EdgePath._
 
 /**
   * Abstract polygon, with given edges and vertices, i.e. a two-complex with a single face.
@@ -159,7 +160,7 @@ object TwoComplex {
   def allCollapsed(complex: TwoComplex): TwoComplex =
     nonLoop(complex)
       .map { e =>
-        allCollapsed(complex.collapseEdge(e))
+        allCollapsed(complex.collapseEdge(e)._1)
       }
       .getOrElse(complex).ensuring{_.checkComplex}
 
@@ -277,7 +278,7 @@ trait TwoComplex { twoComplex =>
       terminal <- face.indices
     } yield NormalArc(initial, terminal, face)
 
-  def collapseEdge(e: Edge): TwoComplex = {
+  def collapseEdge(e: Edge): (TwoComplex, EdgePath => EdgePath) = {
     require(e.initial != e.terminal, s"cannot collapse loop $e at ${e.initial}")
     // map from edges to new edges
     val newEdgeHalfMap: Map[Edge, Edge] =
@@ -302,6 +303,20 @@ trait TwoComplex { twoComplex =>
           case (k, v) => (k.flip, v.flip)
         }
 
+    def forwardEdgePathMap (edgePath : EdgePath) : EdgePath = {
+      require(edgePath.inTwoComplex(twoComplex), s"$edgePath is not a path in $twoComplex")
+      val newPath : EdgePath = edgePath match {
+        case Constant(vertex) => {
+          if (vertex == e.terminal) Constant(e.initial) else Constant(vertex)
+          }
+        case Append(init, last) => {
+          if (last == e) forwardEdgePathMap(init) else forwardEdgePathMap(init).+(newEdgeMap(last))
+          }    
+        } 
+      assert(newPath.inTwoComplex(twoComplex), s"$newPath is not a path in $newComplex")
+      newPath 
+    }    
+
     def newPoly(polygon: Polygon): Polygon =
       new Polygon {
         val sides: Int = polygon.sides - 1
@@ -319,7 +334,7 @@ trait TwoComplex { twoComplex =>
       val vertices: Set[Vertex] = twoComplex.vertices - e.terminal
       override def toString(): String = s"$twoComplex/$e @ $hashCode"
     }
-    newComplex
+    (newComplex, forwardEdgePathMap)
   }
 
   /**
