@@ -14,6 +14,6 @@ object SphereComplex {
 
   val doubleTriangle: TwoComplex = TwoComplex.pure(upper, lower)
 
-  val doubleBigon: TwoComplex = doubleTriangle.collapseEdge(A.Positive)._1
+  val doubleBigon: TwoComplex = doubleTriangle.collapseEdge(A.Positive)
   val doubleMonogon = TwoComplex.allCollapsed(doubleTriangle)
 }
