@@ -31,10 +31,11 @@ object Quadrangulation {
 
   /**
    *Gives the quadrangulation of a twocomplex along maps from edgepaths from the twocomplex to  
-   *paths in the quadragulation. 
+   *paths in the quadragulation and from edgepaths from the quadragulation to the edgepaths in the
+   * twocomplex. 
   */
 
-  def quadrangulate (twoComplex : TwoComplex) : (TwoComplex, EdgePath => EdgePath) = {
+  def quadrangulate (twoComplex : TwoComplex) : (TwoComplex, (EdgePath => EdgePath, EdgePath => EdgePath)) = {
  
     require(twoComplex.isClosedSurface, "Algorithm only works for closed surfaces")       
 
@@ -70,7 +71,7 @@ object Quadrangulation {
     }
     
     // creates the face corresponding the edge. Also gives an edgepath homotopic to the edge preserving endpoints
-    def createFace (edge : Edge) : (Polygon, (Edge, EdgePath))= {
+    def createFace (edge : Edge) : (Polygon, ((Edge, EdgePath), Vector[(EdgePath, Edge)]))= {
       val face = faceOfEdge(edge)
       val flipFace = faceOfEdge(edge.flip)
       val indexOfEdge = face.boundary.indexOf(edge)
@@ -82,6 +83,18 @@ object Quadrangulation {
           (newEdgeMap1(face, mod(indexOfEdge - 1, periOfFace)).Negative)),
           (newEdgeMap1(face, indexOfEdge).Positive)) 
 
+      val edgePathThroughFlipFace = // from edge.intial to barycenter of face of edge.flip to edge.terminal
+        Append(Append(Constant(edge.initial),
+          (newEdgeMap1(flipFace, indexOfFlip).Negative)),
+          (newEdgeMap1(flipFace, mod(indexOfFlip - 1, periOfFlip)).Positive))
+
+      val backWardMapAsVector = Vector(
+        (edgePath, edge),
+        (edgePathThroughFlipFace, edge),
+        (edgePath.reverse, edge.flip),
+        (edgePathThroughFlipFace.reverse, edge.flip) 
+      )        
+
       val newFace = Polygon.apply(Vector(
         newEdgeMap1(face, indexOfEdge).Positive, // from barycenter of face of edge to edge.terminal
         newEdgeMap1(flipFace, mod(indexOfFlip - 1, periOfFlip)).Negative, // from edge.terminal to barycenter of face of edge.flip
@@ -89,14 +102,19 @@ object Quadrangulation {
         newEdgeMap1(face, mod(indexOfEdge - 1, periOfFace)).Negative // from edge.intial to barycenter of face of edge
       ))
 
-      (newFace, (edge, edgePath))
+      (newFace, ((edge, edgePath), backWardMapAsVector))
     }  
 
     val newFacesAndEdgePathMaps = twoComplex.halfEdges.map(createFace)
     val newFaces = newFacesAndEdgePathMaps.map(el => el._1)
-    val halfOfEdgePathMap = newFacesAndEdgePathMaps.map(el => el._2)
+    val halfOfEdgePathMap = newFacesAndEdgePathMaps.map(el => (el._2)._1)
     val otherHalfOfEdgePathMap = halfOfEdgePathMap.map(el => (el._1.flip, el._2.reverse))
     val edgeToEdgePathMap = (halfOfEdgePathMap ++ otherHalfOfEdgePathMap).toMap
+    
+    // This maps paths of length two which are not spurs to corresponding edges.
+    // These paths need to be from a pre-existing vertex to another pre-existing vertex, i.e 
+    // vertices which are not barycenters and succesive edge on a quadrilateral
+    val edgePathToEdgeMap = newFacesAndEdgePathMaps.flatMap(el => (el._2)._2).toMap
 
     def forwardEdgePathMap (edgePath : EdgePath) : EdgePath = {
       require(edgePath.inTwoComplex(twoComplex), "The given edgepath is not part of the original twoComplex")
@@ -108,10 +126,33 @@ object Quadrangulation {
       newPath
     }
 
+    // This is edgePath map from the quadrangulation to the original twoComplex.
+    // It replies on the assumption that the edgePath given as input is reduced and
+    // both starts and ends on vertices which are not barycenters
+    def backWardEdgePathMapHelper (edgePath : EdgePath) : EdgePath = {
+      require(twoComplex.vertices.contains(edgePath.initial), 
+        s"EdgePath $edgePath starts at ${edgePath.initial} which is not a pre-existing vertex.")
+
+      require(twoComplex.vertices.contains(edgePath.terminal), 
+        s"EdgePath $edgePath ends at ${edgePath.terminal} which is not a pre-existing vertex.") 
+      
+      // require(EdgePath.isReduced(edgePath), s"$edgePath is not reduced")
+
+      edgePath match {
+        case Constant(initial) => Constant(initial)
+        case Append(Append(init, e1), e2) => {
+          backWardEdgePathMapHelper(init) ++ 
+          EdgePath.apply(Vector(edgePathToEdgeMap(EdgePath.apply(Vector(e1, e2)))))
+        }
+        case Append(Constant(initial), e) => ???
+      }                  
+    }
+
     object quad extends PureTwoComplex {
       val faces = newFaces
     }
+
     assert(isQuadrangulation(quad), s"The result of the algorithm doesn't give a quadragulation")
-    (quad, forwardEdgePathMap)
+    (quad, (forwardEdgePathMap, ???))
   } 
 }

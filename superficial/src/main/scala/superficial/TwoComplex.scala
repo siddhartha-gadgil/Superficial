@@ -3,6 +3,8 @@ package superficial
 import Polygon.Index
 import scala.collection.immutable.Nil
 import superficial.Generator.a
+import superficial.EdgePath.Constant
+import EdgePath._
 
 /**
   * Abstract polygon, with given edges and vertices, i.e. a two-complex with a single face.
@@ -159,7 +161,7 @@ object TwoComplex {
   def allCollapsed(complex: TwoComplex): TwoComplex =
     nonLoop(complex)
       .map { e =>
-        allCollapsed(complex.collapseEdge(e))
+        allCollapsed(complex.collapseEdge(e)._1)
       }
       .getOrElse(complex).ensuring{_.checkComplex}
 
@@ -277,7 +279,7 @@ trait TwoComplex { twoComplex =>
       terminal <- face.indices
     } yield NormalArc(initial, terminal, face)
 
-  def collapseEdge(e: Edge): TwoComplex = {
+  def collapseEdge(e: Edge): (TwoComplex, (EdgePath => EdgePath, EdgePath => EdgePath)) = {
     require(e.initial != e.terminal, s"cannot collapse loop $e at ${e.initial}")
     // map from edges to new edges
     val newEdgeHalfMap: Map[Edge, Edge] =
@@ -302,6 +304,8 @@ trait TwoComplex { twoComplex =>
           case (k, v) => (k.flip, v.flip)
         }
 
+    val newEdgeBackMap = newEdgeMap.map(_.swap)   
+
     def newPoly(polygon: Polygon): Polygon =
       new Polygon {
         val sides: Int = polygon.sides - 1
@@ -319,7 +323,49 @@ trait TwoComplex { twoComplex =>
       val vertices: Set[Vertex] = twoComplex.vertices - e.terminal
       override def toString(): String = s"$twoComplex/$e @ $hashCode"
     }
-    newComplex
+
+    // Given an EdgePath in the actual twoComplex this map gives an EdgePath in the resulting
+    // twoComplex
+    def forWardEdgeMap (edgePath : EdgePath) : EdgePath = {
+      require(edgePath.inTwoComplex(twoComplex), 
+        s"The EdgePath $edgePath is not inside the TwoComplex $twoComplex")
+      val newEdgePath = edgePath match {
+        case Constant(vertex) => {
+          if (vertex == e.terminal) Constant(e.initial) else Constant(vertex) 
+        }
+        case Append(init, last) => {
+          if ((last == e) || (last == e.flip)) forWardEdgeMap(init)
+          else (Append(forWardEdgeMap(init), newEdgeMap(last)))
+        }
+      }
+      assert(newEdgePath.inTwoComplex(newComplex), 
+        s"The output EdgePath $newEdgePath is not inside the TwoComplex $newComplex")
+      newEdgePath
+    }
+
+    def backWardEdgeMap (edgePath : EdgePath) : EdgePath = {
+      require(edgePath.inTwoComplex(twoComplex), 
+        s"The EdgePath $edgePath is not inside the TwoComplex $newComplex")
+      val newEdgePath : EdgePath = edgePath match {
+        case Constant(vertex) => Constant(vertex)
+        case Append(init, last) => {
+          val originalInit = backWardEdgeMap(init)
+          val originalLast = newEdgeBackMap(last)
+          if (originalInit.terminal == e.initial && originalLast.initial == e.terminal) {
+            originalInit.+(e).+(originalLast)
+          }
+          else if (originalInit.terminal == e.terminal && originalLast.initial == e.initial) {
+            originalInit.+(e.flip).+(originalLast)
+          }
+          else originalInit.+(originalLast) 
+        }
+      }  
+      assert(newEdgePath.inTwoComplex(newComplex), 
+        s"The output EdgePath $newEdgePath is not inside the TwoComplex $twoComplex")
+      newEdgePath       
+    }
+
+    (newComplex, (forWardEdgeMap, backWardEdgeMap))
   }
 
   /**
