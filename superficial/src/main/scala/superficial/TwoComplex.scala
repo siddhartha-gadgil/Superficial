@@ -278,6 +278,13 @@ trait TwoComplex { twoComplex =>
       terminal <- face.indices
     } yield NormalArc(initial, terminal, face)
 
+  /*
+   * Returns the result of collapasing an edge of the twoComplex.
+   * Also returns a pair of methods. The first of them takes edgePaths in the original TwoComplex
+   * and returns edgepaths in the TwoComplex with the edge collapsed.
+   * The other method is also an edgePath map but in the opposite direction. That is it takes
+   * edgePaths in the resulting TwoComplex and returns an edgePath in the original twoComplex.
+   **/
   def collapseEdge(e: Edge): (TwoComplex, (EdgePath => EdgePath, EdgePath => EdgePath)) = {
     require(e.initial != e.terminal, s"cannot collapse loop $e at ${e.initial}")
     // map from edges to new edges
