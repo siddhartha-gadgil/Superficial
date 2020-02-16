@@ -278,7 +278,14 @@ trait TwoComplex { twoComplex =>
       terminal <- face.indices
     } yield NormalArc(initial, terminal, face)
 
-  def collapseEdge(e: Edge): (TwoComplex, EdgePath => EdgePath) = {
+  /*
+   * Returns the result of collapasing an edge of the twoComplex.
+   * Also returns a pair of methods. The first of them takes edgePaths in the original TwoComplex
+   * and returns edgepaths in the TwoComplex with the edge collapsed.
+   * The other method is also an edgePath map but in the opposite direction. That is it takes
+   * edgePaths in the resulting TwoComplex and returns an edgePath in the original twoComplex.
+   **/
+  def collapseEdge(e: Edge): (TwoComplex, (EdgePath => EdgePath, EdgePath => EdgePath)) = {
     require(e.initial != e.terminal, s"cannot collapse loop $e at ${e.initial}")
     // map from edges to new edges
     val newEdgeHalfMap: Map[Edge, Edge] =
@@ -303,19 +310,7 @@ trait TwoComplex { twoComplex =>
           case (k, v) => (k.flip, v.flip)
         }
 
-    def forwardEdgePathMap (edgePath : EdgePath) : EdgePath = {
-      require(edgePath.inTwoComplex(twoComplex), s"$edgePath is not a path in $twoComplex")
-      val newPath : EdgePath = edgePath match {
-        case Constant(vertex) => {
-          if (vertex == e.terminal) Constant(e.initial) else Constant(vertex)
-          }
-        case Append(init, last) => {
-          if (last == e) forwardEdgePathMap(init) else forwardEdgePathMap(init).+(newEdgeMap(last))
-          }    
-        } 
-      assert(newPath.inTwoComplex(twoComplex), s"$newPath is not a path in $newComplex")
-      newPath 
-    }    
+    val newEdgeBackMap : Map[Edge, Edge] = newEdgeMap.map(_.swap)    
 
     def newPoly(polygon: Polygon): Polygon =
       new Polygon {
@@ -334,7 +329,42 @@ trait TwoComplex { twoComplex =>
       val vertices: Set[Vertex] = twoComplex.vertices - e.terminal
       override def toString(): String = s"$twoComplex/$e @ $hashCode"
     }
-    (newComplex, forwardEdgePathMap)
+
+    def forwardEdgePathMap (edgePath : EdgePath) : EdgePath = {
+      require(edgePath.inTwoComplex(twoComplex), s"$edgePath is not a path in $twoComplex")
+      val newPath : EdgePath = edgePath match {
+        case Constant(vertex) => {
+          if (vertex == e.terminal) Constant(e.initial) else Constant(vertex)
+          }
+        case Append(init, last) => {
+          if (last == e) forwardEdgePathMap(init) else forwardEdgePathMap(init).+(newEdgeMap(last))
+          }    
+        } 
+      assert(newPath.inTwoComplex(newComplex), s"$newPath is not a path in $newComplex")
+      newPath 
+    }
+
+    def backwardEdgePathMap (edgePath : EdgePath) : EdgePath = {
+      require(edgePath.inTwoComplex(newComplex), s"$edgePath is not a path in $newComplex")
+      val newPath : EdgePath = edgePath match {
+        case Constant(vertex) => Constant(vertex)
+        case Append(init, last) => {
+          val backInit : EdgePath = backwardEdgePathMap(init)
+          val backLast : Edge = newEdgeBackMap(last)
+          if (backInit.terminal == e.initial && backLast.initial == e.terminal) backInit.+(e).+(backLast)
+          else if (backInit.terminal == e.terminal && backLast.initial == e.initial) backInit.+(e.flip).+(backLast)
+          else {
+            assert(backInit.terminal == backLast.initial, 
+              s"${backInit.terminal} is not equal to ${backLast.initial} and they don't differ by the collapsed edge $e")
+            backInit.+(backLast)   
+          } 
+        }
+      }
+      assert(newPath.inTwoComplex(twoComplex), s"$newPath is not a path in $twoComplex")
+      newPath
+    }
+
+    (newComplex, (forwardEdgePathMap, backwardEdgePathMap))
   }
 
   /**
