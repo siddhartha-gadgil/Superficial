@@ -41,6 +41,21 @@ sealed trait EdgePath{ edgePath =>
       }
     }
 
+    lazy val isLoop : Boolean = edgePath.initial == edgePath.terminal
+
+    /* 
+     *In case the EdgePath is a loop, shifts the basePoint to the terminal of the first edge
+     */
+    def shiftBasePoint : EdgePath = {
+      require(edgePath.isLoop, s"The EdgePath $edgePath is not a loop. Hence shifting basepoint is not valid")
+      val newPath = edgePath match {
+        case Constant(vertex) => Constant(vertex)
+        case Append(init, last) => Constant(last.initial).+(last).++(init)    
+      }
+      assert(newPath.isLoop, s"The resulting EdgePath $newPath is not a loop. Hence there is an error in the method definition")
+      newPath 
+    }
+
 }
 
 object EdgePath{
