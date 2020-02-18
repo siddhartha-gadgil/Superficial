@@ -324,10 +324,10 @@ object EdgePath{
       *
       * @param e
       * @param turnVect
-      * @param nonPosQuad
+      * @param twoComplex
       * @return
       */
-    def turnPathToGeodesicHelper(edge: Edge, turnVect: Vector[Int], nonPosQuad: NonPosQuad): (Edge, Vector[Int], NonPosQuad) = {
+    def turnPathToGeodesicHelper(edge: Edge, turnVect: Vector[Int], twoComplex : TwoComplex): (Edge, Vector[Int], TwoComplex) = {
         def rectifyBracket(edge: Edge, vect: Vector[Int], bracket: (Int,Int), correction: Int): Vector[Int] = {
             if(bracket._1 == 0){
                 if(bracket._2 == vect.size -1) {
@@ -339,7 +339,7 @@ object EdgePath{
                     turnPathStandardForm(edge,
                     //Correcting the bracket and the first turn after the bracket
                     (vect.slice(1, bracket._2).map(-_) :+ (vect(bracket._2+1) + correction)), 
-                    nonPosQuad) ++ 
+                    twoComplex) ++ 
                     //Rest of the turnPath
                     vect.slice(bracket._2 +2, vect.size -1 )
                     nvect
@@ -350,41 +350,41 @@ object EdgePath{
                 //Correcting the last turn before the bracket, the bracket and the first turn after the bracket
                 ((vect.slice(0, bracket._1-1) :+ (vect(bracket._1-1)+correction)) ++ 
                 (vect.slice(bracket._1+1, bracket._2).map(-_) :+ (vect(bracket._2+1) + correction))),
-                nonPosQuad) ++
+                twoComplex) ++
                 //Rest of the turnPath
                 vect.slice(bracket._2 + 2, vect.size-1)
                 nvect
             }
             
         }
-        val (e, tvect) = turnPathReduce(edge, turnVect, nonPosQuad)
+        val (e, tvect) = turnPathReduce(edge, turnVect, twoComplex)
         val leftBracket = findFirstLeftBracketTurnPath(tvect)
         leftBracket match {
             case None => {
                 val rightBracket = findFirstRightBracketTurnPath(tvect)
                 rightBracket match {
-                    case None => (e, tvect, nonPosQuad)
+                    case None => (e, tvect, twoComplex)
                     case Some(value) => {
                         val rbracket = value
                         if(rbracket._1 == 0) turnPathToGeodesicHelper(
-                            nonPosQuad.SwL(e),
-                            rectifyBracket(nonPosQuad.SwL(e), tvect, rbracket, -1),
-                            nonPosQuad)
+                            twoComplex.SwL(e),
+                            rectifyBracket(twoComplex.SwL(e), tvect, rbracket, -1),
+                            twoComplex)
                         else turnPathToGeodesicHelper(
                         e,
                         rectifyBracket(e, tvect, rbracket, -1),
-                        nonPosQuad)
+                        twoComplex)
                     }
                 }
             } 
             case Some(value) => {
                         val lbracket = value
                         if(lbracket._1 == 0) turnPathToGeodesicHelper(e,
-                            rectifyBracket(nonPosQuad.SwR(e), tvect, lbracket, 1),
-                            nonPosQuad)
+                            rectifyBracket(twoComplex.SwR(e), tvect, lbracket, 1),
+                            twoComplex)
                         else turnPathToGeodesicHelper(e,    
                         rectifyBracket(e, tvect, lbracket, 1),
-                        nonPosQuad)
+                        twoComplex)
             }
         }
     }
@@ -394,11 +394,11 @@ object EdgePath{
       *
       * @param e
       * @param turnVect
-      * @param nonPosQuad
+      * @param twoComplex
       * @return
       */
-    def turnPathToGeodesic(e: Edge, turnVect: Vector[Int], nonPosQuad: NonPosQuad): (Edge, Vector[Int]) = {
-        val v = turnPathToGeodesicHelper(e, turnVect, nonPosQuad)
+    def turnPathToGeodesic(e: Edge, turnVect: Vector[Int], twoComplex : TwoComplex): (Edge, Vector[Int]) = {
+        val v = turnPathToGeodesicHelper(e, turnVect, twoComplex)
         (v._1, v._2)
     }
 
@@ -419,12 +419,12 @@ object EdgePath{
       * Homotopes an EdgePath to a geodesic
       *
       * @param path
-      * @param nonPosQuad
+      * @param twoComplex
       * @return
       */
-    def edgePathToGeodesic(path: EdgePath, nonPosQuad: NonPosQuad): EdgePath = {
-        val (e, tvect) = turnPath(path, nonPosQuad)
-        val geodesic = turnPathToGeodesic(e, tvect, nonPosQuad)
-        turnPathToEdgePath(geodesic._1, geodesic._2, nonPosQuad)
+    def edgePathToGeodesic(path: EdgePath, twoComplex : TwoComplex): EdgePath = {
+        val (e, tvect) = turnPath(path, twoComplex)
+        val geodesic = turnPathToGeodesic(e, tvect, twoComplex)
+        turnPathToEdgePath(geodesic._1, geodesic._2, twoComplex)
     }
 }
