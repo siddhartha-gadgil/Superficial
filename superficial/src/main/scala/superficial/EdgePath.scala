@@ -255,7 +255,7 @@ object EdgePath{
       * Checks if an EdgePath is a geodesic in a non positive quadrangulation
       *
       * @param path
-      * @param nonPosQuad
+      * @param twoComplex
       * @return
       */
     def isGeodesic(path: EdgePath, twoComplex: TwoComplex): Boolean = {
@@ -272,28 +272,29 @@ object EdgePath{
       *
       * @param edge
       * @param turnVect
-      * @param nonPosQuad
+      * @param twoComplex
       * @return
       */
-    def turnPathStandardForm(edge: Edge, turnVect: Vector[Int], nonPosQuad: NonPosQuad): Vector[Int] = turnPath(turnPathToEdgePath(edge, turnVect, nonPosQuad), nonPosQuad)._2
+    def turnPathStandardForm(edge: Edge, turnVect: Vector[Int], twoComplex : TwoComplex): Vector[Int] = 
+      turnPath(turnPathToEdgePath(edge, turnVect, twoComplex), twoComplex)._2
 
     /**
       * Reduces a turnPath
       *
       * @param edge
       * @param turnVect
-      * @param nonPosQuad
+      * @param twoComplex
       * @return
       */
-    def turnPathReduce(edge: Edge, turnVect: Vector[Int], nonPosQuad: NonPosQuad): (Edge, Vector[Int]) = {
+    def turnPathReduce(edge: Edge, turnVect: Vector[Int], twoComplex : TwoComplex): (Edge, Vector[Int]) = {
         if(turnVect.contains(0)) {
-            if(turnVect.head == 0) turnPathReduce(nonPosQuad.turnEdge(edge, turnVect(1)), turnVect.tail, nonPosQuad)
+            if(turnVect.head == 0) turnPathReduce(twoComplex.turnEdge(edge, turnVect(1)), turnVect.tail, twoComplex)
             else {
                 val i = turnVect.indexOf(0)
-                turnPathReduce(edge, ((turnVect.slice(0,i-1) :+ (turnVect(i-1)+turnVect(i+1))) ++ turnVect.slice(i+2,turnVect.size-1)), nonPosQuad)
+                turnPathReduce(edge, ((turnVect.slice(0,i-1) :+ (turnVect(i-1)+turnVect(i+1))) ++ turnVect.slice(i+2,turnVect.size-1)), twoComplex)
             }
         }
-        else (edge, turnPathStandardForm(edge, turnVect, nonPosQuad))
+        else (edge, turnPathStandardForm(edge, turnVect, twoComplex))
     }
 
     /**
@@ -383,13 +384,13 @@ object EdgePath{
       * Reduces an EdgePath
       *
       * @param path
-      * @param nonPosQuad
+      * @param twoComplex
       * @return
       */
-      def edgePathReduce(path: EdgePath, nonPosQuad: NonPosQuad): EdgePath = {
-          val (e, tvect) = turnPath(path, nonPosQuad)
-          val (edge, turnVect) = turnPathReduce(e, tvect, nonPosQuad)
-          turnPathToEdgePath(edge, turnVect, nonPosQuad)
+      def edgePathReduce(path: EdgePath, twoComplex : TwoComplex): EdgePath = {
+          val (e, tvect) = turnPath(path, twoComplex)
+          val (edge, turnVect) = turnPathReduce(e, tvect, twoComplex)
+          turnPathToEdgePath(edge, turnVect, twoComplex)
       }
 
     /**
