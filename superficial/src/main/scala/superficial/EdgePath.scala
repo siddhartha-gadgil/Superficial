@@ -258,10 +258,10 @@ object EdgePath{
       * @param nonPosQuad
       * @return
       */
-    def isGeodesic(path: EdgePath, nonPosQuad: NonPosQuad): Boolean = {
-        assert(edgeVectors(path).toSet.subsetOf(nonPosQuad.edges), s"$path is not a path in the non-positive quadrangulation $nonPosQuad")
+    def isGeodesic(path: EdgePath, twoComplex: TwoComplex): Boolean = {
+        assert(edgeVectors(path).toSet.subsetOf(twoComplex.edges), s"$path is not a path in $twoComplex")
 
-        val turnVect = turnPath(path, nonPosQuad)._2
+        val turnVect = turnPath(path, twoComplex)._2
 
         (isReduced(path)) && (findFirstLeftBracketTurnPath(turnVect) == None) && (findFirstRightBracketTurnPath(turnVect) == None)
 
