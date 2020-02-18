@@ -750,8 +750,6 @@ trait TwoComplex { twoComplex =>
        */
 
     def vectorRightTurns(e: Edge) = vectorOrbit(e, rotateRightOpt(_), Vector[Edge](e)).map(_.flip)
-
-// --------------------------------------------------------------------------------------------------------------------
   
   /**
   * Vector of edges to the left of an edge
@@ -763,7 +761,48 @@ trait TwoComplex { twoComplex =>
   * Vector of edges to the right of an edge
   */
 
-  def vectorEdgesToTheRightOf(e: Edge) = vectorOrbit(e, rotateRightOpt(_), Vector[Edge]())    
+  def vectorEdgesToTheRightOf(e: Edge) = vectorOrbit(e, rotateRightOpt(_), Vector[Edge]()) 
+
+  /**
+      * Gives the designated index (1 L, 2 SL, -1 R, -2 SR, higher values by turn distance) associated to a turn
+      *
+      * @param e1
+      * @param e2
+      * @return
+      */
+  def turnIndex(e1: Edge, e2: Edge): Int = {
+        assert(e1.terminal == e2.initial, s"$e2 cannot come after $e1 in a path")
+        if (Some(e2) == twoComplex.turnLeft(e1)) 1
+        else if (Some(e2) == twoComplex.slightLeft(e1)) 2
+        else if (Some(e2) == twoComplex.turnRight(e1)) -1
+        else if (Some(e2) == twoComplex.slightRight(e1)) -2
+        else{
+            val edgesLeft = twoComplex.vectorLeftTurns(e1)
+            val edgesRight = twoComplex.vectorRightTurns(e1)
+            if (edgesLeft.contains(e2)) (edgesLeft.indexOf(e2))
+            else (-edgesRight.indexOf(e2))
+            
+        }
+    } 
+
+  /**
+      * Gives the succeeding edge associated to a previous edge and a turning index
+      *
+      * @param e
+      * @param t
+      */
+    def turnEdge(e: Edge, t: Int): Edge = {
+        if(t>= 0) {
+          val v = twoComplex.vectorLeftTurns(e)
+          v((t)%v.size)
+        }
+        else {
+          val v = twoComplex.vectorRightTurns(e)
+          v((-t)%v.size)
+        }
+    }  
+
+
 }
 
 

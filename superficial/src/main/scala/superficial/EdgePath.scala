@@ -169,11 +169,11 @@ object EdgePath{
       * @param path
       * @return
       */
-    def turnPath(path: EdgePath, nonPosQuad: NonPosQuad): (Edge, Vector[Int]) = {
+    def turnPath(path: EdgePath, twoComplex : TwoComplex): (Edge, Vector[Int]) = {
         require(! edgeVectors(path).isEmpty, s"The edge path $path is empty")
         val v: Vector[Edge] = edgeVectors(path)
         v match{
-            case y +: z +: ys => (v.head, v.zip(v.tail :+ v.head).map(v=> nonPosQuad.turnIndex(v._1,v._2)))
+            case y +: z +: ys => (v.head, v.zip(v.tail :+ v.head).map(v=> twoComplex.turnIndex(v._1,v._2)))
             case Vector(y) => (y, Vector[Int]())
         }
         
@@ -186,10 +186,10 @@ object EdgePath{
       * @param e
       * @return
       */
-    def turnPathToEdgePath(edge: Edge, v: Vector[Int], nonPosQuad: NonPosQuad): EdgePath = {
+    def turnPathToEdgePath(edge: Edge, v: Vector[Int], twoComplex : TwoComplex): EdgePath = {
         def accumTurnPathToEdgePath(edge: Edge, vect: Vector[Int], accum: EdgePath): EdgePath = {
             if (! vect.isEmpty) {
-                val e = nonPosQuad.turnEdge(edge, vect.head)
+                val e = twoComplex.turnEdge(edge, vect.head)
                 accumTurnPathToEdgePath(e, vect.tail, Append(accum, e))
             }
             else accum

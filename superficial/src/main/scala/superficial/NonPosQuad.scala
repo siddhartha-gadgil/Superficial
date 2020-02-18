@@ -11,7 +11,8 @@ trait NonPosQuad extends TwoComplex {nonPosQuad =>
       * @param e2
       * @return
       */
-    def turnIndex(e1: Edge, e2: Edge): Int = {
+      
+    override def turnIndex(e1: Edge, e2: Edge): Int = {
         assert(e1.terminal == e2.initial, s"$e2 cannot come after $e1 in a path")
         if (Some(e2) == nonPosQuad.turnLeft(e1)) 1
         else if (Some(e2) == nonPosQuad.slightLeft(e1)) 2
@@ -32,7 +33,7 @@ trait NonPosQuad extends TwoComplex {nonPosQuad =>
       * @param e
       * @param t
       */
-    def turnEdge(e: Edge, t: Int): Edge = {
+    override def turnEdge(e: Edge, t: Int): Edge = {
         if(t>= 0) {
           val v = nonPosQuad.vectorLeftTurns(e)
           v((t)%v.size)
