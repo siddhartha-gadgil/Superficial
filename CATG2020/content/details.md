@@ -21,9 +21,17 @@ To register for the course, in addition to registering in the IISc system, you n
 * __Office:__ N-15, Department of Mathematics, IISc.
 * __E-mail group:__ Information about the course, including meeting times, will be on the outlook group `CATG2020`.
 
+#### Midterm and final Grades
+
+Grades will based entirely on contributions to the repository [Superficial](https://github.com/siddhartha-gadgil/Superficial). The grades will be given in three groups, based on contributions before a fixed time. The deadline for the __first midterm grade__, worth 30% of the total, is __6:00 am on March 2, 2020__. For all grades the following procedure is followed.
+
+1. A version is tagged soon after pull requests before the deadline are merged. Grades are based on this.
+2. Only pull requests that pass all tests will be merged.
+3. Please update your report with a brief account of what you have implemented.
+
 ##### Timings and Venues
 
-The official timings are for now __Monday-Wednesday-Friday, 12:10 - 1:00 pm__ in LH-3. As this is a `1:3` credit course, we will meet an average of 1 hour a week. Initially we will meet more often. 
-The first meeting will be in LH-3 on __Monday, January 13, 2020__. 
+The official timings are for now __Monday-Wednesday-Friday, 12:10 - 1:00 pm__ in LH-3. As this is a `1:3` credit course, we will meet an average of 1 hour a week. Initially we will meet more often.
+The first meeting will be in LH-3 on __Monday, January 13, 2020__.
 
 Subsequent meetings will be co-ordinated through the outlook e-mail group `CATG2020` at IISc.
