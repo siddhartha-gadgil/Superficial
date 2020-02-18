@@ -55,7 +55,10 @@ sealed trait EdgePath{ edgePath =>
       newPath 
     }
 
-    def cyclicallyReduce (twoComplex : TwoComplex) : EdgePath = {
+    /** 
+     * Reduces a loop to a geodesic
+     */
+    def loopToGeodesic (twoComplex : TwoComplex) : EdgePath = {
       require(edgePath.inTwoComplex(twoComplex), 
         s"The EdgaPath $edgePath is not inside the TwoComplex $twoComplex")
       require(edgePath.isLoop, s"The EdgePath $edgePath is not a loop. Hence cyclic reduction is not valid")
@@ -69,7 +72,7 @@ sealed trait EdgePath{ edgePath =>
           helper(path.shiftBasePoint, n - 1)
         }
         else {
-          helper(edgePathReduce(path, twoComplex), length(path) + 3) 
+          helper(edgePathToGeodesic(path, twoComplex), length(path) + 3) 
           // only length + 1 should also work. This value is given just for safety.   
         }
       }
