@@ -33,7 +33,6 @@ sealed trait EdgePath{ edgePath =>
       * @return
       */
     def inTwoComplex(twoComplex: TwoComplex): Boolean = edgeVectors(edgePath).toSet.subsetOf(twoComplex.edges)
-
     def reverse : (EdgePath) = {
       edgePath match {
         case Constant(vertex) => Constant(vertex)
@@ -54,6 +53,29 @@ sealed trait EdgePath{ edgePath =>
       }
       assert(newPath.isLoop, s"The resulting EdgePath $newPath is not a loop. Hence there is an error in the method definition")
       newPath 
+    }
+
+    def cyclicallyReduce (twoComplex : TwoComplex) : EdgePath = {
+      require(edgePath.inTwoComplex(twoComplex), 
+        s"The EdgaPath $edgePath is not inside the TwoComplex $twoComplex")
+      require(edgePath.isLoop, s"The EdgePath $edgePath is not a loop. Hence cyclic reduction is not valid")
+    
+      def helper (path : EdgePath, n : Int) : EdgePath = {
+        val corTurnPath = turnPath(path, twoComplex) // the corresponding turnPath
+        val firstLeftBracket = findFirstLeftBracketTurnPath(corTurnPath._2)
+        val firstRightBracket = findFirstRightBracketTurnPath(corTurnPath._2)
+        if (n <= 0) path
+        else if (isReduced(path) && (firstLeftBracket == None) && (firstRightBracket == None)) {
+          helper(path.shiftBasePoint, n - 1)
+        }
+        else {
+          helper(edgePathReduce(path, twoComplex), length(path) + 3) 
+          // only length + 1 should also work. This value is given just for safety.   
+        }
+      }
+      
+      helper(edgePath, length(edgePath) + 3) 
+      // only length + 1 should also work. This value is given just for safety 
     }
 
 }
