@@ -34,7 +34,7 @@ object Quadrangulation {
    *paths in the quadragulation. 
   */
 
-  def quadrangulate (twoComplex : TwoComplex) : (TwoComplex, EdgePath => EdgePath) = {
+  def quadrangulate (twoComplex : TwoComplex) : (TwoComplex, (EdgePath => EdgePath, EdgePath => EdgePath)) = {
  
     require(twoComplex.isClosedSurface, "Algorithm only works for closed surfaces")       
 
@@ -60,6 +60,16 @@ object Quadrangulation {
 
     def mod (m : Int, n : Int) = ((m % n) + n) % n 
   
+    // A new edge from edge.terminal to barycenter is mapped to the pair (left, right) where
+    // left and right are edges in the original twoComplex which are immediately left or right to
+    // the new edge
+    val reverseEdgeMap : Map[Edge, (Edge, Edge)] = {
+      val intermediate = newEdgeMap1.toList.map(_.swap)
+      intermediate.map(el => (el._1.Negative, 
+        (el._2._1.boundary(el._2._2).flip,
+         el._2._1.boundary(mod(el._2._2 - 1, el._2._1.boundary.length))))).toMap
+    }
+
     val vertexList = twoComplex.vertices.toList
     val edgeList = twoComplex.edges.toList
 
@@ -80,12 +90,12 @@ object Quadrangulation {
       val edgePath = // from edge.intial to barycenter of face of edge to edge.terminal
         Append(Append(Constant(edge.initial),
           (newEdgeMap1(face, mod(indexOfEdge - 1, periOfFace)).Negative)),
-          (newEdgeMap1(face, indexOfEdge).Positive)) 
+          (newEdgeMap1(face, indexOfEdge).Positive))     
 
       val newFace = Polygon.apply(Vector(
         newEdgeMap1(face, indexOfEdge).Positive, // from barycenter of face of edge to edge.terminal
         newEdgeMap1(flipFace, mod(indexOfFlip - 1, periOfFlip)).Negative, // from edge.terminal to barycenter of face of edge.flip
-        newEdgeMap1(flipFace, indexOfFlip).Positive, // from barycenter of face of edge.flip to edge.intial
+        newEdgeMap1(flipFace, indexOfFlip).Positive, // from barycenter of face of edge.flip to edge.initial
         newEdgeMap1(face, mod(indexOfEdge - 1, periOfFace)).Negative // from edge.intial to barycenter of face of edge
       ))
 
@@ -98,6 +108,11 @@ object Quadrangulation {
     val otherHalfOfEdgePathMap = halfOfEdgePathMap.map(el => (el._1.flip, el._2.reverse))
     val edgeToEdgePathMap = (halfOfEdgePathMap ++ otherHalfOfEdgePathMap).toMap
 
+    object quad extends PureTwoComplex {
+      val faces = newFaces
+    }
+    assert(isQuadrangulation(quad), s"The result of the algorithm doesn't give a quadragulation")
+
     def forwardEdgePathMap (edgePath : EdgePath) : EdgePath = {
       require(edgePath.inTwoComplex(twoComplex), "The given edgepath is not part of the original twoComplex")
       val newPath = edgePath match {
@@ -108,10 +123,79 @@ object Quadrangulation {
       newPath
     }
 
-    object quad extends PureTwoComplex {
-      val faces = newFaces
+    def gatherEdgesUsingTurnHelper (edge : Edge, turn : Int, accum : Vector[Edge]) : Vector[Edge] = {
+      require(twoComplex.edges.contains(edge), s"The Edge $edge is not inside the TwoComplex $twoComplex")
+      require(twoComplex.isClosedSurface, 
+        s"gatheEdgesUsingTurnHelper might not work as the TwoComplex $twoComplex is not a closed surface")
+      if (turn == 0) accum
+      else if (turn > 0) gatherEdgesUsingTurnHelper(twoComplex.succOpt(edge).get, turn - 1, accum :+ edge)
+      else gatherEdgesUsingTurnHelper(twoComplex.succOpt(edge).get, turn + 1, accum :+ edge)
     }
-    assert(isQuadrangulation(quad), s"The result of the algorithm doesn't give a quadragulation")
-    (quad, forwardEdgePathMap)
+
+    def gatherEdgesUsingTurn (edge : Edge, turn : Int) : Vector[Edge] = {
+      if (turn == 0) Vector()
+      else if (turn > 0) gatherEdgesUsingTurnHelper(reverseEdgeMap(edge)._1, turn - 1, Vector())
+      else gatherEdgesUsingTurnHelper(reverseEdgeMap(edge)._2, turn - 1, Vector())
+    }
+
+    // Given an edge "first" from a pre existing vertex "u" to a barycenter "b" and an edge
+    // "second" from "b" to another pre existing vertex "v" gives an EdgaPath homotopic to
+    // "first + second" 
+    def gatherTurnUsingPairOfEdges (first : Edge, second : Edge) : EdgePath = {
+      val result = EdgePath.apply(gatherEdgesUsingTurn(first, quad.turnIndex(first, second)))
+      assert(result.initial == first.initial, 
+        s"The initial vertex ${result.initial} of the result $result of gatheTurnUsingPairOfEdges is not same as the intial vertex ${first.initial} of the first edge")
+      assert(result.terminal == second.terminal, 
+        s"The initial vertex ${result.terminal} of the result $result of gatheTurnUsingPairOfEdges($first, $second) is not same as the terminal vertex ${second.terminal} of the first edge $second .")
+      assert(result.inTwoComplex(twoComplex), 
+        s"The result $result of gatheTurnUsingPairOfEdges($first, $second) is not inside the original TwoComplex $twoComplex .")      
+      result
+    }
+
+    def backWardMapHelper (edgePath : EdgePath) : EdgePath = {
+      require(edgePath.inTwoComplex(twoComplex), s"The given edgepath $edgePath is not part of the twoComplex $quad")
+      require(twoComplex.vertices.contains(edgePath.initial), s"The given edgepath $edgePath does not start at a pre exsting vertex")
+      require(twoComplex.vertices.contains(edgePath.terminal), s"The given edgepath $edgePath does not end at a pre exsting vertex")
+      require(EdgePath.length(edgePath) % 2 == 0, s"backWardMapHelper does not work for odd length paths like $edgePath")
+    
+      val newPath = edgePath match {
+        case Constant(vertex) => Constant(vertex)
+        case Append(Constant(vertex), first) => ??? // This should not happen given the fourth requirement
+        case Append(Append(init, first), second) => backWardMapHelper(init).++(gatherTurnUsingPairOfEdges(first, second))
+      }
+      newPath
+    }
+
+    // Helper method so that we can apply backWardMapHelper after applying this method
+    def prePareEdgePath (edgePath : EdgePath) : EdgePath = {
+      if (edgePath.isLoop) {
+        if (twoComplex.vertices.contains(edgePath.initial)) edgePath
+        else edgePath.shiftBasePoint
+      }
+
+      else if (!(twoComplex.vertices.contains(edgePath.terminal))) {
+        edgePath match {
+          case Constant(vertex) => ??? // Should not happen
+          case Append(init, last) => prePareEdgePath(init)
+        }  
+      }
+
+      else if (!(twoComplex.vertices.contains(edgePath.initial))) {
+        edgePath match {
+          case Constant(vertex) => ??? // Should not happen
+          case Append(init, last) => prePareEdgePath(Append(init, last).reverse).reverse
+        }  
+      }
+
+      else edgePath
+    }
+
+    def backWardEdgePathMap (edgePath : EdgePath) : EdgePath = {
+      require(edgePath.inTwoComplex(quad), s"The given edgepath $edgePath is not part of the TwoComplex $quad")
+      val newPath : EdgePath = backWardMapHelper(prePareEdgePath(edgePath))
+      assert(newPath.inTwoComplex(twoComplex), s"The resulting edgepath $newPath is not part of the original TwoComplex $twoComplex")
+      newPath
+    }
+    (quad, (forwardEdgePathMap, backWardEdgePathMap))
   } 
 }

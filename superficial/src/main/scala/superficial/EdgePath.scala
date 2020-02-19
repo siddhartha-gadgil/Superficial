@@ -33,12 +33,52 @@ sealed trait EdgePath{ edgePath =>
       * @return
       */
     def inTwoComplex(twoComplex: TwoComplex): Boolean = edgeVectors(edgePath).toSet.subsetOf(twoComplex.edges)
-
     def reverse : (EdgePath) = {
       edgePath match {
         case Constant(vertex) => Constant(vertex)
         case Append(init,last) => Append(Constant(last.terminal), last.flip).++(init.reverse)
       }
+    }
+
+    lazy val isLoop : Boolean = edgePath.initial == edgePath.terminal
+
+    /* 
+     *In case the EdgePath is a loop, shifts the basePoint to the terminal of the first edge
+     */
+    def shiftBasePoint : EdgePath = {
+      require(edgePath.isLoop, s"The EdgePath $edgePath is not a loop. Hence shifting basepoint is not valid")
+      val newPath = edgePath match {
+        case Constant(vertex) => Constant(vertex)
+        case Append(init, last) => Constant(last.initial).+(last).++(init)    
+      }
+      assert(newPath.isLoop, s"The resulting EdgePath $newPath is not a loop. Hence there is an error in the method definition")
+      newPath 
+    }
+
+    /** 
+     * Reduces a loop to a geodesic
+     */
+    def loopToGeodesic (twoComplex : TwoComplex) : EdgePath = {
+      require(edgePath.inTwoComplex(twoComplex), 
+        s"The EdgaPath $edgePath is not inside the TwoComplex $twoComplex")
+      require(edgePath.isLoop, s"The EdgePath $edgePath is not a loop. Hence cyclic reduction is not valid")
+    
+      def helper (path : EdgePath, n : Int) : EdgePath = {
+        val corTurnPath = turnPath(path, twoComplex) // the corresponding turnPath
+        val firstLeftBracket = findFirstLeftBracketTurnPath(corTurnPath._2)
+        val firstRightBracket = findFirstRightBracketTurnPath(corTurnPath._2)
+        if (n <= 0) path
+        else if (isReduced(path) && (firstLeftBracket == None) && (firstRightBracket == None)) {
+          helper(path.shiftBasePoint, n - 1)
+        }
+        else {
+          helper(edgePathToGeodesic(path, twoComplex), length(path) + 3) 
+          // only length + 1 should also work. This value is given just for safety.   
+        }
+      }
+      
+      helper(edgePath, length(edgePath) + 3) 
+      // only length + 1 should also work. This value is given just for safety 
     }
 
 }
@@ -154,11 +194,11 @@ object EdgePath{
       * @param path
       * @return
       */
-    def turnPath(path: EdgePath, nonPosQuad: NonPosQuad): (Edge, Vector[Int]) = {
+    def turnPath(path: EdgePath, twoComplex : TwoComplex): (Edge, Vector[Int]) = {
         require(! edgeVectors(path).isEmpty, s"The edge path $path is empty")
         val v: Vector[Edge] = edgeVectors(path)
         v match{
-            case y +: z +: ys => (v.head, v.zip(v.tail :+ v.head).map(v=> nonPosQuad.turnIndex(v._1,v._2)))
+            case y +: z +: ys => (v.head, v.zip(v.tail :+ v.head).map(v=> twoComplex.turnIndex(v._1,v._2)))
             case Vector(y) => (y, Vector[Int]())
         }
         
@@ -171,10 +211,10 @@ object EdgePath{
       * @param e
       * @return
       */
-    def turnPathToEdgePath(edge: Edge, v: Vector[Int], nonPosQuad: NonPosQuad): EdgePath = {
+    def turnPathToEdgePath(edge: Edge, v: Vector[Int], twoComplex : TwoComplex): EdgePath = {
         def accumTurnPathToEdgePath(edge: Edge, vect: Vector[Int], accum: EdgePath): EdgePath = {
             if (! vect.isEmpty) {
-                val e = nonPosQuad.turnEdge(edge, vect.head)
+                val e = twoComplex.turnEdge(edge, vect.head)
                 accumTurnPathToEdgePath(e, vect.tail, Append(accum, e))
             }
             else accum
@@ -240,13 +280,13 @@ object EdgePath{
       * Checks if an EdgePath is a geodesic in a non positive quadrangulation
       *
       * @param path
-      * @param nonPosQuad
+      * @param twoComplex
       * @return
       */
-    def isGeodesic(path: EdgePath, nonPosQuad: NonPosQuad): Boolean = {
-        assert(edgeVectors(path).toSet.subsetOf(nonPosQuad.edges), s"$path is not a path in the non-positive quadrangulation $nonPosQuad")
+    def isGeodesic(path: EdgePath, twoComplex: TwoComplex): Boolean = {
+        assert(edgeVectors(path).toSet.subsetOf(twoComplex.edges), s"$path is not a path in $twoComplex")
 
-        val turnVect = turnPath(path, nonPosQuad)._2
+        val turnVect = turnPath(path, twoComplex)._2
 
         (isReduced(path)) && (findFirstLeftBracketTurnPath(turnVect) == None) && (findFirstRightBracketTurnPath(turnVect) == None)
 
@@ -257,28 +297,29 @@ object EdgePath{
       *
       * @param edge
       * @param turnVect
-      * @param nonPosQuad
+      * @param twoComplex
       * @return
       */
-    def turnPathStandardForm(edge: Edge, turnVect: Vector[Int], nonPosQuad: NonPosQuad): Vector[Int] = turnPath(turnPathToEdgePath(edge, turnVect, nonPosQuad), nonPosQuad)._2
+    def turnPathStandardForm(edge: Edge, turnVect: Vector[Int], twoComplex : TwoComplex): Vector[Int] = 
+      turnPath(turnPathToEdgePath(edge, turnVect, twoComplex), twoComplex)._2
 
     /**
       * Reduces a turnPath
       *
       * @param edge
       * @param turnVect
-      * @param nonPosQuad
+      * @param twoComplex
       * @return
       */
-    def turnPathReduce(edge: Edge, turnVect: Vector[Int], nonPosQuad: NonPosQuad): (Edge, Vector[Int]) = {
+    def turnPathReduce(edge: Edge, turnVect: Vector[Int], twoComplex : TwoComplex): (Edge, Vector[Int]) = {
         if(turnVect.contains(0)) {
-            if(turnVect.head == 0) turnPathReduce(nonPosQuad.turnEdge(edge, turnVect(1)), turnVect.tail, nonPosQuad)
+            if(turnVect.head == 0) turnPathReduce(twoComplex.turnEdge(edge, turnVect(1)), turnVect.tail, twoComplex)
             else {
                 val i = turnVect.indexOf(0)
-                turnPathReduce(edge, ((turnVect.slice(0,i-1) :+ (turnVect(i-1)+turnVect(i+1))) ++ turnVect.slice(i+2,turnVect.size-1)), nonPosQuad)
+                turnPathReduce(edge, ((turnVect.slice(0,i-1) :+ (turnVect(i-1)+turnVect(i+1))) ++ turnVect.slice(i+2,turnVect.size-1)), twoComplex)
             }
         }
-        else (edge, turnPathStandardForm(edge, turnVect, nonPosQuad))
+        else (edge, turnPathStandardForm(edge, turnVect, twoComplex))
     }
 
     /**
@@ -286,10 +327,10 @@ object EdgePath{
       *
       * @param e
       * @param turnVect
-      * @param nonPosQuad
+      * @param twoComplex
       * @return
       */
-    def turnPathToGeodesicHelper(edge: Edge, turnVect: Vector[Int], nonPosQuad: NonPosQuad): (Edge, Vector[Int], NonPosQuad) = {
+    def turnPathToGeodesicHelper(edge: Edge, turnVect: Vector[Int], twoComplex : TwoComplex): (Edge, Vector[Int], TwoComplex) = {
         def rectifyBracket(edge: Edge, vect: Vector[Int], bracket: (Int,Int), correction: Int): Vector[Int] = {
             if(bracket._1 == 0){
                 if(bracket._2 == vect.size -1) {
@@ -301,7 +342,7 @@ object EdgePath{
                     turnPathStandardForm(edge,
                     //Correcting the bracket and the first turn after the bracket
                     (vect.slice(1, bracket._2).map(-_) :+ (vect(bracket._2+1) + correction)), 
-                    nonPosQuad) ++ 
+                    twoComplex) ++ 
                     //Rest of the turnPath
                     vect.slice(bracket._2 +2, vect.size -1 )
                     nvect
@@ -312,41 +353,41 @@ object EdgePath{
                 //Correcting the last turn before the bracket, the bracket and the first turn after the bracket
                 ((vect.slice(0, bracket._1-1) :+ (vect(bracket._1-1)+correction)) ++ 
                 (vect.slice(bracket._1+1, bracket._2).map(-_) :+ (vect(bracket._2+1) + correction))),
-                nonPosQuad) ++
+                twoComplex) ++
                 //Rest of the turnPath
                 vect.slice(bracket._2 + 2, vect.size-1)
                 nvect
             }
             
         }
-        val (e, tvect) = turnPathReduce(edge, turnVect, nonPosQuad)
+        val (e, tvect) = turnPathReduce(edge, turnVect, twoComplex)
         val leftBracket = findFirstLeftBracketTurnPath(tvect)
         leftBracket match {
             case None => {
                 val rightBracket = findFirstRightBracketTurnPath(tvect)
                 rightBracket match {
-                    case None => (e, tvect, nonPosQuad)
+                    case None => (e, tvect, twoComplex)
                     case Some(value) => {
                         val rbracket = value
                         if(rbracket._1 == 0) turnPathToGeodesicHelper(
-                            nonPosQuad.SwL(e),
-                            rectifyBracket(nonPosQuad.SwL(e), tvect, rbracket, -1),
-                            nonPosQuad)
+                            twoComplex.SwL(e),
+                            rectifyBracket(twoComplex.SwL(e), tvect, rbracket, -1),
+                            twoComplex)
                         else turnPathToGeodesicHelper(
                         e,
                         rectifyBracket(e, tvect, rbracket, -1),
-                        nonPosQuad)
+                        twoComplex)
                     }
                 }
             } 
             case Some(value) => {
                         val lbracket = value
                         if(lbracket._1 == 0) turnPathToGeodesicHelper(e,
-                            rectifyBracket(nonPosQuad.SwR(e), tvect, lbracket, 1),
-                            nonPosQuad)
+                            rectifyBracket(twoComplex.SwR(e), tvect, lbracket, 1),
+                            twoComplex)
                         else turnPathToGeodesicHelper(e,    
                         rectifyBracket(e, tvect, lbracket, 1),
-                        nonPosQuad)
+                        twoComplex)
             }
         }
     }
@@ -356,11 +397,11 @@ object EdgePath{
       *
       * @param e
       * @param turnVect
-      * @param nonPosQuad
+      * @param twoComplex
       * @return
       */
-    def turnPathToGeodesic(e: Edge, turnVect: Vector[Int], nonPosQuad: NonPosQuad): (Edge, Vector[Int]) = {
-        val v = turnPathToGeodesicHelper(e, turnVect, nonPosQuad)
+    def turnPathToGeodesic(e: Edge, turnVect: Vector[Int], twoComplex : TwoComplex): (Edge, Vector[Int]) = {
+        val v = turnPathToGeodesicHelper(e, turnVect, twoComplex)
         (v._1, v._2)
     }
 
@@ -368,25 +409,25 @@ object EdgePath{
       * Reduces an EdgePath
       *
       * @param path
-      * @param nonPosQuad
+      * @param twoComplex
       * @return
       */
-      def edgePathReduce(path: EdgePath, nonPosQuad: NonPosQuad): EdgePath = {
-          val (e, tvect) = turnPath(path, nonPosQuad)
-          val (edge, turnVect) = turnPathReduce(e, tvect, nonPosQuad)
-          turnPathToEdgePath(edge, turnVect, nonPosQuad)
+      def edgePathReduce(path: EdgePath, twoComplex : TwoComplex): EdgePath = {
+          val (e, tvect) = turnPath(path, twoComplex)
+          val (edge, turnVect) = turnPathReduce(e, tvect, twoComplex)
+          turnPathToEdgePath(edge, turnVect, twoComplex)
       }
 
     /**
       * Homotopes an EdgePath to a geodesic
       *
       * @param path
-      * @param nonPosQuad
+      * @param twoComplex
       * @return
       */
-    def edgePathToGeodesic(path: EdgePath, nonPosQuad: NonPosQuad): EdgePath = {
-        val (e, tvect) = turnPath(path, nonPosQuad)
-        val geodesic = turnPathToGeodesic(e, tvect, nonPosQuad)
-        turnPathToEdgePath(geodesic._1, geodesic._2, nonPosQuad)
+    def edgePathToGeodesic(path: EdgePath, twoComplex : TwoComplex): EdgePath = {
+        val (e, tvect) = turnPath(path, twoComplex)
+        val geodesic = turnPathToGeodesic(e, tvect, twoComplex)
+        turnPathToEdgePath(geodesic._1, geodesic._2, twoComplex)
     }
 }
