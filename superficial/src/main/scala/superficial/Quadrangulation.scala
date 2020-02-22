@@ -180,7 +180,7 @@ object Quadrangulation {
     }
 
     // Helper method so that we can apply backWardMapHelper after applying this method
-    def prePareEdgePath (edgePath : EdgePath) : EdgePath = {
+    def prepareEdgePath (edgePath : EdgePath) : EdgePath = {
 
       if (edgePath.isLoop) {
         if (twoComplex.vertices.contains(edgePath.initial)) edgePath
@@ -201,7 +201,7 @@ object Quadrangulation {
 
     def backWardEdgePathMap (edgePath : EdgePath) : EdgePath = {
       require(edgePath.inTwoComplex(quad), s"The given edgepath $edgePath is not part of the TwoComplex $quad")
-      val newPath : EdgePath = backWardMapHelper(prePareEdgePath(edgePath))
+      val newPath : EdgePath = backWardMapHelper(prepareEdgePath(edgePath))
       assert(newPath.inTwoComplex(twoComplex), s"The resulting edgepath $newPath is not part of the original TwoComplex $twoComplex")
       newPath
     }
