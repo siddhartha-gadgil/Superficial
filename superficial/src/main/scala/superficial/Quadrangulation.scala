@@ -33,6 +33,14 @@ object Quadrangulation {
 
   case class QuadEdge(face: Polygon, index: Int) extends EdgePair(BaryCenter(face), face.boundary(index).terminal)
 
+
+  // The `bdy` parameter is redundant, but will need significant refactoring to avoid
+  case class QuadFace(complex: TwoComplex, edge: Edge, bdy: Vector[Edge]) extends Polygon{
+      val sides: Int = bdy.size
+      val boundary: Vector[Edge] = bdy
+      val vertices: Set[Vertex] = boundary.map(_.initial).toSet
+  }
+
   /**
    *Gives the quadrangulation of a twocomplex along maps from edgepaths from the twocomplex to  
    *paths in the quadragulation.
@@ -119,7 +127,7 @@ object Quadrangulation {
           (newEdgeMap1(face, mod(indexOfEdge - 1, periOfFace)).Negative)),
           (newEdgeMap1(face, indexOfEdge).Positive))     
 
-      val newFace = Polygon(
+      val newFace = QuadFace(twoComplex, edge,
         dualFaceBoundary(edge)
       )
 
