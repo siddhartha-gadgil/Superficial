@@ -31,8 +31,21 @@ object Quadrangulation {
 
   /**
    *Gives the quadrangulation of a twocomplex along maps from edgepaths from the twocomplex to  
-   *paths in the quadragulation. 
-  */
+   *paths in the quadragulation.
+   *The forWard EdgePath method turns every edge in the original twoComplex into an EdgePath of length two 
+   *in the corresponding face in the quadrangulation.  
+   *The backWard EdgePath method only works if the EdgePath in the quadrangulation
+   *starts and ends at pre existing vertices, or is a loop on a barycenter of length more than one.
+   *In the first case it returns a fixed end point homotopic path in the original TwoComplex.
+   *In the second case if returns a freely homotopic path in the original TwoComplex. 
+   *In the first case the backWard EdgePath map considers edges in the quadragulation in Pairs. 
+   *Because the pre existing vertices and the barycenters form a bipartite set in the quadrangulation, a consequtive
+   *pair of edges in the quadragulation (say u and v), starting from a (which is a pre existing vertex), 
+   *passing through b (which is a barycenter) and ending at c (which is a pre existing vertex) is homotopic
+   *to a sequence of edges in the face corresponding to b. So we can take such a path.
+   *In the second case because the pre existing vertices and the barycenters form a bipartite set in the quadrangulation,
+   *shifting the basepoint makes the loop start and end at a pre existing vertex.
+   */
 
   def quadrangulate (twoComplex : TwoComplex) : (TwoComplex, (EdgePath => EdgePath, EdgePath => EdgePath)) = {
  
@@ -168,26 +181,22 @@ object Quadrangulation {
 
     // Helper method so that we can apply backWardMapHelper after applying this method
     def prePareEdgePath (edgePath : EdgePath) : EdgePath = {
+
       if (edgePath.isLoop) {
         if (twoComplex.vertices.contains(edgePath.initial)) edgePath
-        else edgePath.shiftBasePoint
+        else {
+          assert(EdgePath.length(edgePath) >= 1, s"The EdgePath $edgePath is the constant loop" ++  
+            "on the barycenter $edgePath.initial. Hence it is not possible to make it loop on a pre existing vertex") 
+          edgePath.shiftBasePoint
+        }
+      }  
+      else {
+        assert(twoComplex.vertices.contains(edgePath.terminal), 
+         s"The EdgePath $edgePath does not end at a pre existing vertex, so backWardEdgePathMap is not valid")
+        assert(twoComplex.vertices.contains(edgePath.initial), 
+         s"The EdgePath $edgePath does not start at a pre existing vertex, so backWardEdgePathMap is not valid") 
+        edgePath 
       }
-
-      else if (!(twoComplex.vertices.contains(edgePath.terminal))) {
-        edgePath match {
-          case Constant(vertex) => ??? // Should not happen
-          case Append(init, last) => prePareEdgePath(init)
-        }  
-      }
-
-      else if (!(twoComplex.vertices.contains(edgePath.initial))) {
-        edgePath match {
-          case Constant(vertex) => ??? // Should not happen
-          case Append(init, last) => prePareEdgePath(Append(init, last).reverse).reverse
-        }  
-      }
-
-      else edgePath
     }
 
     def backWardEdgePathMap (edgePath : EdgePath) : EdgePath = {
