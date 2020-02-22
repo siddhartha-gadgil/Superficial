@@ -29,6 +29,10 @@ object Quadrangulation {
         twoComplex.asInstanceOf[Quadrangulation]
     }
 
+  case class BaryCenter(face: Polygon) extends Vertex
+
+  case class QuadEdge(face: Polygon, index: Int) extends EdgePair(BaryCenter(face), face.boundary(index).terminal)
+
   /**
    *Gives the quadrangulation of a twocomplex along maps from edgepaths from the twocomplex to  
    *paths in the quadragulation.
@@ -54,17 +58,12 @@ object Quadrangulation {
     val faceList = twoComplex.faces.toList
     val facesWithIndexes :  List[(Polygon, Int)] = faceList.flatMap(f => ((0 to (f.boundary.length - 1)).map(ind => (f, ind))))
 
-    def createBarycenter (face : Polygon) : Vertex = {
-      object bFace extends Vertex
-      bFace
-    } 
+    def createBarycenter (face : Polygon) : Vertex = BaryCenter(face)
 
     val barycentersList = faceList.map(createBarycenter(_))
     val barycenters = faceList.zip(barycentersList).toMap
 
-    def createEdgePairs (face : Polygon, index : Int) : EdgePair = {
-      new EdgePair(barycenters(face), face.boundary(index).terminal)
-    }
+    def createEdgePairs (face : Polygon, index : Int) : EdgePair = QuadEdge(face, index)
 
     val newEdgeMap1 : Map[(Polygon, Int),EdgePair] = 
       facesWithIndexes.map{
