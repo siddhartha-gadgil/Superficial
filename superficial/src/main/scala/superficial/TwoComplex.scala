@@ -1,4 +1,4 @@
-package superficial
+  package superficial
 
 import Polygon.Index
 import scala.collection.immutable.Nil
@@ -157,12 +157,30 @@ object TwoComplex {
   }
 
   // collapse all edges that are not loops
-  def allCollapsed(complex: TwoComplex): TwoComplex =
+  def allCollapsed1(complex: TwoComplex): TwoComplex =
     nonLoop(complex)
       .map { e =>
-        allCollapsed(complex.collapseEdge(e)._1)
+        allCollapsed1(complex.collapseEdge(e)._1)
       }
       .getOrElse(complex).ensuring{_.checkComplex}
+
+  def allCollapsed (complex : TwoComplex) : (TwoComplex, ((EdgePath => EdgePath), (EdgePath => EdgePath))) = {
+
+    def helper (twoComplex: TwoComplex, forwardEdgePathMap: (EdgePath => EdgePath), backwardEdgePathMap: (EdgePath => EdgePath)) :
+           (TwoComplex, ((EdgePath => EdgePath), (EdgePath => EdgePath))) = {
+      nonLoop(twoComplex).map(
+        e => {
+          val eCollapsed = twoComplex.collapseEdge(e)
+          def newForwardMap (edgePath : EdgePath) : EdgePath = (eCollapsed)._2._1(forwardEdgePathMap(edgePath))
+          def newBackWardMap (edgePath : EdgePath) : EdgePath = backwardEdgePathMap(eCollapsed._2._2(edgePath))
+          helper(eCollapsed._1, newForwardMap, newBackWardMap)
+        }
+      )
+      .getOrElse((twoComplex, (forwardEdgePathMap, backwardEdgePathMap))).ensuring{_._1.checkComplex}       
+    }
+    def identityFun (edgePath : EdgePath) = edgePath
+    helper(complex, identityFun, identityFun)
+  }
 
   def nonLoop(complex: TwoComplex): Option[Edge] =
     complex.edges.find(edge => edge.initial != edge.terminal)
