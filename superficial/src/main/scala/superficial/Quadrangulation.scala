@@ -90,6 +90,21 @@ object Quadrangulation {
        assert(face != None, "For a closed surface each edge should be in at least one face")
        face.get
     }
+
+    def dualFaceBoundary(edge: Edge): Vector[Edge] = {
+      val face = faceOfEdge(edge)
+      val flipFace = faceOfEdge(edge.flip)
+      val indexOfEdge = face.boundary.indexOf(edge)
+      val indexOfFlip = flipFace.boundary.indexOf(edge.flip)
+      val periOfFace = face.boundary.length
+      val periOfFlip = flipFace.boundary.length
+      Vector(
+        newEdgeMap1(face, indexOfEdge).Positive, // from barycenter of face of edge to edge.terminal
+        newEdgeMap1(flipFace, mod(indexOfFlip - 1, periOfFlip)).Negative, // from edge.terminal to barycenter of face of edge.flip
+        newEdgeMap1(flipFace, indexOfFlip).Positive, // from barycenter of face of edge.flip to edge.initial
+        newEdgeMap1(face, mod(indexOfEdge - 1, periOfFace)).Negative // from edge.intial to barycenter of face of edge
+      )
+    }
     
     // creates the face corresponding the edge. Also gives an edgepath homotopic to the edge preserving endpoints
     def createFace (edge : Edge) : (Polygon, (Edge, EdgePath))= {
@@ -104,12 +119,9 @@ object Quadrangulation {
           (newEdgeMap1(face, mod(indexOfEdge - 1, periOfFace)).Negative)),
           (newEdgeMap1(face, indexOfEdge).Positive))     
 
-      val newFace = Polygon.apply(Vector(
-        newEdgeMap1(face, indexOfEdge).Positive, // from barycenter of face of edge to edge.terminal
-        newEdgeMap1(flipFace, mod(indexOfFlip - 1, periOfFlip)).Negative, // from edge.terminal to barycenter of face of edge.flip
-        newEdgeMap1(flipFace, indexOfFlip).Positive, // from barycenter of face of edge.flip to edge.initial
-        newEdgeMap1(face, mod(indexOfEdge - 1, periOfFace)).Negative // from edge.intial to barycenter of face of edge
-      ))
+      val newFace = Polygon(
+        dualFaceBoundary(edge)
+      )
 
       (newFace, (edge, edgePath))
     }  
