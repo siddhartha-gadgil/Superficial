@@ -44,6 +44,15 @@ trait EquivalenceClass { equivalenceClass =>
       }
     } 
   }
+
+  /**
+   * Checks if the sets in the equivalence class are mutually disjoint
+   */
+  def isWellDefined = {
+    val allElements : Set[Any] = equivalenceClass.sets.flatMap(e => e)
+    (allElements.filter(el => 
+      (equivalenceClass.sets.filter(_.contains(el)).size != 1)).size == 0)
+  }  
 }
 
 object EquivalenceClass {
