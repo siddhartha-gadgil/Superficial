@@ -24,7 +24,8 @@ object superficial extends CommonModule with SbtModule{
   def scalaJSVersion = "0.6.32"
 
   def ivyDeps = Agg(
-    ivy"org.scala-lang.modules::scala-xml:1.2.0"
+    ivy"org.scala-lang.modules::scala-xml:1.2.0",
+    ivy"com.lihaoyi::fastparse:2.2.2"
   )
 
   def bin() : define.Command[PathRef] = T.command {
