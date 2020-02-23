@@ -837,3 +837,7 @@ trait PureTwoComplex extends TwoComplex {
     faces.map(_.vertices).foldLeft(Set.empty[Vertex])(_ union _)
 }
 
+case class PureComplex(polys: Set[Polygon]) extends PureTwoComplex{
+  val faces: Set[Polygon] = polys
+}
+

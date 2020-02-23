@@ -1,25 +1,15 @@
 package superficial
 
-class EdgePair(initial: Vertex, terminal: Vertex) { pair =>
-  case object Positive extends OrientedEdge {
-    val initial = pair.initial
-    val terminal = pair.terminal
+class EdgePair(val initial: Vertex, val terminal: Vertex) { pair =>
+  lazy val  Positive = EdgePair.Oriented(pair, true)
 
-    val positivelyOriented: Boolean = true
+  lazy val Negative = EdgePair.Oriented(pair, false)
+}
 
-    lazy val flip: OrientedEdge = Negative
-
-    override def toString = s"$pair.positive"
-  }
-
-  case object Negative extends OrientedEdge {
-    val initial = pair.terminal
-    val terminal = pair.initial
-
-    val positivelyOriented: Boolean = false
-
-    lazy val flip: OrientedEdge = Positive
-
-    override def toString = s"$pair.negative"
+object EdgePair{
+  case class Oriented(pair: EdgePair, positive: Boolean) extends Edge{
+    lazy val flip: Edge = Oriented(pair, !positive)
+    lazy val terminal: Vertex = if (positive) pair.terminal else pair.initial
+    lazy val initial: Vertex = if (positive) pair.initial else pair.terminal
   }
 }
