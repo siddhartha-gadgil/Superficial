@@ -30,3 +30,25 @@ object CheckQuadrangulation {
      someOtherPathsInOriginal.length == someOtherPathsInQuad.length)
   }
 }
+
+trait EquivalenceClass { equivalenceClass =>
+  val sets : Set[Set[Any]]
+
+  def expandWith(newSet : Set[Any]) : EquivalenceClass = {
+    val destination = equivalenceClass.sets.find(ss => ss.intersect(newSet).nonEmpty)
+    destination match {
+      case None => EquivalenceClass.apply(equivalenceClass.sets.+(newSet))
+      case Some(element) => {
+        val newElement = element.++(newSet)
+        EquivalenceClass.apply(equivalenceClass.sets.-(element).+(newElement))
+      }
+    } 
+  }
+}
+
+object EquivalenceClass {
+  
+  def apply (newSets : Set[Set[Any]]) : EquivalenceClass = new EquivalenceClass {
+    val sets = newSets
+  }
+}
