@@ -35,9 +35,15 @@ object Quadrangulation {
 
 
   // The `bdy` parameter is redundant, but will need significant refactoring to avoid
-  case class QuadFace(complex: TwoComplex, edge: Edge, bdy: Vector[Edge]) extends Polygon{
-      val sides: Int = bdy.size
-      val boundary: Vector[Edge] = bdy
+  case class QuadFace(face: Polygon, flipFace: Polygon, indexOfEdge: Int, indexOfFlip: Int) extends Polygon{
+      val sides: Int = 4
+      val boundary: Vector[Edge] = 
+        Vector(
+        QuadEdge(face, indexOfEdge).Positive, // from barycenter of face of edge to edge.terminal
+        QuadEdge(flipFace, mod(indexOfFlip - 1, flipFace.boundary.length)).Negative, // from edge.terminal to barycenter of face of edge.flip
+        QuadEdge(flipFace, indexOfFlip).Positive, // from barycenter of face of edge.flip to edge.initial
+        QuadEdge(face, mod(indexOfEdge - 1, face.boundary.length)).Negative // from edge.intial to barycenter of face of edge
+      )
       val vertices: Set[Vertex] = boundary.map(_.initial).toSet
   }
 
@@ -59,6 +65,8 @@ object Quadrangulation {
    *shifting the basepoint makes the loop start and end at a pre existing vertex.
    */
 
+  def mod (m : Int, n : Int) = ((m % n) + n) % n 
+
   def quadrangulate (twoComplex : TwoComplex) : (TwoComplex, (EdgePath => EdgePath, EdgePath => EdgePath)) = {
  
     require(twoComplex.isClosedSurface, "Algorithm only works for closed surfaces")       
@@ -78,7 +86,7 @@ object Quadrangulation {
         case (poly, j) => (poly, j) -> createEdgePairs(poly, j)
       }.toMap
 
-    def mod (m : Int, n : Int) = ((m % n) + n) % n 
+    
   
     // A new edge from edge.terminal to barycenter is mapped to the pair (left, right) where
     // left and right are edges in the original twoComplex which are immediately left or right to
@@ -98,21 +106,6 @@ object Quadrangulation {
        assert(face != None, "For a closed surface each edge should be in at least one face")
        face.get
     }
-
-    def dualFaceBoundary(edge: Edge): Vector[Edge] = {
-      val face = faceOfEdge(edge)
-      val flipFace = faceOfEdge(edge.flip)
-      val indexOfEdge = face.boundary.indexOf(edge)
-      val indexOfFlip = flipFace.boundary.indexOf(edge.flip)
-      val periOfFace = face.boundary.length
-      val periOfFlip = flipFace.boundary.length
-      Vector(
-        newEdgeMap1(face, indexOfEdge).Positive, // from barycenter of face of edge to edge.terminal
-        newEdgeMap1(flipFace, mod(indexOfFlip - 1, periOfFlip)).Negative, // from edge.terminal to barycenter of face of edge.flip
-        newEdgeMap1(flipFace, indexOfFlip).Positive, // from barycenter of face of edge.flip to edge.initial
-        newEdgeMap1(face, mod(indexOfEdge - 1, periOfFace)).Negative // from edge.intial to barycenter of face of edge
-      )
-    }
     
     // creates the face corresponding the edge. Also gives an edgepath homotopic to the edge preserving endpoints
     def createFace (edge : Edge) : (Polygon, (Edge, EdgePath))= {
@@ -127,10 +120,7 @@ object Quadrangulation {
           (newEdgeMap1(face, mod(indexOfEdge - 1, periOfFace)).Negative)),
           (newEdgeMap1(face, indexOfEdge).Positive))     
 
-      val newFace = QuadFace(twoComplex, edge,
-        dualFaceBoundary(edge)
-      )
-
+      val newFace = QuadFace(face, flipFace, indexOfEdge, indexOfFlip)
       (newFace, (edge, edgePath))
     }  
 
@@ -140,9 +130,8 @@ object Quadrangulation {
     val otherHalfOfEdgePathMap = halfOfEdgePathMap.map(el => (el._1.flip, el._2.reverse))
     val edgeToEdgePathMap = (halfOfEdgePathMap ++ otherHalfOfEdgePathMap).toMap
 
-    object quad extends PureTwoComplex {
-      val faces = newFaces
-    }
+    val quad = PureComplex(newFaces)
+
     assert(isQuadrangulation(quad), s"The result of the algorithm doesn't give a quadragulation")
 
     def forwardEdgePathMap (edgePath : EdgePath) : EdgePath = {
