@@ -29,6 +29,24 @@ object Quadrangulation {
         twoComplex.asInstanceOf[Quadrangulation]
     }
 
+  case class BaryCenter(face: Polygon) extends Vertex
+
+  case class QuadEdge(face: Polygon, index: Int) extends EdgePair(BaryCenter(face), face.boundary(index).terminal)
+
+
+  // The `bdy` parameter is redundant, but will need significant refactoring to avoid
+  case class QuadFace(face: Polygon, flipFace: Polygon, indexOfEdge: Int, indexOfFlip: Int) extends Polygon{
+      val sides: Int = 4
+      val boundary: Vector[Edge] = 
+        Vector(
+        QuadEdge(face, indexOfEdge).Positive, // from barycenter of face of edge to edge.terminal
+        QuadEdge(flipFace, mod(indexOfFlip - 1, flipFace.boundary.length)).Negative, // from edge.terminal to barycenter of face of edge.flip
+        QuadEdge(flipFace, indexOfFlip).Positive, // from barycenter of face of edge.flip to edge.initial
+        QuadEdge(face, mod(indexOfEdge - 1, face.boundary.length)).Negative // from edge.intial to barycenter of face of edge
+      )
+      val vertices: Set[Vertex] = boundary.map(_.initial).toSet
+  }
+
   /**
    *Gives the quadrangulation of a twocomplex along maps from edgepaths from the twocomplex to  
    *paths in the quadragulation.
@@ -47,6 +65,8 @@ object Quadrangulation {
    *shifting the basepoint makes the loop start and end at a pre existing vertex.
    */
 
+  def mod (m : Int, n : Int) = ((m % n) + n) % n 
+
   def quadrangulate (twoComplex : TwoComplex) : (TwoComplex, (EdgePath => EdgePath, EdgePath => EdgePath)) = {
  
     require(twoComplex.isClosedSurface, "Algorithm only works for closed surfaces")       
@@ -54,24 +74,19 @@ object Quadrangulation {
     val faceList = twoComplex.faces.toList
     val facesWithIndexes :  List[(Polygon, Int)] = faceList.flatMap(f => ((0 to (f.boundary.length - 1)).map(ind => (f, ind))))
 
-    def createBarycenter (face : Polygon) : Vertex = {
-      object bFace extends Vertex
-      bFace
-    } 
+    def createBarycenter (face : Polygon) : Vertex = BaryCenter(face)
 
     val barycentersList = faceList.map(createBarycenter(_))
     val barycenters = faceList.zip(barycentersList).toMap
 
-    def createEdgePairs (face : Polygon, index : Int) : EdgePair = {
-      new EdgePair(barycenters(face), face.boundary(index).terminal)
-    }
+    def createEdgePairs (face : Polygon, index : Int) : EdgePair = QuadEdge(face, index)
 
     val newEdgeMap1 : Map[(Polygon, Int),EdgePair] = 
       facesWithIndexes.map{
         case (poly, j) => (poly, j) -> createEdgePairs(poly, j)
       }.toMap
 
-    def mod (m : Int, n : Int) = ((m % n) + n) % n 
+    
   
     // A new edge from edge.terminal to barycenter is mapped to the pair (left, right) where
     // left and right are edges in the original twoComplex which are immediately left or right to
@@ -105,13 +120,7 @@ object Quadrangulation {
           (newEdgeMap1(face, mod(indexOfEdge - 1, periOfFace)).Negative)),
           (newEdgeMap1(face, indexOfEdge).Positive))     
 
-      val newFace = Polygon.apply(Vector(
-        newEdgeMap1(face, indexOfEdge).Positive, // from barycenter of face of edge to edge.terminal
-        newEdgeMap1(flipFace, mod(indexOfFlip - 1, periOfFlip)).Negative, // from edge.terminal to barycenter of face of edge.flip
-        newEdgeMap1(flipFace, indexOfFlip).Positive, // from barycenter of face of edge.flip to edge.initial
-        newEdgeMap1(face, mod(indexOfEdge - 1, periOfFace)).Negative // from edge.intial to barycenter of face of edge
-      ))
-
+      val newFace = QuadFace(face, flipFace, indexOfEdge, indexOfFlip)
       (newFace, (edge, edgePath))
     }  
 
@@ -121,9 +130,8 @@ object Quadrangulation {
     val otherHalfOfEdgePathMap = halfOfEdgePathMap.map(el => (el._1.flip, el._2.reverse))
     val edgeToEdgePathMap = (halfOfEdgePathMap ++ otherHalfOfEdgePathMap).toMap
 
-    object quad extends PureTwoComplex {
-      val faces = newFaces
-    }
+    val quad = PureComplex(newFaces)
+
     assert(isQuadrangulation(quad), s"The result of the algorithm doesn't give a quadragulation")
 
     def forwardEdgePathMap (edgePath : EdgePath) : EdgePath = {
