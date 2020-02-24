@@ -259,7 +259,14 @@ trait CollectionOfHomotopyClasses { collection =>
     }
     assert(result.isWellDefined, s"Result $result of makeWellDefined for CollectionOfHomotopyClasses is not well defined")
     result
-  }  
+  } 
+
+  def mainCourse : CollectionOfHomotopyClasses = {
+    val classVector : Vector[HomotopyClassesOfPaths] = collection.classes.toVector
+    val classMap : Map[(Vertex, Vertex), HomotopyClassesOfPaths] = 
+      classVector.map(el => ((el.initial, el.terminal), el)).toMap
+    ???  
+  } 
 }
 
 object CollectionOfHomotopyClasses {
