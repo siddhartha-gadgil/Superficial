@@ -263,9 +263,22 @@ trait CollectionOfHomotopyClasses { collection =>
 
   def mainCourse : CollectionOfHomotopyClasses = {
     val classVector : Vector[HomotopyClassesOfPaths] = collection.classes.toVector
-    val classMap : Map[(Vertex, Vertex), HomotopyClassesOfPaths] = 
-      classVector.map(el => ((el.initial, el.terminal), el)).toMap
-    ???  
+    def helper (oneClass : Vector[HomotopyClassesOfPaths], anotherClass : Vector[HomotopyClassesOfPaths], 
+      accum : CollectionOfHomotopyClasses) : CollectionOfHomotopyClasses = {
+        oneClass match {
+          case cl +: cls => {
+            anotherClass match {
+              case dl +: dls => {
+                if (cl.terminal == dl.initial) helper(cl +: cls, dls, accum.expandWith(cl.multiply(dl)))
+                else helper(cl +: cls, dls, accum)
+              }
+              case _ => helper(cls, cls, accum)
+            }
+          }
+          case _ => accum
+        }
+      } 
+    helper(classVector, classVector, CollectionOfHomotopyClasses.apply(Set()))  
   } 
 }
 
