@@ -187,17 +187,20 @@ object HomotopyClassesOfPaths {
     require(i <= j, s"$i is not less than or equal to $j in helper method of starter method")
     require((i >= 0) && (i < face.boundary.length), s"$i is not inside [1, ${face.boundary.length - 1}]")
     require((j >= 0) && (j < face.boundary.length), s"$j is not inside [1, ${face.boundary.length - 1}]")
-    val limitL = face.boundary.length
       
     val newClass = {
       if(i == 0 && j == 0) {
         Set(Constant(face.boundary.head.initial), EdgePath.apply(face.boundary))
       }  
-      else if (i == 0 && (j == (face.boundary.length - 1))) {
+      else if (i == 0 && (j == (face.boundary.length))) {
         Set(Constant(face.boundary.last.terminal), EdgePath.apply(face.boundary))
       }  
-      else if ((i == (face.boundary.length - 1) && (j == face.boundary.length - 1))) {
+      else if ((i == (face.boundary.length - 1) && (j == face.boundary.length))) {
         Set(Constant(face.boundary.last.terminal), EdgePath.apply(face.boundary))
+      }
+      else if (i == 0) {
+        Set(EdgePath.apply(face.boundary.slice(0,j)),
+            EdgePath.apply(face.boundary.slice(j,face.boundary.length)).reverse)
       }
       else if (i == j) {
         Set(Constant(face.boundary(i).initial), 
@@ -210,7 +213,8 @@ object HomotopyClassesOfPaths {
         (EdgePath.apply(face.boundary.slice(j, face.boundary.length)).reverse))
       }
     }
-  HomotopyClassesOfPaths.apply(newClass.head.initial, newClass.head.terminal, Set(newClass))     
+  HomotopyClassesOfPaths.apply(newClass.head.initial, newClass.head.terminal, Set(newClass))  
+  // Maybe it is better to use mod with boundary(mod(j, face.boundary.length))  
   }
 }
 
@@ -298,7 +302,7 @@ object CollectionOfHomotopyClasses {
     val limitL : Int = face.boundary.length 
     val allIndices : Vector[Int] = (0 to (limitL - 1)).toVector
     val facesWithIndices : Vector[(Polygon, (Int, Int))] = 
-      allIndices.flatMap(i => (allIndices.map(j => (face, (i, j))))).filter(el => (el._2._1 < el._2._2))
+      allIndices.flatMap(i => (allIndices.map(j => (face, (i, j))))).filter(el => (el._2._1 <= el._2._2))
     val newClasses : Set[HomotopyClassesOfPaths] = 
       facesWithIndices.map(el => HomotopyClassesOfPaths.starter(el._1, el._2._1, el._2._2)).toSet
     CollectionOfHomotopyClasses.apply(newClasses)
