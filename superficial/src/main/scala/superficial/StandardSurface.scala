@@ -56,3 +56,5 @@ object StandardSurface{
     }
    
 }
+
+case class ClosedSurface(n: Int) extends StandardSurface(n)
