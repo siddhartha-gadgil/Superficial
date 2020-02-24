@@ -32,7 +32,7 @@ class StandardSurface(val genus: Int) extends TwoComplex{surface =>
 
     def parseEdge(s: String) : Parsed[Edge] = parse(s, edge(_))
 
-    def edgePath[ _ : P] : P[EdgePath] = P(edge.rep).map(s => EdgePath(s.toVector))
+    def edgePath[ _ : P] : P[EdgePath] = P(edge.rep ~ End).map(s => EdgePath(s.toVector))
 
     def parsePath(s: String) : Parsed[EdgePath] = parse(s, edgePath(_))
 
