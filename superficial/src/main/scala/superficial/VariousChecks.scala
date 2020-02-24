@@ -32,9 +32,9 @@ object CheckQuadrangulation {
 }
 
 trait EquivalenceClass { equivalenceClass =>
-  val sets : Set[Set[Any]]
+  val sets : Set[Set[EdgePath]]
 
-  def expandWith(newSet : Set[Any]) : EquivalenceClass = {
+  def expandWith(newSet : Set[EdgePath  ]) : EquivalenceClass = {
     val destination = equivalenceClass.sets.find(ss => ss.intersect(newSet).nonEmpty)
     val intermediate = destination match {
       case None => EquivalenceClass.apply(equivalenceClass.sets.+(newSet))
@@ -56,14 +56,14 @@ trait EquivalenceClass { equivalenceClass =>
    * can check methods where findIntersectingPairs are used
    */
   def isWellDefined = {
-    val allElements : Set[Any] = equivalenceClass.sets.flatMap(e => e)
+    val allElements : Set[EdgePath] = equivalenceClass.sets.flatMap(e => e)
     (allElements.filter(el => 
       (equivalenceClass.sets.filter(_.contains(el)).size != 1)).size == 0)
   }
 
-  def findIntersectingPair : Option[(Set[Any], Set[Any])] = {
-    val setList : List[Set[Any]] = equivalenceClass.sets.toList
-    def helper(oneList : List[Set[Any]], anotherList : List[Set[Any]]) : Option[(Set[Any], Set[Any])] = {
+  def findIntersectingPair : Option[(Set[EdgePath], Set[EdgePath])] = {
+    val setList : List[Set[EdgePath]] = equivalenceClass.sets.toList
+    def helper(oneList : List[Set[EdgePath]], anotherList : List[Set[EdgePath]]) : Option[(Set[EdgePath], Set[EdgePath])] = {
       oneList match {
         case Nil => None
         case el :: els => {
@@ -88,24 +88,60 @@ trait EquivalenceClass { equivalenceClass =>
     val result = equivalenceClass.findIntersectingPair match {
       case None => equivalenceClass
       case Some((a, b)) => {
-        val newSets : Set[Set[Any]] = equivalenceClass.sets.-(a).-(b).+(a.++(b))
+        val newSets : Set[Set[EdgePath]] = equivalenceClass.sets.-(a).-(b).+(a.++(b))
         EquivalenceClass.dumbApply(newSets).makeWellDefined
       }
     }
-    assert(result.isWellDefined, s"The result $result of makeWellDefined is not a collection of mutually disjoint sets")
+    assert(result.isWellDefined, s"The result $result of makeWellDefined is not a collection of" ++ 
+      "mutually disjoint sets")
     result  
   }
 }
 
 object EquivalenceClass {
   
-  def dumbApply (newSets : Set[Set[Any]]) : EquivalenceClass = new EquivalenceClass {
+  def dumbApply (newSets : Set[Set[EdgePath]]) : EquivalenceClass = new EquivalenceClass {
     val sets = newSets
   }
 
-  def apply (newSets : Set[Set[Any]]) : EquivalenceClass = {
+  def apply (newSets : Set[Set[EdgePath]]) : EquivalenceClass = {
     val intermediate : EquivalenceClass = EquivalenceClass.dumbApply(newSets)
     val result : EquivalenceClass = intermediate.makeWellDefined
     result
+  }
+}
+
+trait HomotopyClassOfPaths { homotopyClassOfPaths =>
+  val initial : Vertex
+  val terminal : Vertex
+  val homotopyClasses : EquivalenceClass
+}
+
+object HomotopyClassOfPaths {  
+  def apply (initialV : Vertex, terminalV : Vertex, classes : Set[Set[EdgePath]], twoComplex : TwoComplex) = {
+    val allElements : Set[EdgePath] = classes.flatMap(e => e)
+    assert(allElements.forall(_.inTwoComplex(twoComplex)), s"All EdgePaths are not inside the TwoComplex $twoComplex")
+    assert(allElements.forall(_.initial == initialV), s"All EdgePaths do not start at $initialV")
+    assert(allElements.forall(_.terminal == terminalV), s"All EdgePaths do not start at $terminalV")
+
+    new HomotopyClassOfPaths { 
+      val initial : Vertex = initialV
+      val terminal  : Vertex = terminalV
+      val homotopyClasses : EquivalenceClass = EquivalenceClass.apply(classes)
+    }
+  }
+
+  def starter(twoComplex : TwoComplex) : HomotopyClassOfPaths = {
+    val faceList : List[Polygon] = twoComplex.faces.toList
+   
+    // while running this we have to ensure that i <= j. Also that i, j >= 0 
+    def helper (face : Polygon, i : Int, j : Int) : Set[EdgePath] = {
+      require(i <= j, s"$i is not less than or equal to $j in helper method of starter method")
+      val limitL = face.boundary.length
+      
+      if(i == 0 && j == 0) Set(Constant(face.boundary.head.initial), EdgePath.apply(face.boundary))
+      else ???
+    }
+    ??? 
   }
 }
