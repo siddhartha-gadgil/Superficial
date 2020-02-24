@@ -32,6 +32,7 @@ object CheckQuadrangulation {
 }
 
 trait EquivalenceClass { equivalenceClass =>
+
   val sets : Set[Set[EdgePath]]
 
   def expandWith(newSet : Set[EdgePath  ]) : EquivalenceClass = {
@@ -112,6 +113,8 @@ object EquivalenceClass {
   def apply (newSets : Set[Set[EdgePath]]) : EquivalenceClass = {
     val intermediate : EquivalenceClass = EquivalenceClass.dumbApply(newSets)
     val result : EquivalenceClass = intermediate.makeWellDefined
+    assert(result.isWellDefined, s"The result $result of makeWellDefined is not a collection of" ++ 
+      "mutually disjoint sets")
     result
   }
 }
@@ -120,6 +123,11 @@ trait HomotopyClassesOfPaths { homotopyClassesOfPaths =>
   val initial : Vertex
   val terminal : Vertex
   val homotopyClasses : EquivalenceClass
+
+  def isWellDefined : Boolean = {
+    val allElements : Set[EdgePath] = homotopyClasses.sets.flatMap(e => e)
+    allElements.forall(el => (el.initial == initial) && (el.terminal == terminal))
+  }
 
   def expandWith (toAdd : Set[EdgePath]): HomotopyClassesOfPaths = {
     require(toAdd.forall(_.initial == homotopyClassesOfPaths.initial), 
@@ -138,7 +146,24 @@ trait HomotopyClassesOfPaths { homotopyClassesOfPaths =>
       s"Terminal vertices of $anotherClass and $homotopyClassesOfPaths are not same")
 
     val newClass : EquivalenceClass = homotopyClassesOfPaths.homotopyClasses.merge(anotherClass.homotopyClasses)
-    HomotopyClassesOfPaths.apply(homotopyClassesOfPaths.initial, homotopyClassesOfPaths.terminal, newClass.sets) 
+    val result = HomotopyClassesOfPaths.apply(homotopyClassesOfPaths.initial, homotopyClassesOfPaths.terminal, newClass.sets)
+    assert(result.isWellDefined, s"The result $result is not well-defined")
+    result
+  }
+
+  def multiply (anotherClass : HomotopyClassesOfPaths) : HomotopyClassesOfPaths = {
+    def helper(aSet : Set[EdgePath], bSet : Set[EdgePath]) : Set[EdgePath] = {
+      val aList : List[EdgePath] = aSet.toList
+      val bList : List[EdgePath] = bSet.toList
+      val product : List[EdgePath] = aList.flatMap(a => bList.map(b => a.++(b)))
+      product.toSet 
+    }
+
+    val thisList : List[Set[EdgePath]] = homotopyClassesOfPaths.homotopyClasses.sets.toList
+    val anotherList : List[Set[EdgePath]] = anotherClass.homotopyClasses.sets.toList
+    val product : List[Set[EdgePath]] = thisList.flatMap(a => anotherList.map(b => helper(a,b)))
+    val newClasses : Set[Set[EdgePath]] = product.toSet
+    HomotopyClassesOfPaths.apply(homotopyClassesOfPaths.initial, anotherClass.terminal, newClasses)
   }
 }
 
