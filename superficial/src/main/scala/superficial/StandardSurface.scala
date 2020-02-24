@@ -57,4 +57,17 @@ object StandardSurface{
    
 }
 
-case class ClosedSurface(n: Int) extends StandardSurface(n)
+case class ClosedSurface(n: Int) extends StandardSurface(n){
+    override val vertex: Vertex = ClosedSurface.V
+    override lazy val face: Polygon = ClosedSurface.Face(n)
+}
+
+object ClosedSurface{
+    case object V extends Vertex
+    case class Face(n: Int) extends Polygon{
+        val sides: Int = 4 * n
+        lazy val surface = ClosedSurface(n)
+        lazy val boundary: Vector[Edge] = surface.boundary
+        val vertices: Set[Vertex] = Set(V)
+    }
+}
