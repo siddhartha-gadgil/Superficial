@@ -258,4 +258,10 @@ object CollectionOfHomotopyClasses {
       facesWithIndices.map(el => HomotopyClassesOfPaths.starter(el._1, el._2._1, el._2._2)).toSet
     CollectionOfHomotopyClasses.apply(newClasses)
   }
+
+  def starter (twoComplex : TwoComplex) : CollectionOfHomotopyClasses = {
+    val newClasses : Set[HomotopyClassesOfPaths] = 
+      twoComplex.faces.flatMap(fc => CollectionOfHomotopyClasses.starter(fc).classes)
+    CollectionOfHomotopyClasses.apply(newClasses)  
+  }
 }
