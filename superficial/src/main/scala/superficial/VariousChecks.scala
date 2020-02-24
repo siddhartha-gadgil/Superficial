@@ -96,6 +96,11 @@ trait EquivalenceClass { equivalenceClass =>
       "mutually disjoint sets")
     result  
   }
+
+  def merge (anotherClass : EquivalenceClass) : EquivalenceClass = {
+    val newClass : Set[Set[EdgePath]] = equivalenceClass.sets.++(anotherClass.sets)
+    EquivalenceClass.apply(newClass)
+  } 
 }
 
 object EquivalenceClass {
@@ -111,37 +116,89 @@ object EquivalenceClass {
   }
 }
 
-trait HomotopyClassOfPaths { homotopyClassOfPaths =>
+trait HomotopyClassesOfPaths { homotopyClassesOfPaths =>
   val initial : Vertex
   val terminal : Vertex
   val homotopyClasses : EquivalenceClass
+
+  def expandWith (toAdd : Set[EdgePath]): HomotopyClassesOfPaths = {
+    require(toAdd.forall(_.initial == homotopyClassesOfPaths.initial), 
+      s"All EdgePaths do not start at ${homotopyClassesOfPaths.initial}")
+    require(toAdd.forall(_.terminal == homotopyClassesOfPaths.terminal), 
+      s"All EdgePaths do not start at ${homotopyClassesOfPaths.terminal}")
+
+    val newClass : EquivalenceClass = homotopyClassesOfPaths.homotopyClasses.expandWith(toAdd)
+    HomotopyClassesOfPaths.apply(homotopyClassesOfPaths.initial, homotopyClassesOfPaths.terminal, newClass.sets)   
+  }
+
+  def merge (anotherClass : HomotopyClassesOfPaths) : HomotopyClassesOfPaths = {
+    require(anotherClass.initial == homotopyClassesOfPaths.initial, 
+      s"Initial vertices of $anotherClass and $homotopyClassesOfPaths are not same")
+    require(anotherClass.terminal == homotopyClassesOfPaths.terminal, 
+      s"Terminal vertices of $anotherClass and $homotopyClassesOfPaths are not same")
+
+    val newClass : EquivalenceClass = homotopyClassesOfPaths.homotopyClasses.merge(anotherClass.homotopyClasses)
+    HomotopyClassesOfPaths.apply(homotopyClassesOfPaths.initial, homotopyClassesOfPaths.terminal, newClass.sets) 
+  }
 }
 
-object HomotopyClassOfPaths {  
-  def apply (initialV : Vertex, terminalV : Vertex, classes : Set[Set[EdgePath]], twoComplex : TwoComplex) = {
+object HomotopyClassesOfPaths {  
+  def apply (initialV : Vertex, terminalV : Vertex, classes : Set[Set[EdgePath]]) = {
     val allElements : Set[EdgePath] = classes.flatMap(e => e)
-    assert(allElements.forall(_.inTwoComplex(twoComplex)), s"All EdgePaths are not inside the TwoComplex $twoComplex")
     assert(allElements.forall(_.initial == initialV), s"All EdgePaths do not start at $initialV")
     assert(allElements.forall(_.terminal == terminalV), s"All EdgePaths do not start at $terminalV")
 
-    new HomotopyClassOfPaths { 
+    new HomotopyClassesOfPaths { 
       val initial : Vertex = initialV
       val terminal  : Vertex = terminalV
       val homotopyClasses : EquivalenceClass = EquivalenceClass.apply(classes)
     }
   }
-
-  def starter(twoComplex : TwoComplex) : HomotopyClassOfPaths = {
-    val faceList : List[Polygon] = twoComplex.faces.toList
-   
-    // while running this we have to ensure that i <= j. Also that i, j >= 0 
-    def helper (face : Polygon, i : Int, j : Int) : Set[EdgePath] = {
-      require(i <= j, s"$i is not less than or equal to $j in helper method of starter method")
-      val limitL = face.boundary.length
+ 
+  /**
+   *Given a face and indices gives a set containing two possible paths between same intial and terminal vertices. 
+   */
+  def starter (face : Polygon, i : Int, j : Int) : Set[EdgePath] = {
+    require(i <= j, s"$i is not less than or equal to $j in helper method of starter method")
+    require((i >= 0) && (i < face.boundary.length), s"$i is not inside [1, ${face.boundary.length - 1}]")
+    require((j >= 0) && (j < face.boundary.length), s"$j is not inside [1, ${face.boundary.length - 1}]")
+    val limitL = face.boundary.length
       
-      if(i == 0 && j == 0) Set(Constant(face.boundary.head.initial), EdgePath.apply(face.boundary))
-      else ???
+    if(i == 0 && j == 0) {
+      Set(Constant(face.boundary.head.initial), EdgePath.apply(face.boundary))
+    }  
+    else if (i == 0 && (j == (face.boundary.length - 1))) {
+      Set(Constant(face.boundary.last.terminal), EdgePath.apply(face.boundary))
+    }  
+    else if ((i == (face.boundary.length - 1) && (j == face.boundary.length - 1))) {
+      Set(Constant(face.boundary.last.terminal), EdgePath.apply(face.boundary))
     }
-    ??? 
+    else {
+      Set(EdgePath.apply(face.boundary.slice(i, j+1)), 
+      EdgePath.apply(face.boundary.slice(0, i)).reverse.++
+      (EdgePath.apply(face.boundary.slice(j+1, face.boundary.length)).reverse))
+    }  
+  }
+}
+
+trait CollectionOfHomotopyClasses { collection =>
+  val classes : Set[HomotopyClassesOfPaths]
+
+  def expandWith (newClasses : HomotopyClassesOfPaths) : CollectionOfHomotopyClasses = {
+    val classToMerge = collection.classes.find(cl => (cl.initial == newClasses.initial && cl.terminal == newClasses.terminal))
+    classToMerge match {
+      case None => CollectionOfHomotopyClasses.apply(collection.classes.+(newClasses))
+      case Some(cl) => CollectionOfHomotopyClasses.apply(collection.classes.-(cl).+(cl.merge(newClasses)))
+    }
+  } 
+}
+
+
+object CollectionOfHomotopyClasses {
+
+  def apply (newClasses : Set[HomotopyClassesOfPaths]) : CollectionOfHomotopyClasses = {
+    new CollectionOfHomotopyClasses { 
+      val classes = newClasses
+    }
   }
 }
