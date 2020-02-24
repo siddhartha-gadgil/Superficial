@@ -191,14 +191,53 @@ trait CollectionOfHomotopyClasses { collection =>
       case Some(cl) => CollectionOfHomotopyClasses.apply(collection.classes.-(cl).+(cl.merge(newClasses)))
     }
   } 
-}
 
+  def isWellDefined : Boolean = {
+    val classList = classes.toList
+    val terminalPoints = classList.map(e => (e.initial, e.terminal))
+    val condition1 : Boolean = terminalPoints.distinct.size == terminalPoints.length
+    val condition2 : Boolean = classList.forall(e => e.homotopyClasses.isWellDefined)
+    (condition1 && condition2)
+  }
+
+  def makeWellDefined : CollectionOfHomotopyClasses = {
+    val classList = classes.toList
+    def findToMerge(oneList : List[HomotopyClassesOfPaths], anotherList : List[HomotopyClassesOfPaths]) : 
+    Option[(HomotopyClassesOfPaths, HomotopyClassesOfPaths)] = {
+      oneList match {
+        case Nil => None
+        case el :: els => {
+          anotherList match {
+            case Nil => findToMerge (els, els)
+            case fl :: fls => {
+              if ((el.initial == fl.initial) && (el.terminal == fl.terminal) && (el != fl)) Some((el, fl))
+              else findToMerge(el :: els, fls)
+            }
+          }
+        }
+      }
+    } 
+    val toMerge = findToMerge(classList, classList)
+    val result = toMerge match {
+      case None => collection
+      case Some((el, fl)) => {
+        CollectionOfHomotopyClasses.dumbApply(collection.classes.-(el).-(fl).+(el.merge(fl))).makeWellDefined
+      }  
+    }
+    assert(result.isWellDefined, s"Result $result of makeWellDefined for CollectionOfHomotopyClasses is not well defined")
+    result
+  }  
+}
 
 object CollectionOfHomotopyClasses {
 
-  def apply (newClasses : Set[HomotopyClassesOfPaths]) : CollectionOfHomotopyClasses = {
+  def dumbApply (newClasses : Set[HomotopyClassesOfPaths]) : CollectionOfHomotopyClasses = {
     new CollectionOfHomotopyClasses { 
       val classes = newClasses
     }
+  }
+
+  def apply (newClasses : Set[HomotopyClassesOfPaths]) : CollectionOfHomotopyClasses = {
+    CollectionOfHomotopyClasses.dumbApply(newClasses).makeWellDefined
   }
 }
