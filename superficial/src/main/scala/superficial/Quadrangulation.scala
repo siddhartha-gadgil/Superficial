@@ -47,6 +47,9 @@ object Quadrangulation {
       val vertices: Set[Vertex] = boundary.map(_.initial).toSet
   }
 
+   def mod (m : Int, n : Int) = ((m % n) + n) % n 
+
+
   /**
    *Gives the quadrangulation of a twocomplex along maps from edgepaths from the twocomplex to  
    *paths in the quadragulation.
@@ -64,9 +67,6 @@ object Quadrangulation {
    *In the second case because the pre existing vertices and the barycenters form a bipartite set in the quadrangulation,
    *shifting the basepoint makes the loop start and end at a pre existing vertex.
    */
-
-  def mod (m : Int, n : Int) = ((m % n) + n) % n 
-
   def quadrangulate (twoComplex : TwoComplex) : (TwoComplex, (EdgePath => EdgePath, EdgePath => EdgePath)) = {
  
     require(twoComplex.isClosedSurface, "Algorithm only works for closed surfaces")       
