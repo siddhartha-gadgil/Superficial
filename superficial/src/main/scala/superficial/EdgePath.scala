@@ -109,7 +109,7 @@ sealed trait EdgePath{ edgePath =>
       helper(edgePath, Set())  
     }
 
-    def intersectionsWith(otherPath : EdgePath , twoComplex : TwoComplex) = Set[(EdgePath, Int)] {
+    def intersectionsWith(otherPath : EdgePath , twoComplex : TwoComplex) : Set[Intersection] = {
       require(edgePath.inTwoComplex(twoComplex), s"$edgePath is not inside $twoComplex")
       require(otherPath.inTwoComplex(twoComplex), s"$otherPath is not inside $twoComplex")
       require(edgePath.isLoop, s"The method for finding intersections does not work for non-loops such as $edgePath")
@@ -140,22 +140,12 @@ sealed trait EdgePath{ edgePath =>
       // i-th and j-th edge of edgePath and otherPath have same initial vertex
       // u is the turn b/w (i-1)-th edge of edgePath and (j-1)-th edge of otherPath (technically their flips).
       // v is the turn b/w i-th edge of edgePath and j-th edge of otherPath 
-      val intersectionsWithTurns : Set[((Int, Int), (Int, Int))] = 
+      val intermediateInter : Set[((Int, Int), (Int, Int))] = 
         intersectionIndices.map(el => (el, giveTurnsAtIntersection(el._1, el._2)))
-      
-      def isMergable (before : ((Int, Int), (Int, Int)), after : ((Int, Int), (Int, Int))) : Boolean = {
-        ((mod(before._1._1 + 1, thisLength) == mod(after._1._1, thatLength)) &&
-         (mod(before._1._2 + 1, thisLength) == mod(after._1._2, thatLength)) &&
-         (before._2._2 == 0) &&
-         (after._2._1 == 0)) 
-      }
-
-      def findMergable (values : Set[((Int, Int), (Int, Int))]) : Option[((Int, Int), (Int, Int))]= {
-        val valueVector : Vector[((Int, Int), (Int, Int))] = values.toVector
-        ???
-      }
-        
-      ???
+      val unmerged : Vector[Intersection] = 
+        intermediateInter.map(el => Intersection.apply(el._1, el._1, el._2._1, el._2._1)).toVector
+      val merged : Set[Intersection] = Intersection.mergeAll(unmerged, thisLength, thatLength).toSet   
+      merged
     }
 }
 
@@ -553,19 +543,16 @@ sealed trait Intersection { intersection =>
   def findMergable(inside : Vector[Intersection], thisLimit : Int, thatLimit : Int) : Option[Intersection] = 
     inside.find(el => intersection.isMergableWith(el, thisLimit, thatLimit))
 
-  def mergeAll (allInter : Vector[Intersection], thisLimit : Int, thatLimit : Int) : Vector[Intersection] = {
-    val interPair : Option[(Intersection, Intersection)] = Intersection.findMergablePair(allInter.toSet, thisLimit, thatLimit)
-    interPair match {
-      case None => allInter
-      case Some((el, fl)) => {
-        val gl : Intersection = el.mergeWith(fl, thisLimit, thatLimit)
-        if ((el == fl) && (fl == gl)) allInter
-        else {
-          val newInter : Vector[Intersection] = allInter.toSet.-(el).-(fl).+(gl).toVector
-          mergeAll(newInter, thisLimit, thatLimit)
-        }
-      }
-    }    
+  def getEdgePathsWithSigns(thisPath : EdgePath, thatPath : EdgePath, twoComplex : TwoComplex) : (EdgePath, Int) = {
+    require(intersection.isValidBetween(thisPath, thatPath, twoComplex), 
+      s"$intersection is not a valid intersection between $thisPath and $thatPath")
+    val sign : Int = {
+      if ((intersection.turnBefore > 0) && (intersection.turnAfter > 0)) 1
+      else if ((intersection.turnBefore < 0) && (intersection.turnAfter < 0)) -1
+      else 0
+    }
+    val newPath : EdgePath = thisPath.cyclicalTake(intersection.start._1, intersection.end._1)
+    (newPath, sign)
   }
 }
 
@@ -596,5 +583,20 @@ object Intersection {
     }
     val insideVect : Vector[Intersection] = inside.toVector
     helper(insideVect, insideVect)
+  }
+  
+  def mergeAll (allInter : Vector[Intersection], thisLimit : Int, thatLimit : Int) : Vector[Intersection] = {
+    val interPair : Option[(Intersection, Intersection)] = Intersection.findMergablePair(allInter.toSet, thisLimit, thatLimit)
+    interPair match {
+      case None => allInter
+      case Some((el, fl)) => {
+        val gl : Intersection = el.mergeWith(fl, thisLimit, thatLimit)
+        if ((el == fl) && (fl == gl)) mergeAll(allInter.toSet.-(el).toVector, thisLimit, thatLimit) :+ el
+        else {
+          val newInter : Vector[Intersection] = allInter.toSet.-(el).-(fl).+(gl).toVector
+          mergeAll(newInter, thisLimit, thatLimit)
+        }
+      }
+    }    
   }
 } 
