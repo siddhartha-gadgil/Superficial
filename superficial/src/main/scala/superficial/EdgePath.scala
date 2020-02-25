@@ -147,6 +147,10 @@ sealed trait EdgePath{ edgePath =>
       val merged : Set[Intersection] = Intersection.mergeAll(unmerged, thisLength, thatLength).toSet   
       merged
     }
+
+    def selfIntersection (twoComplex : TwoComplex) : Set[Intersection] = 
+      edgePath.intersectionsWith(edgePath, twoComplex).
+      filter(inter => ((inter.start._1 != inter.start._2) && (inter.end._1 != inter.end._2)))
 }
 
 object EdgePath{
@@ -543,7 +547,7 @@ sealed trait Intersection { intersection =>
   def findMergable(inside : Vector[Intersection], thisLimit : Int, thatLimit : Int) : Option[Intersection] = 
     inside.find(el => intersection.isMergableWith(el, thisLimit, thatLimit))
 
-  def getEdgePathsWithSigns(thisPath : EdgePath, thatPath : EdgePath, twoComplex : TwoComplex) : (EdgePath, Int) = {
+  def getEdgePathWithSigns(thisPath : EdgePath, thatPath : EdgePath, twoComplex : TwoComplex) : (EdgePath, Int) = {
     require(intersection.isValidBetween(thisPath, thatPath, twoComplex), 
       s"$intersection is not a valid intersection between $thisPath and $thatPath")
     val sign : Int = {
