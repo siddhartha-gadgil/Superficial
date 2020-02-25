@@ -42,7 +42,7 @@ sealed trait EdgePath{ edgePath =>
 
     lazy val isLoop : Boolean = edgePath.initial == edgePath.terminal
 
-    /* 
+    /** 
      *In case the EdgePath is a loop, shifts the basePoint to the terminal of the first edge
      */
     def shiftBasePoint : EdgePath = {
@@ -90,8 +90,12 @@ sealed trait EdgePath{ edgePath =>
       }
       helper(edgePath, Set())  
     }
+
+    def mod(m : Int, n : Int) : Int = ((m % n) + n) % n 
  
-    def intersectionsWith(otherPath : EdgePath) = Set[(EdgePath, Int)] {
+    def intersectionsWith(otherPath : EdgePath , twoComplex : TwoComplex) = Set[(EdgePath, Int)] {
+      require(edgePath.inTwoComplex(twoComplex), s"$edgePath is not inside $twoComplex")
+      require(otherPath.inTwoComplex(twoComplex), s"$otherPath is not inside $twoComplex")
       require(edgePath.isLoop, s"The method for finding intersections does not work for non-loops such as $edgePath")
       require(otherPath.isLoop, s"The method for finding intersections does not work for non-loops such as $otherPath")
       require(length(edgePath) >= 1, s"The method for finding intersections does not work for 0 length paths such as $edgePath")
@@ -101,9 +105,24 @@ sealed trait EdgePath{ edgePath =>
       val verticesInOtherPath : Set[Vertex] = otherPath.verticesCovered
       val edgePathVector : Vector[Edge] = edgeVectors(edgePath)
       val otherPathVector : Vector[Edge] = edgeVectors(otherPath)
+      val thisLength : Int = length(edgePath)
+      val thatLength : Int = length(otherPath)
       val intersectionIndices : Set[(Int, Int)] = 
         (0 to (length(edgePath) - 1)).flatMap(i => (0 to (length(otherPath) - 1)).map(j => (i,j))).
-        filter(el => (edgePathVector(el._1).initial == otherPathVector(el._2).initial)).toSet  
+        filter(el => (edgePathVector(el._1).initial == otherPathVector(el._2).initial)).toSet
+     
+      def giveTurnsAtIntersection (i : Int, j : Int) : (Int, Int) = {
+        require(edgePathVector(i).initial == otherPathVector(i).initial, s"($i,$j) is not an intersection point")
+        val a1 : Edge = edgePathVector(mod(i - 1, thisLength)).flip
+        val a2 : Edge = edgePathVector(mod(i, thisLength))
+        val b1 : Edge = otherPathVector(mod(j - 1, thatLength)).flip
+        val b2 : Edge = otherPathVector(mod(j, thatLength))
+        (twoComplex.turnIndex(a1, b1), twoComplex.turnIndex(a2, b2))
+      }
+
+      val intersectionsWithTurns : Set[((Int, Int), (Int, Int))] = 
+        intersectionIndices.map(el => (el, giveTurnsAtIntersection(el._1, el._2)))
+      
 
       ???
     }
