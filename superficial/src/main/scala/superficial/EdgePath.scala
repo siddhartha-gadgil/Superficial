@@ -81,6 +81,33 @@ sealed trait EdgePath{ edgePath =>
       // only length + 1 should also work. This value is given just for safety 
     }
 
+    def verticesCovered : Set[Vertex] = {
+      def helper (path : EdgePath, accum : Set[Vertex]) : Set[Vertex] = {
+        path match {
+          case Constant(vertex) => accum.+(vertex)
+          case Append(init, last) => helper(init, accum.++(Set(last.initial, last.terminal)))  
+        }
+      }
+      helper(edgePath, Set())  
+    }
+ 
+    def intersectionsWith(otherPath : EdgePath) = Set[(EdgePath, Int)] {
+      require(edgePath.isLoop, s"The method for finding intersections does not work for non-loops such as $edgePath")
+      require(otherPath.isLoop, s"The method for finding intersections does not work for non-loops such as $otherPath")
+      require(length(edgePath) >= 1, s"The method for finding intersections does not work for 0 length paths such as $edgePath")
+      require(length(otherPath) >= 1, s"The method for finding intersections does not work for 0 length paths such as $otherPath")
+
+      val verticesInEdgePath : Set[Vertex] = edgePath.verticesCovered
+      val verticesInOtherPath : Set[Vertex] = otherPath.verticesCovered
+      val edgePathVector : Vector[Edge] = edgeVectors(edgePath)
+      val otherPathVector : Vector[Edge] = edgeVectors(otherPath)
+      val intersectionIndices : Set[(Int, Int)] = 
+        (0 to (length(edgePath) - 1)).flatMap(i => (0 to (length(otherPath) - 1)).map(j => (i,j))).
+        filter(el => (edgePathVector(el._1).initial == otherPathVector(el._2).initial)).toSet  
+
+      ???
+    }
+
 }
 
 object EdgePath{
