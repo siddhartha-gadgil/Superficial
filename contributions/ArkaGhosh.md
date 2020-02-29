@@ -62,4 +62,23 @@ Defined the `quadrangulate` method which quadrangulates a closed surface and als
 
 6. `Intersection` - Defined the `trait` `Intersection`. This helps us to compute intersections between two loops.
 
+### `Examples.scala` and `SphereComplex.scala`
+
+Defined examples of non-surfaces, non-closed-surfaces, sufaces with boundaries.
+
+
+### `VariousChecks.scala`
+
+1. `Termination` - Defined this method to check terminations of the `quadrangulate` method and correctness of the forward and backward maps.
+
+2. `HomotopyClassesOfPaths` -  Defined this trait which is  equivalence class of paths between two vertices. Contains methods to expand the homotopy classes by adding one more set, merge two homotopy classes, etc.
+
+3. `CollectionOfHomotopyClasses` - Defined this trait which is a collection of homotopy classes between multiple pairs of edges.
+
+4. `starter` - Defines basic homotopy classes by declaring paths in the boundary of a face to be homotopic when they start and end at the same vertex.
+
+5. `mainCourse` - For homotopic pairs of paths `(a,b)` and `(c,d)` declares `a*c` and `b*d` to be homotopic and expands the collection of homotopy classes accordingly.
+
+
+
 
