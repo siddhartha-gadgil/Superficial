@@ -634,7 +634,7 @@ trait TwoComplex { twoComplex =>
    *Given a set of faces fcs gives the TwoComplex got by adding fcs 
    *to the existing twoComplex.
    */
-  def addfaces (fcs : Set[Polygon]) : TwoComplex = {
+  def addFaces (fcs : Set[Polygon]) : TwoComplex = {
     if (twoComplex.faces.intersect(fcs).nonEmpty) {
       System.err.println("[Warning] The following edges already belong to the twocomplex" 
         + twoComplex + "\n" + twoComplex.faces.intersect(fcs))
