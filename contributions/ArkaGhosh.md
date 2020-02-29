@@ -3,7 +3,7 @@ author: "Arka Ghosh"
 github-id: "anotherArka"
 ---
 
-## `TwoComplex.scala`
+### `TwoComplex.scala`
 
 1. `allCollapsed` - Extended definition to give forward and backward maps along with the surface with one vertex.
 
@@ -42,4 +42,9 @@ github-id: "anotherArka"
 18. `slightLeft` - Defined this method which, given an edge `e` rotates left twice and flips it. This is same as rotating left once and then taking the successor. 
 
 19. `slightRight` - Given e takes two right rotations and flips it.
+
+20. `angleBetween` - Given two edges e1 and e2 says what is the angle between them. Where angle is the number of turns to reach e2 from e1. Left turns are considered positive and right turns are considered negative.
+
+### `Quadrangulation.scala`
+Defined the `quadrangulate` method which quadrangulates a closed surface and also gives forward and backward maps between edgepaths in the original TwoComplex and its quadragulation.
 
