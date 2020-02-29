@@ -43,8 +43,23 @@ github-id: "anotherArka"
 
 19. `slightRight` - Given e takes two right rotations and flips it.
 
-20. `angleBetween` - Given two edges e1 and e2 says what is the angle between them. Where angle is the number of turns to reach e2 from e1. Left turns are considered positive and right turns are considered negative.
+20. `angleBetween` - Given two edges `e1` and `e2` gives the angle between them. Where angle is the number of turns to reach `e2` from `e1`. Left turns are considered positive and right turns are considered negative.
 
 ### `Quadrangulation.scala`
 Defined the `quadrangulate` method which quadrangulates a closed surface and also gives forward and backward maps between edgepaths in the original TwoComplex and its quadragulation.
+
+### `EdgePath.scala`
+
+1. `cyclicalTake` - Defined this method which, given indexes `i` and `j` gives the subpath between `i`-th and `j`-th vertex. Because it works on loops `j` can be less than `i`.
+
+2. `shiftBasePoint` - Defined this method which, In case the EdgePath is a loop, shifts the basePoint to the terminal of the first edge.
+
+3. `loopToGeodesic` - Defined this method which, reduces a loop to geodesic.
+
+4. `intersectionsWith` - Defined this method which, given another loop gives intersection along with signs.
+
+5. `selfIntersection` - Defined this method which gives self intersections with signs.
+
+6. `Intersection` - Defined the `trait` `Intersection`. This helps us to compute intersections between two loops.
+
 
