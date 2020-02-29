@@ -129,11 +129,11 @@ sealed trait EdgePath{ edgePath =>
      
       def giveTurnsAtIntersection (i : Int, j : Int) : (Int, Int) = {
         require(edgePathVector(i).initial == otherPathVector(i).initial, s"($i,$j) is not an intersection point")
-        val a1 : Edge = edgePathVector(mod(i - 1, thisLength)).flip
-        val a2 : Edge = edgePathVector(mod(i, thisLength))
-        val b1 : Edge = otherPathVector(mod(j - 1, thatLength)).flip
-        val b2 : Edge = otherPathVector(mod(j, thatLength))
-        (twoComplex.turnIndex(a1, b1), twoComplex.turnIndex(a2, b2))
+        val a1 : Edge = edgePathVector(mod(i - 1, thisLength))
+        val a2 : Edge = edgePathVector(mod(i, thisLength)).flip
+        val b1 : Edge = otherPathVector(mod(j - 1, thatLength))
+        val b2 : Edge = otherPathVector(mod(j, thatLength)).flip
+        (twoComplex.angleBetween(a1, b1), twoComplex.angleBetween(a2, b2))
       }
 
       // The elements are of the form ((i,j), (u,v)) where
