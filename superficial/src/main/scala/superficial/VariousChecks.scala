@@ -41,7 +41,7 @@ trait EquivalenceClass { equivalenceClass =>
       case None => EquivalenceClass.apply(equivalenceClass.sets.+(newSet))
       case Some(element) => {
         val newElement = element.++(newSet)
-        EquivalenceClass.dumbApply(equivalenceClass.sets.-(element).+(newElement))
+        EquivalenceClass.uncheckedApply(equivalenceClass.sets.-(element).+(newElement))
       }
     }
     val result = intermediate.makeWellDefined
@@ -90,7 +90,7 @@ trait EquivalenceClass { equivalenceClass =>
       case None => equivalenceClass
       case Some((a, b)) => {
         val newSets : Set[Set[EdgePath]] = equivalenceClass.sets.-(a).-(b).+(a.++(b))
-        EquivalenceClass.dumbApply(newSets).makeWellDefined
+        EquivalenceClass.uncheckedApply(newSets).makeWellDefined
       }
     }
     assert(result.isWellDefined, s"The result $result of makeWellDefined is not a collection of" ++ 
@@ -106,12 +106,12 @@ trait EquivalenceClass { equivalenceClass =>
 
 object EquivalenceClass {
   
-  def dumbApply (newSets : Set[Set[EdgePath]]) : EquivalenceClass = new EquivalenceClass {
+  def uncheckedApply (newSets : Set[Set[EdgePath]]) : EquivalenceClass = new EquivalenceClass {
     val sets = newSets
   }
 
   def apply (newSets : Set[Set[EdgePath]]) : EquivalenceClass = {
-    val intermediate : EquivalenceClass = EquivalenceClass.dumbApply(newSets)
+    val intermediate : EquivalenceClass = EquivalenceClass.uncheckedApply(newSets)
     val result : EquivalenceClass = intermediate.makeWellDefined
     assert(result.isWellDefined, s"The result $result of makeWellDefined is not a collection of" ++ 
       "mutually disjoint sets")
@@ -258,7 +258,7 @@ trait CollectionOfHomotopyClasses { collection =>
     val result = toMerge match {
       case None => collection
       case Some((el, fl)) => {
-        CollectionOfHomotopyClasses.dumbApply(collection.classes.-(el).-(fl).+(el.merge(fl))).makeWellDefined
+        CollectionOfHomotopyClasses.uncheckedApply(collection.classes.-(el).-(fl).+(el.merge(fl))).makeWellDefined
       }  
     }
     assert(result.isWellDefined, s"Result $result of makeWellDefined for CollectionOfHomotopyClasses is not well defined")
@@ -288,14 +288,14 @@ trait CollectionOfHomotopyClasses { collection =>
 
 object CollectionOfHomotopyClasses {
 
-  def dumbApply (newClasses : Set[HomotopyClassesOfPaths]) : CollectionOfHomotopyClasses = {
+  def uncheckedApply (newClasses : Set[HomotopyClassesOfPaths]) : CollectionOfHomotopyClasses = {
     new CollectionOfHomotopyClasses { 
       val classes = newClasses
     }
   }
 
   def apply (newClasses : Set[HomotopyClassesOfPaths]) : CollectionOfHomotopyClasses = {
-    CollectionOfHomotopyClasses.dumbApply(newClasses).makeWellDefined
+    CollectionOfHomotopyClasses.uncheckedApply(newClasses).makeWellDefined
   }
 
   def starter (face : Polygon) : CollectionOfHomotopyClasses = {
