@@ -160,17 +160,47 @@ sealed trait EdgePath{ edgePath =>
       * @param twoComplex
       * @return
       */
-    def isHomotopicTo(path: EdgePath, twoComplex: TwoComplex): Boolean = {
-      require(path.inTwoComplex(twoComplex), s"The path $path is not in the Two Complex $twoComplex")
-      require(edgePath.inTwoComplex(twoComplex), s"The path $edgePath is not in the Two Complex $twoComplex")
+    def isHomotopicTo(path: EdgePath, nonposQuad: NonPosQuad): Boolean = {
+      require(path.inTwoComplex(nonposQuad), s"The path $path is not in the Two Complex $nonposQuad")
+      require(edgePath.inTwoComplex(nonposQuad), s"The path $edgePath is not in the Two Complex $nonposQuad")
       require((initial == path.initial), s"The path $path doesn't have the same initial vertex as $edgePath")
       require((terminal == path.terminal), s"The path $path doesn't have the same terminal vertex as $edgePath")
 
       val newPath = path ++ (edgePath.reverse)
-      val mergedGeodesic = edgePathToGeodesic(newPath, twoComplex)
+      val mergedGeodesic = edgePathToGeodesic(newPath, nonposQuad)
       mergedGeodesic match {
         case Constant(vertex) => true
         case _ => false
+      }
+    }
+
+    def isFreelyHomotopicTo(loop: EdgePath, nonposQuad: NonPosQuad): Boolean = {
+      require(loop.inTwoComplex(nonposQuad), s"The path $loop is not in the Two Complex $nonposQuad")
+      require(edgePath.inTwoComplex(nonposQuad), s"The path $edgePath is not in the Two Complex $nonposQuad")
+      require(loop.isLoop, s"The path $loop is not a loop")
+      require(edgePath.isLoop, s"The path $loop doesn't have the same terminal vertex as $edgePath")
+
+      def checkSameCanonicalLoop(loop1: EdgePath, loop2: EdgePath): Boolean = {
+        def checkSameCanonicalLoopHelper(loop1: EdgePath, loop2: EdgePath, n: Int): Boolean = {
+          if(n<=0) true
+          else (loop1 == loop2) && checkSameCanonicalLoopHelper(loop1.shiftBasePoint, loop2, n-1)
+        }
+        val n = length(loop1)
+        (n == length(loop)) && (checkSameCanonicalLoopHelper(loop1, loop2, n+2))
+      } 
+
+      val canonical1 = canoniciseLoop(edgePath, nonposQuad)
+      val canonical2 = canoniciseLoop(loop, nonposQuad)
+
+      canonical1 match {
+        case Constant(initial) => canonical2 match {
+          case Constant(initial) => true
+          case Append(init, last) => false
+        }
+        case Append(init, last) => canonical2 match {
+          case Constant(initial) => false
+          case Append(init1, last1) => checkSameCanonicalLoop(canonical1, canonical2)
+        }
       }
     }
 }
@@ -589,5 +619,6 @@ object EdgePath{
       }
       isCanonicalGeodesicLoopHelper(loop, length(loop)+2, nonposQuad)
     }
+
 }
 
