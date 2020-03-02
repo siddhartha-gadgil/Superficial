@@ -11,6 +11,11 @@ object CheckQuadrangulation {
 
   def truePredicate (edgePath : EdgePath) : Boolean = true
 
+  /**
+   * This method method checks the termination and correctness of the quadrangulation method.
+   * Given a twoComplex and an integer n it checks that the forward and backward EdgePaths
+   * Works for EdgePaths upto length n.
+   */ 
   def Termination (twoComplex : TwoComplex, n : Int) : Boolean = {
     val quadWithMaps = Quadrangulation.quadrangulate(twoComplex)
     val quad = quadWithMaps._1
@@ -35,13 +40,19 @@ trait EquivalenceClass { equivalenceClass =>
 
   val sets : Set[Set[EdgePath]]
 
-  def expandWith(newSet : Set[EdgePath  ]) : EquivalenceClass = {
+  /**
+   * Given a set newSet of EdgePaths expands the Equivalence class with newSet.
+   * First it adds it to the collection of sets, and then uses makeWellDefined 
+   * method to merge sets inside the equivalence class until there are no 
+   * intersecting pair of sets.
+   */
+  def expandWith(newSet : Set[EdgePath]) : EquivalenceClass = {
     val destination = equivalenceClass.sets.find(ss => ss.intersect(newSet).nonEmpty)
     val intermediate = destination match {
       case None => EquivalenceClass.apply(equivalenceClass.sets.+(newSet))
       case Some(element) => {
         val newElement = element.++(newSet)
-        EquivalenceClass.uncheckedApply(equivalenceClass.sets.-(element).+(newElement))
+        EquivalenceClass.dumbApply(equivalenceClass.sets.-(element).+(newElement))
       }
     }
     val result = intermediate.makeWellDefined
@@ -90,7 +101,7 @@ trait EquivalenceClass { equivalenceClass =>
       case None => equivalenceClass
       case Some((a, b)) => {
         val newSets : Set[Set[EdgePath]] = equivalenceClass.sets.-(a).-(b).+(a.++(b))
-        EquivalenceClass.uncheckedApply(newSets).makeWellDefined
+        EquivalenceClass.dumbApply(newSets).makeWellDefined
       }
     }
     assert(result.isWellDefined, s"The result $result of makeWellDefined is not a collection of" ++ 
@@ -106,12 +117,12 @@ trait EquivalenceClass { equivalenceClass =>
 
 object EquivalenceClass {
   
-  def uncheckedApply (newSets : Set[Set[EdgePath]]) : EquivalenceClass = new EquivalenceClass {
+  def dumbApply (newSets : Set[Set[EdgePath]]) : EquivalenceClass = new EquivalenceClass {
     val sets = newSets
   }
 
   def apply (newSets : Set[Set[EdgePath]]) : EquivalenceClass = {
-    val intermediate : EquivalenceClass = EquivalenceClass.uncheckedApply(newSets)
+    val intermediate : EquivalenceClass = EquivalenceClass.dumbApply(newSets)
     val result : EquivalenceClass = intermediate.makeWellDefined
     assert(result.isWellDefined, s"The result $result of makeWellDefined is not a collection of" ++ 
       "mutually disjoint sets")
@@ -258,7 +269,7 @@ trait CollectionOfHomotopyClasses { collection =>
     val result = toMerge match {
       case None => collection
       case Some((el, fl)) => {
-        CollectionOfHomotopyClasses.uncheckedApply(collection.classes.-(el).-(fl).+(el.merge(fl))).makeWellDefined
+        CollectionOfHomotopyClasses.dumbApply(collection.classes.-(el).-(fl).+(el.merge(fl))).makeWellDefined
       }  
     }
     assert(result.isWellDefined, s"Result $result of makeWellDefined for CollectionOfHomotopyClasses is not well defined")
@@ -288,14 +299,14 @@ trait CollectionOfHomotopyClasses { collection =>
 
 object CollectionOfHomotopyClasses {
 
-  def uncheckedApply (newClasses : Set[HomotopyClassesOfPaths]) : CollectionOfHomotopyClasses = {
+  def dumbApply (newClasses : Set[HomotopyClassesOfPaths]) : CollectionOfHomotopyClasses = {
     new CollectionOfHomotopyClasses { 
       val classes = newClasses
     }
   }
 
   def apply (newClasses : Set[HomotopyClassesOfPaths]) : CollectionOfHomotopyClasses = {
-    CollectionOfHomotopyClasses.uncheckedApply(newClasses).makeWellDefined
+    CollectionOfHomotopyClasses.dumbApply(newClasses).makeWellDefined
   }
 
   def starter (face : Polygon) : CollectionOfHomotopyClasses = {
