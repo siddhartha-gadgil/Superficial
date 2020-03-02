@@ -62,3 +62,11 @@ github-id: "Chinmaya-Kausik"
 16. `isGeodesicLoop` checks if a loop is a geodesic loop.
 
 17. `isCanonicalGeodesicLoop` checks if a loop is a canonical geodesic loop.
+
+### `NonPosQuad.scala`
+
+1. `turnIndex` gives the index of the turn between two edges, if defined.
+
+2. `turnEdge` gives the edge obtained by turning from the given edge by the given index.
+
+3. `apply` creates a non positive quadrangulation from a Two Complex satisfying the relevant conditions.
