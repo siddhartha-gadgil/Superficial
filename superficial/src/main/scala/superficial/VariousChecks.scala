@@ -94,7 +94,7 @@ trait EquivalenceClass { equivalenceClass =>
 
   /** 
    * If the equivalence class is not well defined makes it well defined. 
-   * That is merges intersecting 
+   * That is merges intersecting pairs of sets.
    */
   def makeWellDefined : EquivalenceClass = {
     val result = equivalenceClass.findIntersectingPair match {
@@ -162,6 +162,9 @@ trait HomotopyClassesOfPaths { homotopyClassesOfPaths =>
     result
   }
 
+  /**
+   * For homotopic pairs of paths (a,b) and (c,d) declares a*c and b*d to be homotopic.
+   */
   def multiply (anotherClass : HomotopyClassesOfPaths) : HomotopyClassesOfPaths = {
     def helper(aSet : Set[EdgePath], bSet : Set[EdgePath]) : Set[EdgePath] = {
       val aList : List[EdgePath] = aSet.toList
@@ -276,6 +279,10 @@ trait CollectionOfHomotopyClasses { collection =>
     result
   } 
 
+  /** 
+   * For homotopic pairs of paths (a,b) and `(c,d) declares a*c and b*d to be homotopic and 
+   * expands the collection of homotopy classes accordingly.
+   */
   def mainCourse : CollectionOfHomotopyClasses = {
     val classVector : Vector[HomotopyClassesOfPaths] = collection.classes.toVector
     def helper (oneClass : Vector[HomotopyClassesOfPaths], anotherClass : Vector[HomotopyClassesOfPaths], 
