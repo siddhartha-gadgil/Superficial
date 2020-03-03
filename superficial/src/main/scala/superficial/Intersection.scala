@@ -26,9 +26,9 @@ sealed trait Intersection { intersection =>
     val i2 : Int = mod(intersection.start._2 - 1, thatLength)
     val thisVect : Vector[Edge] = EdgePath.edgeVectors(thisPath)
     val thatVect : Vector[Edge] = EdgePath.edgeVectors(thatPath)
-    val condition2 : Boolean = (twoComplex.angleBetween(thisVect(i1).flip, thatVect(i2).flip) == intersection.turnBefore)
+    val condition2 : Boolean = (twoComplex.angleBetween(thisVect(i1), thatVect(i2)) == intersection.turnBefore)
     val condition3 : Boolean = 
-      (twoComplex.angleBetween(thisVect(intersection.end._1), thatVect(intersection.end._2)) == intersection.turnAfter)
+      (twoComplex.angleBetween(thisVect(intersection.end._1).flip, thatVect(intersection.end._2).flip) == intersection.turnAfter)
     
     (condition1 && condition2 && condition3)
   } 

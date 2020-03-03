@@ -753,9 +753,28 @@ trait TwoComplex { twoComplex =>
     */
     def vectorOrbit (e : Edge, opt: (Edge => Option[Edge]), accum : Vector[Edge]) : Vector[Edge] = {
         val nextEdge = opt(e)
-        if ((nextEdge != None) && (! accum.contains(nextEdge))) vectorOrbit(nextEdge.get, opt, accum :+ nextEdge.get)
-        else accum
+        // if ((nextEdge != None) && (!accum.contains(nextEdge))) {
+        //   vectorOrbit(nextEdge.get, opt, accum :+ nextEdge.get)
+        // }
+        // else accum
+        nextEdge match {
+          case None => accum
+          case Some(f) => {
+            if (accum.contains(f)) accum
+            else vectorOrbit(f, opt, accum :+ f)
+          }
+        }
       }
+
+    def vectorOrbitFin (e : Edge, opt: (Edge => Option[Edge]), accum : Vector[Edge], n : Int) : Vector[Edge] = {
+        val nextEdge = opt(e)
+        if ((nextEdge != None) && (!accum.contains(nextEdge)) && (n > 0)) {
+          println(s"nextEdge = $nextEdge")
+          println(s"accum = $accum")
+          vectorOrbitFin(nextEdge.get, opt, accum :+ nextEdge.get, n - 1)
+        }
+        else accum
+      }  
   
     /**
      * Vector of flips of edges to the left of an edge
@@ -810,7 +829,8 @@ trait TwoComplex { twoComplex =>
    * For this method to work both e1 and e2 need to end at the same vertex  */
   def angleBetween(e1 : Edge, e2 : Edge) : Int = {
     require(e1.terminal == e2.terminal, s"$e1 and $e2 do not end at the same vertex")
-    turnIndex(e1, e2.flip)
+    (if (e1 == e2) 0
+    else turnIndex(e1, e2.flip))
   }  
 
   /**
