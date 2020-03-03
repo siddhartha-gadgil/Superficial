@@ -157,7 +157,7 @@ sealed trait EdgePath{ edgePath =>
       val intermediateInter : Set[((Int, Int), (Int, Int))] = 
         intersectionIndices.map(el => (el, giveTurnsAtIntersection(el._1, el._2)))
       val unmerged : Vector[Intersection] = 
-        intermediateInter.map(el => Intersection.apply(el._1, el._1, el._2._1, el._2._1)).toVector
+        intermediateInter.map(el => Intersection.apply(el._1, el._1, el._2._1, el._2._2)).toVector
       val merged : Set[Intersection] = Intersection.mergeAll(unmerged, thisLength, thatLength).toSet   
       merged
     }
