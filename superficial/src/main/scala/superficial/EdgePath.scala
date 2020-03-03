@@ -45,6 +45,10 @@ sealed trait EdgePath{ edgePath =>
 
     def mod(m : Int, n : Int) : Int = ((m % n) + n) % n 
  
+    /**
+     * Given indexes i and j gives the subpath between i-th and j-th vertex. 
+     * Because it works on loops j can be less than i.
+     */
     def cyclicalTake(i : Int, j : Int) : EdgePath = {
       require(edgePath.isLoop, s"Method is only valid for loops")
       val len : Int = length(edgePath)
@@ -62,7 +66,7 @@ sealed trait EdgePath{ edgePath =>
     }
 
     /** 
-     *In case the EdgePath is a loop, shifts the basePoint to the terminal of the first edge
+     * In case the EdgePath is a loop, shifts the basePoint to the terminal of the first edge.
      */
     def shiftBasePoint : EdgePath = {
       require(edgePath.isLoop, s"The EdgePath $edgePath is not a loop. Hence shifting basepoint is not valid")
@@ -100,6 +104,9 @@ sealed trait EdgePath{ edgePath =>
       // only length + 1 should also work. This value is given just for safety 
     }
 
+    /**
+     * Gives the set of vertices visited by the path.
+     */
     def verticesCovered : Set[Vertex] = {
       def helper (path : EdgePath, accum : Set[Vertex]) : Set[Vertex] = {
         path match {
@@ -110,6 +117,9 @@ sealed trait EdgePath{ edgePath =>
       helper(edgePath, Set())  
     }
 
+    /**
+     * Given another loop gives intersection along with signs.
+     */
     def intersectionsWith(otherPath : EdgePath , twoComplex : TwoComplex) : Set[Intersection] = {
       require(edgePath.inTwoComplex(twoComplex), s"$edgePath is not inside $twoComplex")
       require(otherPath.inTwoComplex(twoComplex), s"$otherPath is not inside $twoComplex")
@@ -124,10 +134,13 @@ sealed trait EdgePath{ edgePath =>
       val otherPathVector : Vector[Edge] = edgeVectors(otherPath)
       val thisLength : Int = length(edgePath)
       val thatLength : Int = length(otherPath)
+
+      // Intersection point of two paths
       val intersectionIndices : Set[(Int, Int)] = 
         (0 to (length(edgePath) - 1)).flatMap(i => (0 to (length(otherPath) - 1)).map(j => (i,j))).
         filter(el => (edgePathVector(el._1).initial == otherPathVector(el._2).initial)).toSet
      
+      // Adds turn information on both side of the intersection
       def giveTurnsAtIntersection (i : Int, j : Int) : (Int, Int) = {
         require(edgePathVector(i).initial == otherPathVector(i).initial, s"($i,$j) is not an intersection point")
         val a1 : Edge = edgePathVector(mod(i - 1, thisLength))
@@ -148,7 +161,10 @@ sealed trait EdgePath{ edgePath =>
       val merged : Set[Intersection] = Intersection.mergeAll(unmerged, thisLength, thatLength).toSet   
       merged
     }
-
+    
+    /**
+     * Gives self intersections with signs.
+     */
     def selfIntersection (twoComplex : TwoComplex) : Set[Intersection] = 
       edgePath.intersectionsWith(edgePath, twoComplex).
       filter(inter => ((inter.start._1 != inter.start._2) && (inter.end._1 != inter.end._2)))
