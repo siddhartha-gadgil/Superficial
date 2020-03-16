@@ -189,7 +189,7 @@ sealed trait EdgePath{ edgePath =>
 
     /**
       * Extracts the start and end indices of all positive crossings 
-      * between the EdgePath (if it is a loop, error otherwise) and a given loop
+      * between the canonical forms of the EdgePath (if it is a loop, error otherwise) and a given loop
       *
       * @param loop
       * @param nonposQuad
@@ -201,7 +201,7 @@ sealed trait EdgePath{ edgePath =>
 
     /**
       * Extracts the start and end indices of all negative crossings
-      * between the EdgePath (if it is a loop, error otherwise) and a given loop
+      * between the canonical forms of the EdgePath (if it is a loop, error otherwise) and a given loop
       *
       * @param loop
       * @param nonposQuad
@@ -213,7 +213,7 @@ sealed trait EdgePath{ edgePath =>
 
     /**
       * Extracts the start and end indices of all non-crossings
-      * between the EdgePath (if it is a loop, error otherwise) and a given loop
+      * between the canonical forms EdgePath (if it is a loop, error otherwise) and a given loop
       *
       * @param loop
       * @param twoComplex
