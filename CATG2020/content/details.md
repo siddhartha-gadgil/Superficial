@@ -21,13 +21,15 @@ To register for the course, in addition to registering in the IISc system, you n
 * __Office:__ N-15, Department of Mathematics, IISc.
 * __E-mail group:__ Information about the course, including meeting times, will be on the outlook group `CATG2020`.
 
-#### Midterm and final Grades
+#### Midterm I & II and final Grades
 
 Grades will based entirely on contributions to the repository [Superficial](https://github.com/siddhartha-gadgil/Superficial). The grades will be given in three groups, based on contributions before a fixed time. The deadline for the __first midterm grade__, worth 30% of the total, is __6:00 am on March 2, 2020__. For all grades the following procedure is followed.
 
 1. A version is tagged soon after pull requests before the deadline are merged. Grades are based on this.
 2. Only pull requests that pass all tests will be merged.
 3. Please update your report with a brief account of what you have implemented.
+
+The deadline for the second midterm, worth 20% of the total score, is __6:00 am on March 31, 2020__. Note that this is one day before the date for dropping courses __with__ mention in transcript.
 
 ##### Timings and Venues
 
