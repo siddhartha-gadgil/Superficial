@@ -749,7 +749,7 @@ trait TwoComplex { twoComplex =>
   }
 
   /**
-    * Vector of edges to the left of an edge, modified version of orbit
+    * Vector of edges related by a function opt to an edge, modified version of orbit
     */
     def vectorOrbit (e : Edge, opt: (Edge => Option[Edge]), accum : Vector[Edge]) : Vector[Edge] = {
         val nextEdge = opt(e)

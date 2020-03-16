@@ -149,6 +149,12 @@ sealed trait EdgePath{ edgePath =>
       merged
     }
 
+    def PositiveCrossings(path: EdgePath, twoComplex: TwoComplex): Vector[((Int, Int), (Int,Int))] = {
+      val vect = (edgePath.intersectionsWith(path, twoComplex)).toVector
+      vect.filter(_.)map(_ => (_.start, _.end))
+    }
+
+
     def selfIntersection (twoComplex : TwoComplex) : Set[Intersection] = 
       edgePath.intersectionsWith(edgePath, twoComplex).
       filter(inter => ((inter.start._1 != inter.start._2) && (inter.end._1 != inter.end._2)))
