@@ -162,19 +162,124 @@ sealed trait EdgePath{ edgePath =>
       merged
     }
 
-    def PositiveCrossings(path: EdgePath, twoComplex: TwoComplex): Vector[((Int, Int), (Int,Int))] = {
-      val vect = (edgePath.intersectionsWith(path, twoComplex)).toVector
-      vect.filter(_.)map(_ => (_.start, _.end))
+    /**
+      * Extracts the start and end indices of the crossings of the given sign 
+      * between the EdgePath (if it is a loop, error otherwise) and a given loop
+      *
+      * @param loop
+      * @param nonposQuad
+      * @param sign
+      * @return
+      */
+    def extractCrossings(loop: EdgePath, nonposQuad: NonPosQuad, sign: Int): Vector[((Int, Int), (Int,Int))] = {
+      if(loop != edgePath) {
+        val canonicalLoop = canoniciseLoop(edgePath, nonposQuad)
+        val otherCanonicalLoop = canoniciseLoop(loop, nonposQuad)
+        val vect = (canonicalLoop.intersectionsWith(otherCanonicalLoop, nonposQuad)).toVector
+        (vect.filter((x: Intersection) => ((x.getSign(edgePath, loop, nonposQuad)) == sign))).
+        map((x: Intersection)=> (x.start, x.end))
+      }
+      else {
+        val vect = (edgePath.selfIntersection(nonposQuad)).toVector
+        (vect.filter((x: Intersection) => ((x.getSign(edgePath, loop, nonposQuad)) == sign))).
+        map((x: Intersection)=> (x.start, x.end))
+      }
+        
+    }
+
+    /**
+      * Extracts the start and end indices of all positive crossings 
+      * between the EdgePath (if it is a loop, error otherwise) and a given loop
+      *
+      * @param loop
+      * @param nonposQuad
+      * @return
+      */
+    def positiveCrossings(loop: EdgePath, nonposQuad: NonPosQuad): Vector[((Int, Int), (Int,Int))] ={
+      edgePath.extractCrossings(loop, nonposQuad, 1)
+    }
+
+    /**
+      * Extracts the start and end indices of all negative crossings
+      * between the EdgePath (if it is a loop, error otherwise) and a given loop
+      *
+      * @param loop
+      * @param nonposQuad
+      * @return
+      */
+    def negativeCrossings(loop: EdgePath, nonposQuad: NonPosQuad): Vector[((Int, Int), (Int,Int))] = {
+      edgePath.extractCrossings(loop, nonposQuad, -1)
+    }
+
+    /**
+      * Extracts the start and end indices of all non-crossings
+      * between the EdgePath (if it is a loop, error otherwise) and a given loop
+      *
+      * @param loop
+      * @param twoComplex
+      * @return
+      */
+    def nonCrossings(loop: EdgePath, nonposQuad: NonPosQuad): Vector[((Int, Int), (Int,Int))] = {
+      edgePath.extractCrossings(loop, nonposQuad, 0) 
+    }
+
+    /**
+      * Calculates the geometric intersection number of the EdgePath and a given path
+      *
+      * @param path
+      * @param nonposQuad
+      * @return
+      */
+    def GIN(path: EdgePath, nonposQuad: NonPosQuad): Int = {
+      if(edgePath.isLoop && path.isLoop) 
+        (edgePath.positiveCrossings(path, nonposQuad)).size + (edgePath.negativeCrossings(path, nonposQuad)).size
+      else 0
+    }
+
+    /**
+      * Calculates the geometric self-intersection number of a curve
+      *
+      * @param nonposQuad
+      * @return
+      */
+    def selfGIN(nonposQuad: NonPosQuad): Int = {
+      edgePath.GIN(edgePath, nonposQuad)
+    }
+
+    /**
+      * Calculates the algebraic intersection number of the EdgePath and a given path
+      *
+      * @param path
+      * @param nonposQuad
+      * @return
+      */
+    def AIN(path: EdgePath, nonposQuad: NonPosQuad): Int = {
+      if(edgePath.isLoop && path.isLoop) 
+        (edgePath.positiveCrossings(path, nonposQuad)).size - (edgePath.negativeCrossings(path, nonposQuad)).size
+      else 0
+    }
+
+    /**
+      * Calculates the geometric self-intersection number of a curve
+      *
+      * @param path
+      * @param nonposQuad
+      * @return
+      */
+    def selfAIN(path: EdgePath, nonposQuad: NonPosQuad): Int = {
+      edgePath.AIN(edgePath, nonposQuad)
     }
 
 
-    
     /**
      * Gives self intersections with signs.
      */
-    def selfIntersection (twoComplex : TwoComplex) : Set[Intersection] = 
-      edgePath.intersectionsWith(edgePath, twoComplex).
-      filter(inter => ((inter.start._1 != inter.start._2) && (inter.end._1 != inter.end._2)))
+    def selfIntersection (nonposQuad : NonPosQuad) : Set[Intersection] = {
+      val leftmostPath = canoniciseLoop(edgePath, nonposQuad)
+      val rightmostPath = (canoniciseLoop(edgePath.reverse, nonposQuad)).reverse
+      leftmostPath.intersectionsWith(rightmostPath, nonposQuad)
+    }
+      
 
     /**
       * Checks whether two paths are homotopic fixing endpoints

@@ -3,8 +3,7 @@ package superficial
 import EdgePath._
 import NonPosQuad._
 
-
-sealed trait Intersection { intersection =>
+trait Intersection { intersection =>
   val start : (Int, Int)
   val end : (Int, Int)
   val turnBefore : Int
@@ -65,8 +64,8 @@ sealed trait Intersection { intersection =>
     require(intersection.isValidBetween(thisPath, thatPath, twoComplex), 
       s"$intersection is not a valid intersection between $thisPath and $thatPath")
     val sign : Int = {
-      if ((intersection.turnBefore > 0) && (intersection.turnAfter > 0)) 1
-      else if ((intersection.turnBefore < 0) && (intersection.turnAfter < 0)) -1
+      if ((intersection.turnBefore < 0) && (intersection.turnAfter < 0)) 1
+      else if ((intersection.turnBefore > 0) && (intersection.turnAfter > 0)) -1
       else 0
     }
     sign
