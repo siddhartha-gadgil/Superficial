@@ -31,18 +31,22 @@ object Quadrangulation {
 
   case class BaryCenter(face: Polygon) extends Vertex
 
-  case class QuadEdge(face: Polygon, index: Int) extends EdgePair(BaryCenter(face), face.boundary(index).terminal)
-
+  // case class QuadEdge(face: Polygon, index: Int) extends EdgePair(BaryCenter(face), face.boundary(index).terminal)
+  case class QuadEdge(face: Polygon, index: Int) extends EdgePair(BaryCenter(face), face.boundary(index).initial)
 
   // The `bdy` parameter is redundant, but will need significant refactoring to avoid
   case class QuadFace(face: Polygon, flipFace: Polygon, indexOfEdge: Int, indexOfFlip: Int) extends Polygon{
       val sides: Int = 4
       val boundary: Vector[Edge] = 
         Vector(
-        QuadEdge(face, indexOfEdge).Positive, // from barycenter of face of edge to edge.terminal
-        QuadEdge(flipFace, mod(indexOfFlip - 1, flipFace.boundary.length)).Negative, // from edge.terminal to barycenter of face of edge.flip
-        QuadEdge(flipFace, indexOfFlip).Positive, // from barycenter of face of edge.flip to edge.initial
-        QuadEdge(face, mod(indexOfEdge - 1, face.boundary.length)).Negative // from edge.intial to barycenter of face of edge
+        //QuadEdge(face, indexOfEdge).Positive, // from barycenter of face of edge to edge.terminal
+        QuadEdge(face, mod(indexOfEdge + 1, face.boundary.length)).Positive,
+        //QuadEdge(flipFace, mod(indexOfFlip - 1, flipFace.boundary.length)).Negative, // from edge.terminal to barycenter of face of edge.flip
+        QuadEdge(flipFace, indexOfFlip).Negative,
+        //QuadEdge(flipFace, indexOfFlip).Positive, // from barycenter of face of edge.flip to edge.initial
+        QuadEdge(flipFace, mod(indexOfFlip + 1, flipFace.boundary.length)).Positive,
+        //QuadEdge(face, mod(indexOfEdge - 1, face.boundary.length)).Negative // from edge.intial to barycenter of face of edge
+        QuadEdge(face, indexOfEdge).Negative
       )
       val vertices: Set[Vertex] = boundary.map(_.initial).toSet
   }
@@ -115,10 +119,10 @@ object Quadrangulation {
       val indexOfFlip = flipFace.boundary.indexOf(edge.flip)
       val periOfFace = face.boundary.length
       val periOfFlip = flipFace.boundary.length
-      val edgePath = // from edge.intial to barycenter of face of edge to edge.terminal
+      val edgePath = // from edge.initial to barycenter of face of edge to edge.terminal
         Append(Append(Constant(edge.initial),
-          (newEdgeMap1(face, mod(indexOfEdge - 1, periOfFace)).Negative)),
-          (newEdgeMap1(face, indexOfEdge).Positive))     
+          (newEdgeMap1(face, indexOfEdge).Negative)),
+          (newEdgeMap1(face, mod(indexOfEdge + 1, periOfFace)).Positive))    
 
       val newFace = QuadFace(face, flipFace, indexOfEdge, indexOfFlip)
       (newFace, (edge, edgePath))
