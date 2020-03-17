@@ -80,20 +80,24 @@ object Quadrangulation {
 
     val barycentersList = faceList.map(BaryCenter(_))
     val barycenters = faceList.zip(barycentersList).toMap
-    
-    val newEdgeMap1 : Map[(Polygon, Int),EdgePair] = 
-      facesWithIndexes.map{
-        case (poly, j) => (poly, j) -> QuadEdge(poly, j)
-      }.toMap
 
+    // val newEdgeMap1 : Map[(Polygon, Int),EdgePair] = 
+    //   facesWithIndexes.map{
+    //     case (poly, j) => (poly, j) -> QuadEdge(poly, j)
+    //   }.toMap
+
+    val newEdgeMap2: Map[(Polygon, Int), Edge] =
+      facesWithIndexes.map{
+        case (poly, j) => (poly, j) -> QuadEdge(poly, j).Negative
+      }.toMap
     
   
     // A new edge from edge.terminal to barycenter is mapped to the pair (left, right) where
     // left and right are edges in the original twoComplex which are immediately left or right to
     // the new edge
     val reverseEdgeMap : Map[Edge, (Edge, Edge)] = {
-      val intermediate = newEdgeMap1.toList.map(_.swap)
-      intermediate.map(el => (el._1.Negative, 
+      val intermediate = newEdgeMap2.toList.map(_.swap)
+      intermediate.map(el => (el._1, 
         (el._2._1.boundary(el._2._2).flip,
          el._2._1.boundary(mod(el._2._2 - 1, el._2._1.boundary.length))))).toMap
     }
