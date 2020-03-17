@@ -14,6 +14,8 @@ trait Edge {
 
   def initial: Vertex
 
+  val isEmpty: Boolean = false
+
   def checkFlip: Boolean =
     (flip.terminal == initial) && (flip.initial == terminal) && 
     (flip.flip == this) && (flip != this)
@@ -31,6 +33,16 @@ object Edge {
   ) extends OrientedEdge {
     def flip: OrientedEdge =
       Symbolic(name, terminal, initial, !positivelyOriented)
+  }
+
+  def makeEmptyEdge(v: Vertex): Edge = {
+    object emptyEdge extends Edge{
+              def flip = emptyEdge
+              def initial = v
+              def terminal = v
+              override val isEmpty: Boolean = true
+            }
+    emptyEdge
   }
 
   def symbolic(
