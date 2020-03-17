@@ -32,7 +32,7 @@ class StandardSurface(val genus: Int) extends TwoComplex{surface =>
 
     def parseEdge(s: String) : Parsed[Edge] = parse(s, edge(_))
 
-    def edgePath[ _ : P] : P[EdgePath] = P(edge.rep).map(s => EdgePath(s.toVector))
+    def edgePath[ _ : P] : P[EdgePath] = P(edge.rep ~ End).map(s => EdgePath(s.toVector))
 
     def parsePath(s: String) : Parsed[EdgePath] = parse(s, edgePath(_))
 
@@ -42,17 +42,32 @@ class StandardSurface(val genus: Int) extends TwoComplex{surface =>
 }
 
 object StandardSurface{
-    case class A(index: Int, surf: StandardSurface, positive: Boolean) extends Edge{
+    case class A(index: Int, surf: StandardSurface, positivelyOriented: Boolean) extends OrientedEdge{
         assert(0 < index && index <= surf.genus, s"index $index invalid for genus ${surf.genus} surface")
-        def flip: Edge = A(index, surf, !positive)
+        lazy val flip: OrientedEdge = A(index, surf, !positivelyOriented)
         lazy val terminal: Vertex = surf.vertex
         lazy val initial: Vertex = surf.vertex
     }
-    case class B(index: Int, surf: StandardSurface, positive: Boolean) extends Edge{
+    case class B(index: Int, surf: StandardSurface, positivelyOriented: Boolean) extends OrientedEdge{
         assert(0 < index && index <= surf.genus, s"index $index invalid for genus ${surf.genus} surface")
-        def flip: Edge = B(index, surf, !positive)
+        lazy val flip: OrientedEdge = B(index, surf, !positivelyOriented)
         lazy val terminal: Vertex = surf.vertex
         lazy val initial: Vertex = surf.vertex
     }
    
+}
+
+case class ClosedSurface(n: Int) extends StandardSurface(n){
+    override val vertex: Vertex = ClosedSurface.V
+    override lazy val face: Polygon = ClosedSurface.Face(n)
+}
+
+object ClosedSurface{
+    case object V extends Vertex
+    case class Face(n: Int) extends Polygon{
+        val sides: Int = 4 * n
+        lazy val surface = ClosedSurface(n)
+        lazy val boundary: Vector[Edge] = surface.boundary
+        val vertices: Set[Vertex] = Set(V)
+    }
 }
