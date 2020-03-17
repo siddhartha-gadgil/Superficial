@@ -80,7 +80,7 @@ object Quadrangulation {
 
     def createBarycenter (face : Polygon) : Vertex = BaryCenter(face)
 
-    val barycentersList = faceList.map(createBarycenter(_))
+    val barycentersList = faceList.map(BaryCenter(_))
     val barycenters = faceList.zip(barycentersList).toMap
 
     def createEdgePairs (face : Polygon, index : Int) : EdgePair = QuadEdge(face, index)
@@ -112,7 +112,7 @@ object Quadrangulation {
     }
     
     // creates the face corresponding the edge. Also gives an edgepath homotopic to the edge preserving endpoints
-    def createFace (edge : Edge) : (Polygon, (Edge, EdgePath))= {
+    def getFace (edge : Edge) : (Polygon, (Edge, EdgePath))= {
       val face = faceOfEdge(edge)
       val flipFace = faceOfEdge(edge.flip)
       val indexOfEdge = face.boundary.indexOf(edge)
@@ -128,7 +128,7 @@ object Quadrangulation {
       (newFace, (edge, edgePath))
     }  
 
-    val newFacesAndEdgePathMaps = twoComplex.halfEdges.map(createFace)
+    val newFacesAndEdgePathMaps = twoComplex.halfEdges.map(getFace)
     val newFaces = newFacesAndEdgePathMaps.map(el => el._1)
     val halfOfEdgePathMap = newFacesAndEdgePathMaps.map(el => el._2)
     val otherHalfOfEdgePathMap = halfOfEdgePathMap.map(el => (el._1.flip, el._2.reverse))
