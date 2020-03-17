@@ -78,16 +78,16 @@ object Quadrangulation {
     val faceList = twoComplex.faces.toList
     val facesWithIndexes :  List[(Polygon, Int)] = faceList.flatMap(f => ((0 to (f.boundary.length - 1)).map(ind => (f, ind))))
 
-    def createBarycenter (face : Polygon) : Vertex = BaryCenter(face)
+    // def createBarycenter (face : Polygon) : Vertex = BaryCenter(face)
 
     val barycentersList = faceList.map(BaryCenter(_))
     val barycenters = faceList.zip(barycentersList).toMap
 
-    def createEdgePairs (face : Polygon, index : Int) : EdgePair = QuadEdge(face, index)
+    // def createEdgePairs (face : Polygon, index : Int) : EdgePair = QuadEdge(face, index)
 
     val newEdgeMap1 : Map[(Polygon, Int),EdgePair] = 
       facesWithIndexes.map{
-        case (poly, j) => (poly, j) -> createEdgePairs(poly, j)
+        case (poly, j) => (poly, j) -> QuadEdge(poly, j)
       }.toMap
 
     
