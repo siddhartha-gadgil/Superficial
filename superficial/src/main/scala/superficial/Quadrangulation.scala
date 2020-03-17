@@ -85,10 +85,10 @@ object Quadrangulation {
 
     // def createEdgePairs (face : Polygon, index : Int) : EdgePair = QuadEdge(face, index)
 
-    val newEdgeMap1 : Map[(Polygon, Int),EdgePair] = 
-      facesWithIndexes.map{
-        case (poly, j) => (poly, j) -> QuadEdge(poly, j)
-      }.toMap
+    // val newEdgeMap1 : Map[(Polygon, Int),EdgePair] = 
+    //   facesWithIndexes.map{
+    //     case (poly, j) => (poly, j) -> QuadEdge(poly, j)
+    //   }.toMap
 
     
   
@@ -96,7 +96,11 @@ object Quadrangulation {
     // left and right are edges in the original twoComplex which are immediately left or right to
     // the new edge
     val reverseEdgeMap : Map[Edge, (Edge, Edge)] = {
-      val intermediate = newEdgeMap1.toList.map(_.swap)
+      val intermediate = //newEdgeMap1.toList.map(_.swap)
+      facesWithIndexes.map{
+        case (poly, j) => QuadEdge(poly, j) -> (poly, j) 
+      }.toMap
+
       intermediate.map(el => (el._1.Negative, 
         (el._2._1.boundary(el._2._2).flip,
          el._2._1.boundary(mod(el._2._2 - 1, el._2._1.boundary.length))))).toMap
@@ -121,8 +125,8 @@ object Quadrangulation {
       val periOfFlip = flipFace.boundary.length
       val edgePath = // from edge.initial to barycenter of face of edge to edge.terminal
         Append(Append(Constant(edge.initial),
-          (newEdgeMap1(face, indexOfEdge).Negative)),
-          (newEdgeMap1(face, mod(indexOfEdge + 1, periOfFace)).Positive))    
+          (QuadEdge(face, indexOfEdge).Negative)),
+          (QuadEdge(face, mod(indexOfEdge + 1, periOfFace)).Positive))    
 
       val newFace = QuadFace(face, flipFace, indexOfEdge, indexOfFlip)
       (newFace, (edge, edgePath))
