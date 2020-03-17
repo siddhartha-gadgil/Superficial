@@ -2,6 +2,7 @@ package superficial
 
 import NonPosQuad._
 import Intersection._
+import Edge._
 
 sealed trait EdgePath{ edgePath =>
     import EdgePath._
@@ -81,23 +82,29 @@ sealed trait EdgePath{ edgePath =>
     /** 
      * Reduces a loop to a geodesic
      */
-    def loopToGeodesic (twoComplex : TwoComplex) : EdgePath = {
-      require(edgePath.inTwoComplex(twoComplex), 
-        s"The EdgaPath $edgePath is not inside the TwoComplex $twoComplex")
+    def loopToGeodesic (nonposQuad : NonPosQuad) : EdgePath = {
+      require(edgePath.inTwoComplex(nonposQuad), 
+        s"The EdgePath $edgePath is not inside the TwoComplex $nonposQuad")
       require(edgePath.isLoop, s"The EdgePath $edgePath is not a loop. Hence cyclic reduction is not valid")
     
       def helper (path : EdgePath, n : Int) : EdgePath = {
-        val corTurnPath = turnPath(path, twoComplex) // the corresponding turnPath
-        val firstLeftBracket = findFirstLeftBracketTurnPath(corTurnPath._2)
-        val firstRightBracket = findFirstRightBracketTurnPath(corTurnPath._2)
-        if (n <= 0) path
-        else if (isReduced(path) && (firstLeftBracket == None) && (firstRightBracket == None)) {
-          helper(path.shiftBasePoint, n - 1)
+        path match {
+          case Constant(initial) => path
+          case Append(init, last) => {
+            val corTurnPath = turnPath(path, nonposQuad) // the corresponding turnPath
+            val firstLeftBracket = findFirstLeftBracketTurnPath(corTurnPath._2)
+            val firstRightBracket = findFirstRightBracketTurnPath(corTurnPath._2)
+            if (n <= 0) path
+            else if (isReduced(path) && (firstLeftBracket == None) && (firstRightBracket == None)) {
+              helper(path.shiftBasePoint, n - 1)
+            }
+            else {
+              helper(edgePathToGeodesic(path, nonposQuad), length(path) + 3) 
+              // only length + 1 should also work. This value is given just for safety.   
+            }
+          }
         }
-        else {
-          helper(edgePathToGeodesic(path, twoComplex), length(path) + 3) 
-          // only length + 1 should also work. This value is given just for safety.   
-        }
+        
       }
       
       helper(edgePath, length(edgePath) + 3) 
@@ -137,12 +144,12 @@ sealed trait EdgePath{ edgePath =>
 
       // Intersection point of two paths
       val intersectionIndices : Set[(Int, Int)] = 
-        (0 to (length(edgePath) - 1)).flatMap(i => (0 to (length(otherPath) - 1)).map(j => (i,j))).
+        ((0 to (length(edgePath) - 1)).flatMap(i => (0 to (length(otherPath) - 1)).map(j => (i,j)))).
         filter(el => (edgePathVector(el._1).initial == otherPathVector(el._2).initial)).toSet
      
       // Adds turn information on both side of the intersection
       def giveTurnsAtIntersection (i : Int, j : Int) : (Int, Int) = {
-        require(edgePathVector(i).initial == otherPathVector(i).initial, s"($i,$j) is not an intersection point")
+        require(edgePathVector(i).initial == otherPathVector(j).initial, s"($i,$j) is not an intersection point")
         val a1 : Edge = edgePathVector(mod(i - 1, thisLength))
         val a2 : Edge = edgePathVector(mod(i, thisLength)).flip
         val b1 : Edge = otherPathVector(mod(j - 1, thatLength))
@@ -152,7 +159,7 @@ sealed trait EdgePath{ edgePath =>
 
       // The elements are of the form ((i,j), (u,v)) where
       // i-th and j-th edge of edgePath and otherPath have same initial vertex
-      // u is the turn b/w (i-1)-th edge of edgePath and (j-1)-th edge of otherPath (technically their flips).
+      // ut is the turn b/w (i-1)-th edge of edgePath and (j-1)-th edge of otherPath (technically their flips).
       // v is the turn b/w i-th edge of edgePath and j-th edge of otherPath 
       val intermediateInter : Set[((Int, Int), (Int, Int))] = 
         intersectionIndices.map(el => (el, giveTurnsAtIntersection(el._1, el._2)))
@@ -161,13 +168,125 @@ sealed trait EdgePath{ edgePath =>
       val merged : Set[Intersection] = Intersection.mergeAll(unmerged, thisLength, thatLength).toSet   
       merged
     }
-    
+
+    /**
+      * Extracts the start and end indices of the crossings of the given sign 
+      * between the EdgePath (if it is a loop, error otherwise) and a given loop
+      *
+      * @param loop
+      * @param nonposQuad
+      * @param sign
+      * @return
+      */
+    def extractCrossings(loop: EdgePath, nonposQuad: NonPosQuad, sign: Int): Vector[((Int, Int), (Int,Int))] = {
+      if(loop != edgePath) {
+        val canonicalLoop = canoniciseLoop(edgePath, nonposQuad)
+        val otherCanonicalLoop = canoniciseLoop(loop, nonposQuad)
+        val vect = (canonicalLoop.intersectionsWith(otherCanonicalLoop, nonposQuad)).toVector
+        (vect.filter((x: Intersection) => ((x.getSign(canonicalLoop, otherCanonicalLoop, nonposQuad)) == sign))).
+        map((x: Intersection)=> (x.start, x.end))
+      }
+      else {
+        val vect = (edgePath.selfIntersection(nonposQuad)).toVector
+        (vect.filter((x: Intersection) => ((x.getSign(edgePath, loop, nonposQuad)) == sign))).
+        map((x: Intersection)=> (x.start, x.end))
+      }
+        
+    }
+
+    /**
+      * Extracts the start and end indices of all positive crossings 
+      * between the canonical forms of the EdgePath (if it is a loop, error otherwise) and a given loop
+      *
+      * @param loop
+      * @param nonposQuad
+      * @return
+      */
+    def positiveCrossings(loop: EdgePath, nonposQuad: NonPosQuad): Vector[((Int, Int), (Int,Int))] ={
+      edgePath.extractCrossings(loop, nonposQuad, 1)
+    }
+
+    /**
+      * Extracts the start and end indices of all negative crossings
+      * between the canonical forms of the EdgePath (if it is a loop, error otherwise) and a given loop
+      *
+      * @param loop
+      * @param nonposQuad
+      * @return
+      */
+    def negativeCrossings(loop: EdgePath, nonposQuad: NonPosQuad): Vector[((Int, Int), (Int,Int))] = {
+      edgePath.extractCrossings(loop, nonposQuad, -1)
+    }
+
+    /**
+      * Extracts the start and end indices of all non-crossings
+      * between the canonical forms EdgePath (if it is a loop, error otherwise) and a given loop
+      *
+      * @param loop
+      * @param twoComplex
+      * @return
+      */
+    def nonCrossings(loop: EdgePath, nonposQuad: NonPosQuad): Vector[((Int, Int), (Int,Int))] = {
+      edgePath.extractCrossings(loop, nonposQuad, 0) 
+    }
+
+    /**
+      * Calculates the geometric intersection number of the EdgePath and a given path
+      *
+      * @param path
+      * @param nonposQuad
+      * @return
+      */
+    def GIN(path: EdgePath, nonposQuad: NonPosQuad): Int = {
+      if(edgePath.isLoop && path.isLoop) 
+        (edgePath.positiveCrossings(path, nonposQuad)).size + (edgePath.negativeCrossings(path, nonposQuad)).size
+      else 0
+    }
+
+    /**
+      * Calculates the geometric self-intersection number of a curve
+      *
+      * @param nonposQuad
+      * @return
+      */
+    def selfGIN(nonposQuad: NonPosQuad): Int = {
+      edgePath.GIN(edgePath, nonposQuad)
+    }
+
+    /**
+      * Calculates the algebraic intersection number of the EdgePath and a given path
+      *
+      * @param path
+      * @param nonposQuad
+      * @return
+      */
+    def AIN(path: EdgePath, nonposQuad: NonPosQuad): Int = {
+      if(edgePath.isLoop && path.isLoop) 
+        (edgePath.positiveCrossings(path, nonposQuad)).size - (edgePath.negativeCrossings(path, nonposQuad)).size
+      else 0
+    }
+
+    /**
+      * Calculates the geometric self-intersection number of a curve
+      *
+      * @param path
+      * @param nonposQuad
+      * @return
+      */
+    def selfAIN(path: EdgePath, nonposQuad: NonPosQuad): Int = {
+      edgePath.AIN(edgePath, nonposQuad)
+    }
+
+
     /**
      * Gives self intersections with signs.
      */
-    def selfIntersection (twoComplex : TwoComplex) : Set[Intersection] = 
-      edgePath.intersectionsWith(edgePath, twoComplex).
-      filter(inter => ((inter.start._1 != inter.start._2) && (inter.end._1 != inter.end._2)))
+    def selfIntersection (nonposQuad : NonPosQuad) : Set[Intersection] = {
+      val leftmostPath = canoniciseLoop(edgePath, nonposQuad)
+      val rightmostPath = (canoniciseLoop(edgePath.reverse, nonposQuad)).reverse
+      leftmostPath.intersectionsWith(rightmostPath, nonposQuad)
+    }
+      
 
     /**
       * Checks whether two paths are homotopic fixing endpoints
@@ -333,13 +452,16 @@ object EdgePath{
       * @return
       */
     def turnPath(path: EdgePath, twoComplex : TwoComplex): (Edge, Vector[Int]) = {
-        require(! edgeVectors(path).isEmpty, s"The edge path $path is empty")
-        val v: Vector[Edge] = edgeVectors(path)
-        v match{
-            case y +: z +: ys => (v.head, v.zip(v.tail :+ v.head).map(v=> twoComplex.turnIndex(v._1,v._2)))
-            case Vector(y) => (y, Vector[Int]())
+        path match {
+          case Constant(initial) => (makeEmptyEdge(initial), Vector[Int]())
+          case Append(init, last) => {
+            val v: Vector[Edge] = edgeVectors(path)
+            v match{
+              case (y +: z +: ys) => (v.head, (v.zip(v.tail)).map(v=> twoComplex.turnIndex(v._1,v._2)))
+              case Vector(y) => (y, Vector[Int]())
+            }
+          }  
         }
-        
     }
 
     /**
@@ -350,15 +472,20 @@ object EdgePath{
       * @return
       */
     def turnPathToEdgePath(edge: Edge, v: Vector[Int], twoComplex : TwoComplex): EdgePath = {
-        def accumTurnPathToEdgePath(edge: Edge, vect: Vector[Int], accum: EdgePath): EdgePath = {
+      if (edge.isEmpty == true) Constant(edge.initial)
+      else {
+          def accumTurnPathToEdgePath(edge: Edge, vect: Vector[Int], accum: EdgePath): EdgePath = {
             if (! vect.isEmpty) {
                 val e = twoComplex.turnEdge(edge, vect.head)
                 accumTurnPathToEdgePath(e, vect.tail, Append(accum, e))
             }
             else accum
-        }
-        accumTurnPathToEdgePath(edge, v, Append(Constant(edge.initial), edge))
-    }
+          }
+          accumTurnPathToEdgePath(edge, v, Append(Constant(edge.initial), edge))
+        } 
+      }
+          
+
 
     /**
       * Finds indices of the beginning and end (the left turns) of the first left bracket in an EdgePath
@@ -449,15 +576,29 @@ object EdgePath{
       * @param twoComplex
       * @return
       */
-    def turnPathReduce(edge: Edge, turnVect: Vector[Int], twoComplex : TwoComplex): (Edge, Vector[Int]) = {
+    def turnPathReduce(edge: Edge, turnVect1: Vector[Int], twoComplex : TwoComplex): (Edge, Vector[Int]) = {
+      if (edge.isEmpty == true) (edge, turnVect1)
+      else {
+        val turnVect = turnPathStandardForm(edge, turnVect1, twoComplex)
         if(turnVect.contains(0)) {
-            if(turnVect.head == 0) turnPathReduce(twoComplex.turnEdge(edge, turnVect(1)), turnVect.tail, twoComplex)
+          if(turnVect == Vector(0)) {
+            (makeEmptyEdge(edge.initial), Vector())
+          }
+          else {
+            if(turnVect.head == 0) turnPathReduce(twoComplex.turnEdge(edge.flip, turnVect(1)), (turnVect.tail).tail, twoComplex)
+            else if(turnVect.last == 0) turnPathReduce(edge, (turnVect.init).init, twoComplex)
             else {
                 val i = turnVect.indexOf(0)
-                turnPathReduce(edge, ((turnVect.slice(0,i-1) :+ (turnVect(i-1)+turnVect(i+1))) ++ turnVect.slice(i+2,turnVect.size-1)), twoComplex)
+                turnPathReduce(edge, 
+                (turnVect.slice(0,i-1) :+ (turnVect(i-1) + turnVect(i+1))) ++ turnVect.slice(i+2,turnVect.size),
+                twoComplex)
             }
+          }
+            
         }
         else (edge, turnPathStandardForm(edge, turnVect, twoComplex))
+      }
+        
     }
 
     /**
@@ -469,6 +610,8 @@ object EdgePath{
       * @return
       */
     def turnPathToGeodesicHelper(edge: Edge, turnVect: Vector[Int], twoComplex : TwoComplex): (Edge, Vector[Int], TwoComplex) = {
+      if (edge.isEmpty == true) (edge, turnVect, twoComplex)
+      else {
         def rectifyBracket(edge: Edge, vect: Vector[Int], bracket: (Int,Int), correction: Int): Vector[Int] = {
             if(bracket._1 == 0){
                 if(bracket._2 == vect.size -1) {
@@ -528,6 +671,8 @@ object EdgePath{
                         twoComplex)
             }
         }
+      }
+        
     }
 
     /**
@@ -574,18 +719,19 @@ object EdgePath{
       if (len == 0) (edge, turnPath)
       else {
         val i = turnPath.indexOf(-1)
-        if (i == 0)
+        if (i == -1) turnPathToGeodesic(edge, turnPath, nonposQuad)
+        else if (i == 0)
           canoniciseTurnLoop(nonposQuad.R(edge), 
-          turnPathStandardForm(edge, Vector(1, turnPath(1)-1) ++ turnPath.slice(2,len), nonposQuad),
+          turnPathStandardForm(edge, Vector(1, turnPath(1)+1) ++ turnPath.slice(2,len), nonposQuad),
           nonposQuad)
         else if (i== len-1)
           canoniciseTurnLoop(edge, 
-          turnPathStandardForm(edge, turnPath.slice(0,i-1) ++ Vector(turnPath(i-1)-1,1), nonposQuad),
+          turnPathStandardForm(edge, turnPath.slice(0,i-1) ++ Vector(turnPath(i-1)+1,1), nonposQuad),
           nonposQuad)
         else 
           canoniciseTurnLoop(edge,
           turnPathStandardForm(edge, 
-          turnPath.slice(0,i-1)++Vector(turnPath(i-1)-1,1,turnPath(i+1)-1)++turnPath.slice(i+2,len), 
+          turnPath.slice(0,i-1)++Vector(turnPath(i-1)+1,1,turnPath(i+1)+1)++turnPath.slice(i+2,len), 
           nonposQuad),
           nonposQuad
           )
@@ -597,12 +743,19 @@ object EdgePath{
       def canoniciseLoopHelper(loop: EdgePath, n: Int, nonposQuad: NonPosQuad): EdgePath = {
         if (n<=0) loop
         else {
-          val (e, tloop) = turnPath(loop, nonposQuad)
-          val (e1, tLoop) = turnPathToGeodesic(e, tloop, nonposQuad)
-          val (edge, turnLoop) = canoniciseTurnLoop(e1, tLoop, nonposQuad)
-          val newLoop = turnPathToEdgePath(edge, turnLoop, nonposQuad)
-          require(isGeodesic(newLoop, nonposQuad), s"The loop $newLoop is not a geodesic")
-          canoniciseLoopHelper(newLoop.shiftBasePoint, n-1, nonposQuad)
+          loop match {
+            case Constant(initial) => loop
+            case Append(init, last) => {
+              val loop1 = loop.loopToGeodesic(nonposQuad)
+              val (e, tloop) = turnPath(loop1, nonposQuad)
+              val (e1, tLoop) = turnPathToGeodesic(e, tloop, nonposQuad)
+              val (edge, turnLoop) = canoniciseTurnLoop(e1, tLoop, nonposQuad)
+              val newLoop = turnPathToEdgePath(edge, turnLoop, nonposQuad)
+              require(isGeodesic(newLoop, nonposQuad), s"The loop $newLoop is not a geodesic")
+              canoniciseLoopHelper(newLoop.shiftBasePoint, n-1, nonposQuad)
+            }
+          }
+          
         }
       }
       canoniciseLoopHelper(loop, length(loop)+2, nonposQuad)
@@ -624,6 +777,7 @@ object EdgePath{
 
     def isCanonicalGeodesicLoop(loop: EdgePath, nonposQuad: NonPosQuad): Boolean = {
       require(loop.isLoop, s"The path $loop is not a loop")
+
       def isCanonicalGeodesicLoopHelper(loop: EdgePath, n: Int, nonposQuad: NonPosQuad): Boolean = {
         if (n<=0) true
         else{
@@ -633,8 +787,28 @@ object EdgePath{
           }
         }
       }
-      isCanonicalGeodesicLoopHelper(loop, length(loop)+2, nonposQuad)
+      isCanonicalGeodesicLoopHelper(loop, length(loop)+2, nonposQuad) && isGeodesic(loop, nonposQuad)
     }
 
 }
 
+/*
+{
+  
+import superficial._
+val g = new StandardSurface(2)
+val (quad, (f, b)) = Quadrangulation.quadrangulate(g)
+val quad1 = NonPosQuad(quad)
+val p1 = g.getPath("a1a2")
+val path1 = f(p1)
+val p2 = g.getPath("b1b2")
+val path2 = f(p2)
+import EdgePath._
+val ppath = path1 ++ path1.reverse
+val tpath = turnPath(ppath, quad1)
+
+}
+
+val canonicalPath1 = EdgePath.canoniciseLoop(path1, quad1)
+
+*/
