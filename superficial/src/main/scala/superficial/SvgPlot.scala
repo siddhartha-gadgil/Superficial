@@ -13,11 +13,14 @@ object SvgPlot {
       y1: Double,
       x2: Double,
       y2: Double,
-      colour: String
-  ): Elem =
+      colour: String,
+      strokeArray: Option[String] = None
+  ): Elem = {
+    val str = strokeArray.getOrElse("")
     <line x1={x1.toInt.toString} x2={x2.toInt.toString} y1={y1.toInt.toString} y2={
       y2.toInt.toString
-    } stroke={colour} stroke-width="1" xmlns="http://www.w3.org/2000/svg"></line>
+    } stroke={colour} stroke-width="1" stroke-dasharray={str}  xmlns="http://www.w3.org/2000/svg"></line>
+  }
 
   def drawCircle(
     cx: Double,
@@ -94,7 +97,8 @@ object SvgPlot {
       xt: Double,
       yterm: Double,
       colour: String = "black",
-      label: String = ""
+      label: String = "",
+      strokeArray: Option[String] = None
   ): Vector[Elem] = {
 
     val arrowBase = ((xt * 3 + xinit) / 4, (yterm * 3 + yinit) / 4)
@@ -102,7 +106,7 @@ object SvgPlot {
     val (bt, tt) = ((xt + (3 * xinit)) / 4, (yterm + (3 * yinit)) / 4)
     val (xu, yu) = unit(xt - xinit, yterm - yinit)
     Vector(
-      drawLine(xinit, yinit, xt, yterm, colour),
+      drawLine(xinit, yinit, xt, yterm, colour, strokeArray),
       drawLine(
         bu,
         tu,
