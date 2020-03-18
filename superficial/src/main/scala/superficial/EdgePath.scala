@@ -714,32 +714,40 @@ object EdgePath{
         turnPathToEdgePath(geodesic._1, geodesic._2, twoComplex)
     }
 
-    def canoniciseTurnLoop(edge: Edge, turnPath: Vector[Int], nonposQuad: NonPosQuad): (Edge, Vector[Int]) = {
-      val len = turnPath.length
-      if (len == 0) (edge, turnPath)
+    def findQuad(e1: Edge, e2: Edge, nonposQuad: NonPosQuad): Polygon = {
+      val PolySet = ((nonposQuad.facesWithEdge(e1)) union (nonposQuad.facesWithEdge(e1.flip))) intersect (
+      (nonposQuad.facesWithEdge(e2)) union (nonposQuad.facesWithEdge(e2.flip))
+      )
+      assert(! PolySet.isEmpty, s"There is no face containing both one of $e1 and its flip, and one of $e2 and flip")
+      PolySet.toVector(0)
+    }
+
+    def shiftRightwards(e1: Edge, e2: Edge, nonposQuad: NonPosQuad): Vector[Edge] = {
+      val quad = findQuad(e1, e2, nonposQuad)
+      val edgeVect = (quad.edges - (e1, e1.flip, e2, e2.flip)).toVector
+      val initVect = (edgeVect.flatMap(x => Vector(x, x.flip)))
+      val tryVect = initVect.flatMap(x => initVect.map((x, _)).filter(x => x._1.terminal == x._2.initial))
+      val rightVect = tryVect.filter(x => ((nonposQuad.turnIndex(x._1, x._2) == 1) && (x._1.initial == e1.initial)))
+      assert(! rightVect.isEmpty, s"There is no right turn correction for the edges $e1 and $e2")
+      val rightEdges = rightVect.head
+      Vector(rightEdges._1, rightEdges._2)
+    }
+
+    def canoniciseVectorLoop(eVect: Vector[Edge], nonposQuad: NonPosQuad): Vector[Edge] = {
+      val turnVect = turnPath(EdgePath.apply(eVect), nonposQuad)._2
+      val i = turnVect.indexOf(-1)
+      if(i == -1) eVect
       else {
-        val i = turnPath.indexOf(-1)
-        if (i == -1) turnPathToGeodesic(edge, turnPath, nonposQuad)
-        else if (i == 0)
-          canoniciseTurnLoop(nonposQuad.R(edge), 
-          turnPathStandardForm(edge, Vector(1, turnPath(1)+1) ++ turnPath.slice(2,len), nonposQuad),
-          nonposQuad)
-        else if (i== len-1)
-          canoniciseTurnLoop(edge, 
-          turnPathStandardForm(edge, turnPath.slice(0,i-1) ++ Vector(turnPath(i-1)+1,1), nonposQuad),
-          nonposQuad)
-        else 
-          canoniciseTurnLoop(edge,
-          turnPathStandardForm(edge, 
-          turnPath.slice(0,i-1)++Vector(turnPath(i-1)+1,1,turnPath(i+1)+1)++turnPath.slice(i+2,len), 
-          nonposQuad),
-          nonposQuad
-          )
+        val newVect = eVect.slice(0,i) ++ 
+        shiftRightwards(eVect(i), eVect(i+1), nonposQuad) ++ 
+        eVect.slice(i+2,eVect.length)
+        canoniciseVectorLoop(newVect, nonposQuad)
       }
     }
       
     def canoniciseLoop(loop: EdgePath, nonposQuad: NonPosQuad): EdgePath = {
       require(loop.isLoop, s"The path $loop is not a loop")
+      val edgeVect = edgeVectors(loop)
       def canoniciseLoopHelper(loop: EdgePath, n: Int, nonposQuad: NonPosQuad): EdgePath = {
         if (n<=0) loop
         else {
@@ -747,10 +755,9 @@ object EdgePath{
             case Constant(initial) => loop
             case Append(init, last) => {
               val loop1 = loop.loopToGeodesic(nonposQuad)
-              val (e, tloop) = turnPath(loop1, nonposQuad)
-              val (e1, tLoop) = turnPathToGeodesic(e, tloop, nonposQuad)
-              val (edge, turnLoop) = canoniciseTurnLoop(e1, tLoop, nonposQuad)
-              val newLoop = turnPathToEdgePath(edge, turnLoop, nonposQuad)
+              val eVect = edgeVectors(loop1)
+              val newVect = canoniciseVectorLoop(eVect, nonposQuad)
+              val newLoop = EdgePath.apply(newVect)
               require(isGeodesic(newLoop, nonposQuad), s"The loop $newLoop is not a geodesic")
               canoniciseLoopHelper(newLoop.shiftBasePoint, n-1, nonposQuad)
             }
