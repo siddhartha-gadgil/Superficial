@@ -313,15 +313,15 @@ sealed trait EdgePath{ edgePath =>
       require(loop.inTwoComplex(nonposQuad), s"The path $loop is not in the Two Complex $nonposQuad")
       require(edgePath.inTwoComplex(nonposQuad), s"The path $edgePath is not in the Two Complex $nonposQuad")
       require(loop.isLoop, s"The path $loop is not a loop")
-      require(edgePath.isLoop, s"The path $loop doesn't have the same terminal vertex as $edgePath")
+      require(edgePath.isLoop, s"The path $edgePath is not a loop")
 
       def checkSameCanonicalLoop(loop1: EdgePath, loop2: EdgePath): Boolean = {
         def checkSameCanonicalLoopHelper(loop1: EdgePath, loop2: EdgePath, n: Int): Boolean = {
-          if(n<=0) true
-          else (loop1 == loop2) && checkSameCanonicalLoopHelper(loop1.shiftBasePoint, loop2, n-1)
+          if(n<=0) false
+          else (loop1 == loop2) || checkSameCanonicalLoopHelper(loop1.shiftBasePoint, loop2, n-1)
         }
         val n = length(loop1)
-        (n == length(loop)) && (checkSameCanonicalLoopHelper(loop1, loop2, n+2))
+        (n == length(loop2)) && (checkSameCanonicalLoopHelper(loop1, loop2, n+2))
       } 
 
       val canonical1 = canoniciseLoop(edgePath, nonposQuad)
