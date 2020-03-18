@@ -88,7 +88,7 @@ class QuadPlot(val genus: Int, radius: Double = 200, shift: Double = 0.1) {
     val lines = paths.toVector.zipWithIndex.map{
         case (p, n) =>
         val str = if (n == 0) None else Some((3 * n).toString) 
-        quadEdgeLines(p, shift, str)
+        quadEdgeLines(p, shift * (1 + (0.7 * n)), str)
     }.foldLeft(sides)(_ ++ _)
     //sides.toVector ++ quadEdgeLines(path, shift, None)
     svgPlot(lines , 3 * radius, 3 * radius)  
