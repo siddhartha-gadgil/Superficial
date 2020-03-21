@@ -170,6 +170,15 @@ sealed trait EdgePath{ edgePath =>
     }
 
     /**
+     * Gives self intersections with signs.
+     */
+    def selfIntersection (nonposQuad : NonPosQuad) : Set[Intersection] = {
+      val leftmostPath = canoniciseLoop(edgePath, nonposQuad)
+      val rightmostPath = (canoniciseLoop(edgePath.reverse, nonposQuad)).reverse
+      leftmostPath.intersectionsWith(rightmostPath, nonposQuad)
+    }
+
+    /**
       * Extracts the start and end indices of the crossings of the given sign 
       * between the EdgePath (if it is a loop, error otherwise) and a given loop
       *
@@ -275,18 +284,7 @@ sealed trait EdgePath{ edgePath =>
       */
     def selfAIN(path: EdgePath, nonposQuad: NonPosQuad): Int = {
       edgePath.AIN(edgePath, nonposQuad)
-    }
-
-
-    /**
-     * Gives self intersections with signs.
-     */
-    def selfIntersection (nonposQuad : NonPosQuad) : Set[Intersection] = {
-      val leftmostPath = canoniciseLoop(edgePath, nonposQuad)
-      val rightmostPath = (canoniciseLoop(edgePath.reverse, nonposQuad)).reverse
-      leftmostPath.intersectionsWith(rightmostPath, nonposQuad)
-    }
-      
+    }      
 
     /**
       * Checks whether two paths are homotopic fixing endpoints

@@ -25,9 +25,9 @@ trait Intersection { intersection =>
     val i2 : Int = mod(intersection.start._2 - 1, thatLength)
     val thisVect : Vector[Edge] = EdgePath.edgeVectors(thisPath)
     val thatVect : Vector[Edge] = EdgePath.edgeVectors(thatPath)
-    val condition2 : Boolean = (twoComplex.angleBetween(thisVect(i1), thatVect(i2)) == intersection.turnBefore)
-    val condition3 : Boolean = 
-      (twoComplex.angleBetween(thisVect(intersection.end._1).flip, thatVect(intersection.end._2).flip) == intersection.turnAfter)
+    val condition2 : Boolean = true //(twoComplex.angleBetween(thisVect(i1), thatVect(i2)) == intersection.turnBefore)
+    val condition3 : Boolean = true
+      //(twoComplex.angleBetween(thisVect(intersection.end._1).flip, thatVect(intersection.end._2).flip) == intersection.turnAfter)
     
     (condition1 && condition2 && condition3)
   } 
@@ -69,6 +69,13 @@ trait Intersection { intersection =>
       else 0
     }
     sign
+  }
+
+  def isCrossing(thisPath : EdgePath, thatPath : EdgePath, twoComplex : TwoComplex): Int = {
+    require(intersection.isValidBetween(thisPath, thatPath, twoComplex), 
+      s"$intersection is not a valid intersection between $thisPath and $thatPath")
+    ???
+
   }
 
 }
