@@ -2,6 +2,7 @@ package superficial
 
 import EdgePath._
 import NonPosQuad._
+import Clockwise._
 
 trait Intersection { intersection =>
   val start : (Int, Int)
@@ -71,11 +72,47 @@ trait Intersection { intersection =>
     sign
   }
 
-  def isCrossing(thisPath : EdgePath, thatPath : EdgePath, twoComplex : TwoComplex): Int = {
+  def length : Int = {
+    require((intersection.start._1 - intersection.end._1) == 
+            (intersection.start._2 - intersection.end._2), s"$intersection is not valid")
+    (intersection.start._1 - intersection.end._1).abs
+  }
+
+  /**
+   * Decides whether the given (maximal) intersection of non-zero length is a crossing or non-crossing.    
+   */
+  def isCrossing(thisPath : EdgePath, thatPath : EdgePath, twoComplex : TwoComplex) : Boolean = {
+    
     require(intersection.isValidBetween(thisPath, thatPath, twoComplex), 
       s"$intersection is not a valid intersection between $thisPath and $thatPath")
-    ???
+    require(intersection.length > 0, s"Currently the method only supports intersections of non-zero length")
 
+    val thisLength : Int = EdgePath.length(thisPath)
+    val thatLength : Int = EdgePath.length(thatPath)
+    val thisVect : Vector[Edge] = edgeVectors(thisPath)
+    val thatVect : Vector[Edge] = edgeVectors(thatPath)
+
+    val thisEdgeBefore : Edge = thisVect(mod(intersection.start._1 - 1, thisLength))
+    val thatEdgeBefore : Edge = thatVect(mod(intersection.start._2 - 1, thatLength))
+    val thisFirstEdge : Edge = thisVect(intersection.start._1)
+    val thatFirstEdge : Edge = thatVect(intersection.start._2)
+    
+    require(thisFirstEdge == thatFirstEdge, 
+      s"The first edge of the $intersection between $thisPath and $thatPath are not same")
+
+    val inTheBegining : Boolean = isClockwise(thisEdgeBefore, thisFirstEdge.flip, thatEdgeBefore, twoComplex)
+
+    val thisEdgeAfter : Edge = thisVect(intersection.end._1)
+    val thatEdgeAfter : Edge = thatVect(intersection.end._2)
+    val thisLastEdge : Edge = thisVect(mod(intersection.end._1 - 1, thisLength))
+    val thatLastEdge : Edge = thatVect(mod(intersection.end._2 - 2, thatLength))
+    
+    require(thisLastEdge == thatLastEdge, 
+      s"The last edge of the $intersection between $thisPath and $thatPath are not same")
+
+    val inTheEnd : Boolean = isClockwise(thisEdgeAfter.flip, thisLastEdge, thatEdgeAfter.flip, twoComplex)   
+    
+    (inTheBegining == inTheEnd)
   }
 
 }
