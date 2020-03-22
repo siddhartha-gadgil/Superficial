@@ -722,7 +722,7 @@ object EdgePath{
 
     def shiftRightwards(e1: Edge, e2: Edge, nonposQuad: NonPosQuad): Vector[Edge] = {
       val quad = findQuad(e1, e2, nonposQuad)
-      val edgeVect = (quad.edges - (e1, e1.flip, e2, e2.flip)).toVector
+      val edgeVect = (quad.edges -- Set(e1, e1.flip, e2, e2.flip)).toVector
       val initVect = (edgeVect.flatMap(x => Vector(x, x.flip)))
       val tryVect = initVect.flatMap(x => initVect.map((x, _)).filter(x => x._1.terminal == x._2.initial))
       val rightVect = tryVect.filter(x => ((nonposQuad.turnIndex(x._1, x._2) == 1) && (x._1.initial == e1.initial)))
