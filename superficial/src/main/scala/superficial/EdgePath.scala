@@ -352,6 +352,22 @@ sealed trait EdgePath{ edgePath =>
      */
     def isEqualUptoBasepointShift (otherPath : EdgePath) : (Boolean, Int) = {
       isEqualUptoBasepointShiftHelper(otherPath, length(edgePath) + 1, 0)
+    }
+
+    def makeBasePointSameHelper (path : EdgePath): EdgePath = {
+        if (edgePath.initial == path.initial) path
+        else makeBasePointSame(path.shiftBasePoint)
+      }
+
+    def makeBasePointSame (otherPath : EdgePath) = {
+      require(edgePath.isLoop, s"method is not useful for non-loops such as $edgePath")
+      require(otherPath.isLoop, s"method is not useful for non-loops such as $otherPath")
+      
+      val sameVertices : Set[Vertex] = 
+        edgePath.verticesCovered.intersect(otherPath.verticesCovered)
+ 
+      require(sameVertices.nonEmpty, s"$edgePath and $otherPath don't have any vertices in common.")
+      makeBasePointSameHelper(otherPath)       
     }  
 }
 
