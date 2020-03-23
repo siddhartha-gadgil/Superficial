@@ -650,7 +650,7 @@ trait TwoComplex { twoComplex =>
   }
 
   /**
-   *Gives the result of adding the given set of twocomplexes to the existing one.
+   * Gives the result of adding the given set of twocomplexes to the existing one.
    */
   def addTwoComplexes (complexes : Set[TwoComplex]) = {
     object newComplex extends TwoComplex {
@@ -663,7 +663,7 @@ trait TwoComplex { twoComplex =>
   }
 
   /**
-   *Given a set of vertices gives the subcomplex on the vertices
+   * Given a set of vertices gives the subcomplex on the vertices
    */
   def subComplex (vs : Set[Vertex]) : TwoComplex = {
     if (!vs.subsetOf(twoComplex.vertices)) {
