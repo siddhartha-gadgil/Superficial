@@ -338,9 +338,8 @@ sealed trait EdgePath{ edgePath =>
     }
 
     def isEqualUptoBasepointShiftHelper (otherPath : EdgePath, remains : Int, current : Int) : (Boolean, Int) = {
-      require(edgePath.isLoop, s"method is not useful for non-loops such as $edgePath")
-      require(otherPath.isLoop, s"method is not useful for non-loops such as $otherPath")
-
+      // the requirement inside isEqualUptoBasepointShift should ensure that both edgePath and otherPath
+      // are loops    
       if (remains < 0) (false, 0)
       else if (edgePath == otherPath) (true, current)
       else isEqualUptoBasepointShiftHelper(otherPath.shiftBasePoint, remains - 1, current + 1)
@@ -351,14 +350,22 @@ sealed trait EdgePath{ edgePath =>
      * Should return (true, n) if otherPath after n shifts of basepoints is equal to edgePath
      */
     def isEqualUptoBasepointShift (otherPath : EdgePath) : (Boolean, Int) = {
+
+      require(edgePath.isLoop, s"method is not useful for non-loops such as $edgePath")
+      require(otherPath.isLoop, s"method is not useful for non-loops such as $otherPath")
+
       isEqualUptoBasepointShiftHelper(otherPath, length(edgePath) + 1, 0)
     }
 
     def makeBasePointSameHelper (path : EdgePath): EdgePath = {
+        // the requirement inside makeBasePointSame should ensure that edgePath is a loop       
         if (edgePath.initial == path.initial) path
         else makeBasePointSame(path.shiftBasePoint)
       }
 
+    /**
+     * Given a path otherPath shifts otherPath until it has the same basepoint as edgePath
+     */
     def makeBasePointSame (otherPath : EdgePath) = {
       require(edgePath.isLoop, s"method is not useful for non-loops such as $edgePath")
       require(otherPath.isLoop, s"method is not useful for non-loops such as $otherPath")
