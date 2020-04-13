@@ -50,6 +50,23 @@ object DoublePaths {
        (cLEdgeAfter  == dEdgeAfter))
     }
 
+    def condition21 (intersection : Intersection) : Boolean = {
+      val dEdgeBefore  : Edge = edgeVectors(d)(mod(intersection.start._2 - 1, length(d)))
+      val endOfSpokeInCL : Option[Int] = cL.findVertexIndex(dEdgeBefore.terminal)
+      endOfSpokeInCL match {
+        case None => false
+        case Some(indexInCL) => {
+          val cLEdgeBefore    : Edge = edgeVectors(cL)(mod(indexInCL - 1, length(cL)))
+          val dTwoEdgeBefore  : Edge = edgeVectors(d)(mod(intersection.start._2 - 2, length(d)))
+          val dEdgeBefore     : Edge = edgeVectors(d)(mod(intersection.start._2 - 1, length(d)))
+          val cREdge          : Edge = edgeVectors(cR)(intersection.start._1)
+          ((cLEdgeBefore == dTwoEdgeBefore) &&
+           (nonPosQuad.R(cLEdgeBefore) == dEdgeBefore) && 
+           (nonPosQuad.L(dEdgeBefore)  == cREdge)) 
+        }
+      }
+    }
+
     val zeroIntersections = cR.intersectionsWith(d, nonPosQuad).filter(el => (el.length == 0))
     val satisfyingFirstCondition = zeroIntersections.filter(el => (condition11(el) && condition12(el)))
 
