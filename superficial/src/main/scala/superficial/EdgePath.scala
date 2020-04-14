@@ -375,7 +375,21 @@ sealed trait EdgePath{ edgePath =>
  
       require(sameVertices.nonEmpty, s"$edgePath and $otherPath don't have any vertices in common.")
       makeBasePointSameHelper(otherPath)       
-    }  
+    } 
+
+    /* 
+     * Given a vertex, gives the first index at which it appears in edgePath. 
+     * If not present returns None.
+     */
+    def findVertexIndex (vertex : Vertex) : Option[Int] = {
+      edgePath.reverse match {
+        case Constant(u) => if (vertex == u) Some(0) else None
+        case Append(init, last) => {
+          if (last.terminal == vertex) Some(0)
+          else init.reverse.findVertexIndex(vertex).map(n => (n + 1))
+        }
+      }
+    }
 }
 
 object EdgePath{
