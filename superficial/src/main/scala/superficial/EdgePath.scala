@@ -390,6 +390,20 @@ sealed trait EdgePath{ edgePath =>
         }
       }
     }
+
+    def isPrimitiveLoopHelper (accum : Set[Vertex]) : Boolean = {
+      edgePath match {
+        case Constant(v) => true
+        case Append(init, last) =>
+           if (accum.contains(last.terminal)) false
+           else init.isPrimitiveLoopHelper(accum.+(last.terminal)) 
+      }
+    }
+
+    def isPrimitiveLoop : Boolean = {
+      require(edgePath.isLoop, s"$edgePath is not a loop.")
+      edgePath.isPrimitiveLoopHelper(Set())
+    }
 }
 
 object EdgePath{

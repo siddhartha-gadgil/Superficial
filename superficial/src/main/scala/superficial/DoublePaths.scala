@@ -12,10 +12,11 @@ object DoublePaths {
    * outputs the set of crossing double paths in the set D+
    */ 
   def Positive (cR : EdgePath, d : EdgePath, nonPosQuad : NonPosQuad) : Set[Intersection] = {
+    require(cR.isPrimitiveLoop, s"$cR is not a primitive loop")
+    require(d.isPrimitiveLoop, s"$d is not a primitive loop")
     require(isCanonicalGeodesicLoop(cR, nonPosQuad), s"$cR is not canonical geodesic")  
     require(isCanonicalGeodesicLoop(d, nonPosQuad), s"$d is not canonical geodesic")
-    // have to add check that they are primitive
-    
+     
     val positiveIntersections = cR.intersectionsWith(d, nonPosQuad).filter(el => 
       ((el.length >= 1) && (el.isCrossing(cR,d,nonPosQuad))))
 
@@ -29,14 +30,15 @@ object DoublePaths {
    * and another canonical geodesic d,
    * gives the the set of crossing double paths in the set D0
    */ 
-  def Zero (cR : EdgePath, cL : EdgePath, d : EdgePath, nonPosQuad : NonPosQuad) : Set[Intersection] = {
+  def Zero (cL : EdgePath, cR : EdgePath, d : EdgePath, nonPosQuad : NonPosQuad) : Set[Intersection] = {
+    require(cL.isPrimitiveLoop, s"$cL is not a primitive loop")
+    require(cR.isPrimitiveLoop, s"$cR is not a primitive loop")
+    require(d.isPrimitiveLoop, s"$d is not a primitive loop")
     require(isCanonicalGeodesicLoop(cR, nonPosQuad), s"$cR is not canonical geodesic")
     require(isCanonicalGeodesicLoop(cL.reverse, nonPosQuad), s"inverse of $cL is not canonical geodesic")
     require(isCanonicalGeodesicLoop(d, nonPosQuad), s"$d is not canonical geodesic")
     require(cR.initial == cL.initial, s"$cR and $cL don't have the same initial vertex")
-    /// have to add conditions of primitivity of cL, cR and d
-
-
+    
     val spokes : Set[Edge] = getStairCase(cL, cR, nonPosQuad)._2
 
     /// cL(i) = cR(i)
