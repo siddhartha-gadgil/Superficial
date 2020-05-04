@@ -336,6 +336,74 @@ sealed trait EdgePath{ edgePath =>
         }
       }
     }
+
+    def isEqualUptoBasepointShiftHelper (otherPath : EdgePath, remains : Int, current : Int) : (Boolean, Int) = {
+      // the requirement inside isEqualUptoBasepointShift should ensure that both edgePath and otherPath
+      // are loops    
+      if (remains < 0) (false, 0)
+      else if (edgePath == otherPath) (true, current)
+      else isEqualUptoBasepointShiftHelper(otherPath.shiftBasePoint, remains - 1, current + 1)
+    }
+
+    /**
+     * Checks if otherPath is equal to edgePath upto shift of basepoint.
+     * Should return (true, n) if otherPath after n shifts of basepoints is equal to edgePath
+     */
+    def isEqualUptoBasepointShift (otherPath : EdgePath) : (Boolean, Int) = {
+
+      require(edgePath.isLoop, s"method is not useful for non-loops such as $edgePath")
+      require(otherPath.isLoop, s"method is not useful for non-loops such as $otherPath")
+
+      isEqualUptoBasepointShiftHelper(otherPath, length(edgePath) + 1, 0)
+    }
+
+    def makeBasePointSameHelper (path : EdgePath): EdgePath = {
+        // the requirement inside makeBasePointSame should ensure that edgePath is a loop       
+        if (edgePath.initial == path.initial) path
+        else makeBasePointSame(path.shiftBasePoint)
+      }
+
+    /**
+     * Given a path otherPath shifts otherPath until it has the same basepoint as edgePath
+     */
+    def makeBasePointSame (otherPath : EdgePath) = {
+      require(edgePath.isLoop, s"method is not useful for non-loops such as $edgePath")
+      require(otherPath.isLoop, s"method is not useful for non-loops such as $otherPath")
+      
+      val sameVertices : Set[Vertex] = 
+        edgePath.verticesCovered.intersect(otherPath.verticesCovered)
+ 
+      require(sameVertices.nonEmpty, s"$edgePath and $otherPath don't have any vertices in common.")
+      makeBasePointSameHelper(otherPath)       
+    } 
+
+    /* 
+     * Given a vertex, gives the first index at which it appears in edgePath. 
+     * If not present returns None.
+     */
+    def findVertexIndex (vertex : Vertex) : Option[Int] = {
+      edgePath.reverse match {
+        case Constant(u) => if (vertex == u) Some(0) else None
+        case Append(init, last) => {
+          if (last.terminal == vertex) Some(0)
+          else init.reverse.findVertexIndex(vertex).map(n => (n + 1))
+        }
+      }
+    }
+
+    def isPrimitiveLoopHelper (accum : Set[Vertex]) : Boolean = {
+      edgePath match {
+        case Constant(v) => true
+        case Append(init, last) =>
+           if (accum.contains(last.terminal)) false
+           else init.isPrimitiveLoopHelper(accum.+(last.terminal)) 
+      }
+    }
+
+    def isPrimitiveLoop : Boolean = {
+      require(edgePath.isLoop, s"$edgePath is not a loop.")
+      edgePath.isPrimitiveLoopHelper(Set())
+    }
 }
 
 object EdgePath{
