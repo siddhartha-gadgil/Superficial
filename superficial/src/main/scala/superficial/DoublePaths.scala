@@ -102,4 +102,51 @@ object DoublePaths {
 
     (satisfyingFirstCondition ++ satisfyingSecondCondition)
   }
+
+  /**
+   * Given the left and rightmost geodesic cL and cR of c, 
+   * and another canonical geodesic d,
+   * gives the the set of crossing double paths in the set D-
+   */
+  def Negative (cL : EdgePath, cR : EdgePath, d : EdgePath, nonPosQuad : NonPosQuad) : Set[Intersection] = {
+    require(cL.isPrimitiveLoop, s"$cL is not a primitive loop")
+    require(cR.isPrimitiveLoop, s"$cR is not a primitive loop")
+    require(d.isPrimitiveLoop, s"$d is not a primitive loop")
+    require(isCanonicalGeodesicLoop(cR, nonPosQuad), s"$cR is not canonical geodesic")
+    require(isCanonicalGeodesicLoop(cL.reverse, nonPosQuad), s"inverse of $cL is not canonical geodesic")
+    require(isCanonicalGeodesicLoop(d, nonPosQuad), s"$d is not canonical geodesic")
+    require(cR.initial == cL.initial, s"$cR and $cL don't have the same initial vertex")
+
+    val cLInverse : EdgePath = cL.reverse
+    val negativeIntersections : Set[Intersection] = cLInverse.intersectionsWith(d, nonPosQuad)  
+
+    // Given a vertex finds the edge in the path ending at it
+    def findEdgeEndingAt (path : EdgePath, vertex : Vertex) : Option[Edge] = {
+      path match {
+        case Constant(v) => None
+        case Append(init, last) => {
+          if (last.terminal == vertex) Some(last)
+          else findEdgeEndingAt(init, vertex)
+        }
+      }
+    }
+
+    def condition1 (intersection : Intersection) : Boolean = {
+      val vertexAtIntersection : Vertex = 
+        edgeVectors(cLInverse)(intersection.start._1).initial
+      // Since cR is primitive there is an unique edge ending at the vertex at the intersection
+      val edgeInCR : Option[Edge] = 
+        findEdgeEndingAt(cR, vertexAtIntersection)
+      val edgeBeforeInD : Edge = 
+        edgeVectors(cLInverse)(mod(intersection.start._2 - 1, length(d)))
+      
+      edgeInCR match {
+        case None => false
+        case Some(ed) => (ed == edgeBeforeInD)
+      }
+    } 
+
+    ???
+  }
+
 }
