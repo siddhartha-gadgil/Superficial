@@ -68,7 +68,7 @@ object DoublePaths {
           val dTwoEdgeBefore  : Edge = edgeVectors(d)(mod(intersection.start._2 - 2, length(d)))
           val cREdge          : Edge = edgeVectors(cR)(intersection.start._1)
           ((cLEdgeBefore == dTwoEdgeBefore) &&
-           // spoke condtion
+           // spoke condtion -- this can be a source of error
            (dEdgeBefore.initial  == edgeVectors(cL)(indexInCL).initial) &&
            (dEdgeBefore.terminal == edgeVectors(cR)(intersection.start._1).initial) && 
            (spokes.contains(dEdgeBefore))) 
@@ -85,7 +85,7 @@ object DoublePaths {
         case Some(indexInCL) => {
           val cLEdgeAfter  : Edge = edgeVectors(cL)(indexInCL)  
           (dTwoEdgeAfter == cLEdgeAfter)
-          // spoke condtion
+          // spoke condtion -- this can be a source of error
           (dEdgeAfter.initial  == edgeVectors(cR)(intersection.start._1).initial) &&
           (dEdgeAfter.terminal == edgeVectors(cL)(indexInCL).initial) && 
           (spokes.contains(dEdgeAfter))
@@ -118,7 +118,8 @@ object DoublePaths {
     require(cR.initial == cL.initial, s"$cR and $cL don't have the same initial vertex")
 
     val cLInverse : EdgePath = cL.reverse
-    val negativeIntersections : Set[Intersection] = cLInverse.intersectionsWith(d, nonPosQuad)  
+    val negativeIntersections : Set[Intersection] = cLInverse.intersectionsWith(d, nonPosQuad) 
+    val spokes : Set[Edge] = getStairCase(cL, cR, nonPosQuad)._2 
 
     // Given a vertex finds the edge in the path ending at it
     def findEdgeEndingAt (path : EdgePath, vertex : Vertex) : Option[Edge] = {
@@ -171,6 +172,36 @@ object DoublePaths {
         case Some(ed) => (ed == edgeAfterInD)
       }
     } 
+
+    def condition3 (intersection : Intersection) : Boolean = {
+      val dTwoEdgeBefore : Edge = edgeVectors(d)(mod(intersection.start._2 - 2, length(d)))
+      val dEdgeBefore    : Edge = edgeVectors(d)(mod(intersection.start._2 - 1, length(d)))
+      val endOfSpokeInCR : Option[Int] = cR.findVertexIndex(dEdgeBefore.initial)
+      endOfSpokeInCR match {
+        case None => false
+        case Some(indexInCR) => {
+          val cREdgeBefore : Edge = edgeVectors(cR)(mod(indexInCR - 1, length(cR)))
+          (spokes.contains(dEdgeBefore) &&
+          (cREdgeBefore == dTwoEdgeBefore))
+        }
+      }
+    }
+
+    def condition4 (intersection : Intersection) : Boolean = {
+      val dTwoEdgeAfter  : Edge = edgeVectors(d)(mod(intersection.end._2 + 1, length(d)))
+      val dEdgeAfter     : Edge = edgeVectors(d)(intersection.end._2)
+      val endOfSpokeInCR : Option[Int] = cR.findVertexIndex(dEdgeAfter.terminal)
+      endOfSpokeInCR match {
+        case None => false
+        case Some(indexInCR) => {
+          val cREdgeAfter : Edge = edgeVectors(cR)(indexInCR)
+          (spokes.contains(dEdgeAfter) &&
+          (cREdgeAfter == dTwoEdgeAfter))
+        }
+      }
+    }
+
+    
 
     ???
   }
