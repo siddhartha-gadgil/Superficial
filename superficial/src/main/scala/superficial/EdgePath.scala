@@ -159,7 +159,7 @@ sealed trait EdgePath{ edgePath =>
 
       // The elements are of the form ((i,j), (u,v)) where
       // i-th and j-th edge of edgePath and otherPath have same initial vertex
-      // ut is the turn b/w (i-1)-th edge of edgePath and (j-1)-th edge of otherPath (technically their flips).
+      // u is the turn b/w (i-1)-th edge of edgePath and (j-1)-th edge of otherPath (technically their flips).
       // v is the turn b/w i-th edge of edgePath and j-th edge of otherPath 
       val intermediateInter : Set[((Int, Int), (Int, Int))] = 
         intersectionIndices.map(el => (el, giveTurnsAtIntersection(el._1, el._2)))

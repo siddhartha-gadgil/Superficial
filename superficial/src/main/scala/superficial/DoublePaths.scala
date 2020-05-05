@@ -131,6 +131,17 @@ object DoublePaths {
       }
     }
 
+    // Given a vertex finds the edge in the path starting at it
+    def findEdgeStartingAt (path : EdgePath, vertex : Vertex) : Option[Edge] = {
+      path match {
+        case Constant(v) => None
+        case Append(init, last) => {
+          if (last.initial == vertex) Some(last)
+          else findEdgeEndingAt(init, vertex)
+        }
+      }
+    }
+
     def condition1 (intersection : Intersection) : Boolean = {
       val vertexAtIntersection : Vertex = 
         edgeVectors(cLInverse)(intersection.start._1).initial
@@ -143,6 +154,21 @@ object DoublePaths {
       edgeInCR match {
         case None => false
         case Some(ed) => (ed == edgeBeforeInD)
+      }
+    }
+
+    def condition2 (intersection : Intersection) : Boolean = {
+      val vertexAtIntersection : Vertex = 
+        edgeVectors(cLInverse)(intersection.end._1).initial
+      // Since cR is primitive there is an unique edge ending at the vertex at the intersection
+      val edgeInCR : Option[Edge] = 
+        findEdgeStartingAt(cR, vertexAtIntersection)
+      val edgeAfterInD : Edge = 
+        edgeVectors(cLInverse)(intersection.end._2)
+      
+      edgeInCR match {
+        case None => false
+        case Some(ed) => (ed == edgeAfterInD)
       }
     } 
 
