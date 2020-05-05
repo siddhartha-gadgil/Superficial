@@ -117,8 +117,7 @@ object DoublePaths {
     require(isCanonicalGeodesicLoop(d, nonPosQuad), s"$d is not canonical geodesic")
     require(cR.initial == cL.initial, s"$cR and $cL don't have the same initial vertex")
 
-    val cLInverse : EdgePath = cL.reverse
-    val negativeIntersections : Set[Intersection] = cLInverse.intersectionsWith(d, nonPosQuad) 
+    val cLInverse : EdgePath = cL.reverse 
     val spokes : Set[Edge] = getStairCase(cL, cR, nonPosQuad)._2 
 
     // Given a vertex finds the edge in the path ending at it
@@ -201,9 +200,12 @@ object DoublePaths {
       }
     }
 
+    val negativeIntersections : Set[Intersection] = cLInverse.intersectionsWith(d, nonPosQuad)
+    val goodOnes              : Set[Intersection] = 
+      negativeIntersections.filterNot(el => 
+      (condition1(el) || condition2(el) || condition3(el) || condition4(el)))
     
-
-    ???
+    goodOnes
   }
 
 }
