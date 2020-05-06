@@ -94,7 +94,8 @@ object DoublePaths {
     }
 
     val zeroIntersections         : Set[Intersection] = 
-      cR.intersectionsWith(d, nonPosQuad).filter(el => (el.length == 0))
+      cR.intersectionsWith(d, nonPosQuad).filter(el => 
+        (el.length == 0)).filter(el => (el.isCrossing(cR, d, nonPosQuad)))
     val satisfyingFirstCondition  : Set[Intersection] = 
       zeroIntersections.filter(el => (condition11(el) && condition12(el)))
     val satisfyingSecondCondition : Set[Intersection] = 
@@ -200,7 +201,8 @@ object DoublePaths {
       }
     }
 
-    val negativeIntersections : Set[Intersection] = cLInverse.intersectionsWith(d, nonPosQuad)
+    val negativeIntersections : Set[Intersection] = 
+      cLInverse.intersectionsWith(d, nonPosQuad).filter(el => (el.isCrossing(cLInverse, d, nonPosQuad)))
     val goodOnes              : Set[Intersection] = 
       negativeIntersections.filterNot(el => 
       (condition1(el) || condition2(el) || condition3(el) || condition4(el)))
@@ -208,4 +210,26 @@ object DoublePaths {
     goodOnes
   }
 
+  /**
+   * Calculates the geometric intersection numbers of two primitive curves.
+   */
+  def geometricIntersection (c : EdgePath, d : EdgePath, nonPosQuad : NonPosQuad) : Int = {
+    require(c.isPrimitiveLoop, s"$c is not a primitive loop")
+    require(d.isPrimitiveLoop, s"$d is not a primitive loop")
+
+    val cR : EdgePath = canoniciseLoop(c, nonPosQuad)
+    val cL : EdgePath = canoniciseLoop(c.reverse, nonPosQuad).reverse
+    val dR : EdgePath = canoniciseLoop(d, nonPosQuad)
+
+    require(isCanonicalGeodesicLoop(cR, nonPosQuad), s"$cR is not canonical geodesic")
+    require(isCanonicalGeodesicLoop(cL.reverse, nonPosQuad), s"inverse of $cL is not canonical geodesic")
+    require(isCanonicalGeodesicLoop(dR, nonPosQuad), s"$dR is not canonical geodesic")
+
+    val cL1 : EdgePath = cR.makeBasePointSame(cL)
+    val DPositive : Set[Intersection] = Positive(cR, dR, nonPosQuad)
+    val DZero     : Set[Intersection] = Zero(cL1, cR, dR, nonPosQuad)
+    val DNegative : Set[Intersection] = Negative(cL1, cR, dR, nonPosQuad)
+
+    (DPositive.size + DZero.size + DNegative.size)
+  }
 }
