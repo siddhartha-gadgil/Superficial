@@ -188,7 +188,9 @@ sealed trait EdgePath{ edgePath =>
       }
       else {
         val vect = (edgePath.selfIntersection(nonposQuad)).toVector
-        (vect.filter((x: Intersection) => ((x.getSign(edgePath, loop, nonposQuad)) == sign))).
+        val leftmostPath = canoniciseLoop(edgePath, nonposQuad)
+        val rightmostPath = (canoniciseLoop(edgePath.reverse, nonposQuad)).reverse
+        (vect.filter((x: Intersection) => ((x.getSign(leftmostPath, rightmostPath, nonposQuad)) == sign))).
         map((x: Intersection)=> (x.start, x.end))
       }
         
