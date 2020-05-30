@@ -159,7 +159,7 @@ sealed trait EdgePath{ edgePath =>
 
       // The elements are of the form ((i,j), (u,v)) where
       // i-th and j-th edge of edgePath and otherPath have same initial vertex
-      // ut is the turn b/w (i-1)-th edge of edgePath and (j-1)-th edge of otherPath (technically their flips).
+      // u is the turn b/w (i-1)-th edge of edgePath and (j-1)-th edge of otherPath (technically their flips).
       // v is the turn b/w i-th edge of edgePath and j-th edge of otherPath 
       val intermediateInter : Set[((Int, Int), (Int, Int))] = 
         intersectionIndices.map(el => (el, giveTurnsAtIntersection(el._1, el._2)))
@@ -167,6 +167,15 @@ sealed trait EdgePath{ edgePath =>
         intermediateInter.map(el => Intersection.apply(el._1, el._1, el._2._1, el._2._2)).toVector
       val merged : Set[Intersection] = Intersection.mergeAll(unmerged, thisLength, thatLength).toSet   
       merged
+    }
+
+    /**
+     * Gives self intersections with signs.
+     */
+    def selfIntersection (nonposQuad : NonPosQuad) : Set[Intersection] = {
+      val leftmostPath = canoniciseLoop(edgePath, nonposQuad)
+      val rightmostPath = (canoniciseLoop(edgePath.reverse, nonposQuad)).reverse
+      leftmostPath.intersectionsWith(rightmostPath, nonposQuad)
     }
 
     /**
@@ -277,18 +286,7 @@ sealed trait EdgePath{ edgePath =>
       */
     def selfAIN(path: EdgePath, nonposQuad: NonPosQuad): Int = {
       edgePath.AIN(edgePath, nonposQuad)
-    }
-
-
-    /**
-     * Gives self intersections with signs.
-     */
-    def selfIntersection (nonposQuad : NonPosQuad) : Set[Intersection] = {
-      val leftmostPath = canoniciseLoop(edgePath, nonposQuad)
-      val rightmostPath = (canoniciseLoop(edgePath.reverse, nonposQuad)).reverse
-      leftmostPath.intersectionsWith(rightmostPath, nonposQuad)
-    }
-      
+    }      
 
     /**
       * Checks whether two paths are homotopic fixing endpoints
@@ -339,6 +337,74 @@ sealed trait EdgePath{ edgePath =>
           case Append(init1, last1) => checkSameCanonicalLoop(canonical1, canonical2)
         }
       }
+    }
+
+    def isEqualUptoBasepointShiftHelper (otherPath : EdgePath, remains : Int, current : Int) : (Boolean, Int) = {
+      // the requirement inside isEqualUptoBasepointShift should ensure that both edgePath and otherPath
+      // are loops    
+      if (remains < 0) (false, 0)
+      else if (edgePath == otherPath) (true, current)
+      else isEqualUptoBasepointShiftHelper(otherPath.shiftBasePoint, remains - 1, current + 1)
+    }
+
+    /**
+     * Checks if otherPath is equal to edgePath upto shift of basepoint.
+     * Should return (true, n) if otherPath after n shifts of basepoints is equal to edgePath
+     */
+    def isEqualUptoBasepointShift (otherPath : EdgePath) : (Boolean, Int) = {
+
+      require(edgePath.isLoop, s"method is not useful for non-loops such as $edgePath")
+      require(otherPath.isLoop, s"method is not useful for non-loops such as $otherPath")
+
+      isEqualUptoBasepointShiftHelper(otherPath, length(edgePath) + 1, 0)
+    }
+
+    def makeBasePointSameHelper (path : EdgePath): EdgePath = {
+        // the requirement inside makeBasePointSame should ensure that edgePath is a loop       
+        if (edgePath.initial == path.initial) path
+        else makeBasePointSame(path.shiftBasePoint)
+      }
+
+    /**
+     * Given a path otherPath shifts otherPath until it has the same basepoint as edgePath
+     */
+    def makeBasePointSame (otherPath : EdgePath) = {
+      require(edgePath.isLoop, s"method is not useful for non-loops such as $edgePath")
+      require(otherPath.isLoop, s"method is not useful for non-loops such as $otherPath")
+      
+      val sameVertices : Set[Vertex] = 
+        edgePath.verticesCovered.intersect(otherPath.verticesCovered)
+ 
+      require(sameVertices.nonEmpty, s"$edgePath and $otherPath don't have any vertices in common.")
+      makeBasePointSameHelper(otherPath)       
+    } 
+
+    /* 
+     * Given a vertex, gives the first index at which it appears in edgePath. 
+     * If not present returns None.
+     */
+    def findVertexIndex (vertex : Vertex) : Option[Int] = {
+      edgePath.reverse match {
+        case Constant(u) => if (vertex == u) Some(0) else None
+        case Append(init, last) => {
+          if (last.terminal == vertex) Some(0)
+          else init.reverse.findVertexIndex(vertex).map(n => (n + 1))
+        }
+      }
+    }
+
+    def isPrimitiveLoopHelper (accum : Set[Vertex]) : Boolean = {
+      edgePath match {
+        case Constant(v) => true
+        case Append(init, last) =>
+           if (accum.contains(last.terminal)) false
+           else init.isPrimitiveLoopHelper(accum.+(last.terminal)) 
+      }
+    }
+
+    def isPrimitiveLoop : Boolean = {
+      require(edgePath.isLoop, s"$edgePath is not a loop.")
+      edgePath.isPrimitiveLoopHelper(Set())
     }
 }
 
@@ -726,7 +792,7 @@ object EdgePath{
 
     def shiftRightwards(e1: Edge, e2: Edge, nonposQuad: NonPosQuad): Vector[Edge] = {
       val quad = findQuad(e1, e2, nonposQuad)
-      val edgeVect = (quad.edges - (e1, e1.flip, e2, e2.flip)).toVector
+      val edgeVect = (quad.edges -- Set(e1, e1.flip, e2, e2.flip)).toVector
       val initVect = (edgeVect.flatMap(x => Vector(x, x.flip)))
       val tryVect = initVect.flatMap(x => initVect.map((x, _)).filter(x => x._1.terminal == x._2.initial))
       val rightVect = tryVect.filter(x => ((nonposQuad.turnIndex(x._1, x._2) == 1) && (x._1.initial == e1.initial)))

@@ -4,7 +4,7 @@ import SvgPlot._
 import scala.xml._
 import math._
 
-class QuadPlot(val genus: Int, radius: Double = 200) {
+class QuadPlot(val genus: Int, radius: Double = 200, shift: Double = 0.1) {
   def vertexPosition(k: Int): (Double, Double) =
     (
       1.5 * radius + (radius * cos(2 * Pi * k.toDouble / (4 * genus))),
@@ -64,26 +64,33 @@ class QuadPlot(val genus: Int, radius: Double = 200) {
   def quadEdges(path: EdgePath): Vector[Quadrangulation.QuadEdge] =
     EdgePath.edgeVectors(path).collect { case qp @ QuadEdge(F, n, _) => qp }
 
-  def edgeLine(qe: QuadEdge, index: Int, length: Int, shift: Double) : Vector[Elem] = {
+  def edgeLine(qe: QuadEdge, index: Int, length: Int, shift: Double, strokeArray: Option[String]) : Vector[Elem] = {
     val (bIndex, vIndex) =
       if (qe.positivelyOriented) (index, (index + 1) % length) else ((index + 1) % length, index)
     val (bx, by) = perturbedCentre(bIndex, shift)
     val (vx, vy) = vertexPosition(qe.index)
     val colour = shiftColour(vIndex)
     if (qe.positivelyOriented)
-      lineArrow(bx, by, vx, vy, colour, index.toString())
-    else lineArrow(vx, vy, bx, by, colour, index.toString())
+      lineArrow(bx, by, vx, vy, colour, index.toString(), strokeArray)
+    else lineArrow(vx, vy, bx, by, colour, index.toString(), strokeArray)
   }
 
-  def vecEdgeLines(qes: Vector[QuadEdge], index: Int, length: Int, shift: Double) : Vector[Elem] = 
+  def vecEdgeLines(qes: Vector[QuadEdge], index: Int, length: Int, shift: Double, strokeArray: Option[String]) : Vector[Elem] = 
     qes match {
         case Vector() => Vector()
-        case head +: tail => edgeLine(head, index, length, shift) ++ vecEdgeLines(tail, (index + 1) % length, length, shift)
+        case head +: tail => edgeLine(head, index, length, shift, strokeArray) ++ vecEdgeLines(tail, (index + 1) % length, length, shift, strokeArray)
     }
 
-  def quadEdgeLines(path: EdgePath, shift: Double) =
-    vecEdgeLines(quadEdges(path), 0, EdgePath.length(path), shift)
+  def quadEdgeLines(path: EdgePath, shift: Double, strokeArray: Option[String]) =
+    vecEdgeLines(quadEdges(path), 0, EdgePath.length(path), shift, strokeArray)
 
-  def quadEdgeSVG(path: EdgePath, shift: Double = 0.1) = 
-    svgPlot(sides.toVector ++ quadEdgeLines(path, shift), 3 * radius, 3 * radius)  
+  def quadEdgeSVG(paths: EdgePath*) = {
+    val lines = paths.toVector.zipWithIndex.map{
+        case (p, n) =>
+        val str = if (n == 0) None else Some((3 * n).toString) 
+        quadEdgeLines(p, shift * (1 + (0.7 * n)), str)
+    }.foldLeft(sides)(_ ++ _)
+    //sides.toVector ++ quadEdgeLines(path, shift, None)
+    svgPlot(lines , 3 * radius, 3 * radius)  
+  }
 }
