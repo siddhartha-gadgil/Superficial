@@ -404,6 +404,30 @@ sealed trait EdgePath{ edgePath =>
       require(edgePath.isLoop, s"$edgePath is not a loop.")
       edgePath.isPrimitiveLoopHelper(Set())
     }
+
+    def breakIntoPrimitiveLoopHelper (center : Vertex, current : EdgePath, accum : Vector[EdgePath])
+      : Vector[EdgePath] = {
+      edgePath.reverse match {
+        case Constant(v) => accum
+        case Append(init, last) => {
+          if (last.initial == center) {
+            init.reverse.breakIntoPrimitiveLoopHelper(center, Constant(center), accum :+ (current.+(last.flip)))
+          }
+          else {
+            init.reverse.breakIntoPrimitiveLoopHelper(center, current.+(last.flip), accum)
+          }
+        }  
+      }
+      }  
+
+    def breakIntoPrimitiveLoops : Vector[EdgePath] = {
+      require(edgePath.isLoop, s"$edgePath is not a loop, hence can not be broken into smaller loops")
+      val center : Vertex = edgePath.initial
+      val primitiveLoops = breakIntoPrimitiveLoopHelper(center, Constant(center), Vector())
+      assert(primitiveLoops.forall(_.isPrimitiveLoop),
+        s"Not all loops in the result of breakIntoPrimitiveLoops is a primitive loop")
+      primitiveLoops
+    }
 }
 
 object EdgePath{
