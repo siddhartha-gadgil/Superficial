@@ -812,11 +812,8 @@ object EdgePath{
         canoniciseVectorLoop(newVect, nonposQuad)
       }
     }
-      
-    def canoniciseLoop(loop: EdgePath, nonposQuad: NonPosQuad): EdgePath = {
-      require(loop.isLoop, s"The path $loop is not a loop")
-      val edgeVect = edgeVectors(loop)
-      def canoniciseLoopHelper(loop: EdgePath, n: Int, nonposQuad: NonPosQuad): EdgePath = {
+
+    def canoniciseLoopHelper(loop: EdgePath, n: Int, nonposQuad: NonPosQuad): EdgePath = {
         if (n<=0) loop
         else {
           loop match {
@@ -833,6 +830,11 @@ object EdgePath{
           
         }
       }
+      
+    def canoniciseLoop(loop: EdgePath, nonposQuad: NonPosQuad): EdgePath = {
+      require(loop.isLoop, s"The path $loop is not a loop")
+      val edgeVect = edgeVectors(loop)
+      
       canoniciseLoopHelper(loop, length(loop)+2, nonposQuad)
     }
     
