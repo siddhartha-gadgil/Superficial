@@ -379,7 +379,7 @@ sealed trait EdgePath{ edgePath =>
       makeBasePointSameHelper(otherPath)       
     } 
 
-    /* 
+    /** 
      * Given a vertex, gives the first index at which it appears in edgePath. 
      * If not present returns None.
      */
@@ -402,32 +402,46 @@ sealed trait EdgePath{ edgePath =>
       }
     }
 
+    /**
+     * Given a loop checks if the loop is primitive.
+     */
     def isPrimitiveLoop : Boolean = {
       require(edgePath.isLoop, s"$edgePath is not a loop.")
       edgePath.isPrimitiveLoopHelper(Set())
     }
 
+    /**
+     * Helper method for breakIntoPrimitiveLoops.
+     * Notice that in the code current is built in the opposite way in which edgepath is consumed.
+     */
     def breakIntoPrimitiveLoopHelper (center : Vertex, current : EdgePath, accum : Vector[EdgePath])
       : Vector[EdgePath] = {
-      edgePath.reverse match {
-        case Constant(v) => accum
-        case Append(init, last) => {
-          if (last.initial == center) {
-            init.reverse.breakIntoPrimitiveLoopHelper(center, Constant(center), accum :+ (current.+(last.flip)))
+        edgePath match {
+          case Constant(vertex) => accum 
+          case Append(init,last) => { 
+            if (last.initial == center) { 
+              init.breakIntoPrimitiveLoopHelper(center, Constant(center), accum :+ (Append(current, last.flip)))
+            }
+            else {
+              init.breakIntoPrimitiveLoopHelper(center, Append(current, last.flip), accum)
+            }
           }
-          else {
-            init.reverse.breakIntoPrimitiveLoopHelper(center, current.+(last.flip), accum)
-          }
-        }  
-      }
+        }    
       }  
 
+    /**
+     * Breaks a loop into primitive loops.
+     */
     def breakIntoPrimitiveLoops : Vector[EdgePath] = {
       require(edgePath.isLoop, s"$edgePath is not a loop, hence can not be broken into smaller loops")
       val center : Vertex = edgePath.initial
-      val primitiveLoops = breakIntoPrimitiveLoopHelper(center, Constant(center), Vector())
+      // Because the helper method actually builds the primitive loop in
+      // reverse direction of the edgePath we have to pass edgePath.reverse to it
+      val primitiveLoops = edgePath.reverse.breakIntoPrimitiveLoopHelper(center, Constant(center), Vector())
       assert(primitiveLoops.forall(_.isPrimitiveLoop),
         s"Not all loops in the result of breakIntoPrimitiveLoops is a primitive loop")
+      assert(((primitiveLoops.length == 0) || (combinePaths(primitiveLoops) == edgePath)),
+        s"The result of breakIntoPrimitiveLoops don't add upto $edgePath")  
       primitiveLoops
     }
 }
@@ -891,6 +905,14 @@ object EdgePath{
       isCanonicalGeodesicLoopHelper(loop, length(loop)+2, nonposQuad) && isGeodesic(loop, nonposQuad)
     }
 
+    /**
+     * combines edgePaths in a vector of paths to build a edgePath
+     */
+    def combinePaths (pathVect : Vector[EdgePath]) : EdgePath = {
+      require (pathVect.length >= 1, s"The argument $pathVect to combinePaths is a empty vector")
+      apply(pathVect.flatMap(p => edgeVectors(p)))
+    }
+ 
 }
 
 /*
