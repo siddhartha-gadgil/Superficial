@@ -105,7 +105,7 @@ object ProofFinder {
       }
     )
 
-  implicit val ec = ExecutionContext.global
+  // implicit val ec = ExecutionContext.global
 
   def makeSeq(n: Int, target: Word, preCalcs: Word*): Vector[(Word, Int)] =
     preCalcs.toVector.flatMap(w => (1 to n).toVector.map(j => w -> j)) ++

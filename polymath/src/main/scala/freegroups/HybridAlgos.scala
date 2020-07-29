@@ -95,11 +95,18 @@ object HybridAlgos {
       threshold: Int,
       sampleSize: Int,
       maximize: Boolean = false
-  ): Task[Double] = {
+  ): Task[(Double, Double)] = {
     val ws = (1 to sampleSize).map(_ => ProofFinder.randomWord(length).reduce)
+    val values = ws.map(w => (recNorm(w, threshold, maximize).map(a => a/ length)).memoize)
     val total =
-      Task.gather(ws.map(w => recNorm(w, threshold, maximize))).map(_.sum)
-    total.map(t => t / (sampleSize * length))
+      Task.gather(values).map(_.sum)
+    val totalSquare = Task.gather(values).map(v =>  v.map(x => x * x).sum) 
+    Task.parMap2(total, totalSquare){
+        case (sum, sumOfSquares) =>
+            val mean = sum / sampleSize
+            val variance = (sumOfSquares / sampleSize) - (mean * mean)
+            (mean, math.sqrt(variance))
+    }
   }
 
   def averageList(step: Int, sampleSize: Int = 100) =
