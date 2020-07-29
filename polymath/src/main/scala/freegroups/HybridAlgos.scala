@@ -97,10 +97,30 @@ object HybridAlgos {
       maximize: Boolean = false
   ): Task[(Double, Double)] = {
     val ws = (1 to sampleSize).map(_ => ProofFinder.randomWord(length).reduce)
-    val values = ws.map(w => (recNorm(w, threshold, maximize).map(a => a/ length)).memoize)
+    val values = Task.gather(ws.map(w => (recNorm(w, threshold, maximize).map(a => a/ length)))).memoize
     val total =
-      Task.gather(values).map(_.sum)
-    val totalSquare = Task.gather(values).map(v =>  v.map(x => x * x).sum) 
+      values.map(_.sum)
+    val totalSquare = values.map(v =>  v.map(x => x * x).sum) 
+    Task.parMap2(total, totalSquare){
+        case (sum, sumOfSquares) =>
+            val mean = sum / sampleSize
+            val variance = (sumOfSquares / sampleSize) - (mean * mean)
+            (mean, math.sqrt(variance))
+    }
+  }
+
+  def branchedAverage(
+      length: Int,
+      threshold: Int,
+      sampleSize: Int,
+      depth: Int,
+      extraBranches: Int
+  ): Task[(Double, Double)] = {
+    val ws = (1 to sampleSize).map(_ => ProofFinder.randomWord(length).reduce)
+    val values = Task.gather(ws.map(w => (branchedNorm(w, threshold, depth, extraBranches).map(a => a/ length)))).memoize
+    val total =
+      values.map(_.sum)
+    val totalSquare = values.map(v =>  v.map(x => x * x).sum) 
     Task.parMap2(total, totalSquare){
         case (sum, sumOfSquares) =>
             val mean = sum / sampleSize
