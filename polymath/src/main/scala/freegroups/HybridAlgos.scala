@@ -34,12 +34,18 @@ object HybridAlgos{
         }
     }
 
-    def averageActual(length: Int, sample: Int) : Task[Double] = {
-        val ws = (1 to sample).map(_ => ProofFinder.randomWord(length))
+    def averageActual(length: Int, sampleSize: Int) : Task[Double] = {
+        val ws = (1 to sampleSize).map(_ => ProofFinder.randomWord(length).reduce)
         val total = Task.gather(ws.map(w => normTask(w.ls))).map(_.sum)
-        total.map(t => t / (sample * length))
+        total.map(t => t / (sampleSize * length))
     }
 
-    def averageList(step: Int, sample: Int = 100) = 
-        LazyList.from(1).map(_ * step).map{n => n -> averageActual(n, sample).runToFuture}
+    def averageHybrid(length: Int, threshold: Int, sampleSize: Int, maximize: Boolean = false) : Task[Double] = {
+        val ws = (1 to sampleSize).map(_ => ProofFinder.randomWord(length).reduce)
+        val total = Task.gather(ws.map(w => recNorm(w, threshold, maximize))).map(_.sum)
+        total.map(t => t / (sampleSize * length))
+    }
+
+    def averageList(step: Int, sampleSize: Int = 100) = 
+        LazyList.from(1).map(_ * step).map{n => n -> averageActual(n, sampleSize).runToFuture}
 }
