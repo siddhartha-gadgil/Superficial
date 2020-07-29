@@ -48,7 +48,7 @@ object HybridAlgos {
     if (n < 1 || s.isEmpty) accum
     else {
       val choice = s.toVector(rnd.nextInt(n))
-      choose(s - choice, n - 1, accum)
+      choose(s - choice, n - 1, accum + choice)
     }
   }
 
