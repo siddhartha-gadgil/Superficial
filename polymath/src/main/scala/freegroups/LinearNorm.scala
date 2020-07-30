@@ -11,10 +11,13 @@ import scala.util.Random
 object LinearNorm {
   val memoNorm: mMap[Vector[Int], Double] = mMap()
 
+  var memoLimit: Option[Int] = None
+
   def update(word: Vector[Int], res: Double) = {
     val size = word.length
-    memoNorm += word -> res
+    if (memoLimit.map(b => size <= b).getOrElse(true)) memoNorm += word -> res
   }
+
 
   def power(v: Vector[Int], n: Int) : Vector[Int] = 
     if (n == 0) Vector()
