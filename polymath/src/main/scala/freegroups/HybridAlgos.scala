@@ -96,15 +96,19 @@ object HybridAlgos {
       maximize: Boolean = false
   ): Task[(Double, Double)] = {
     val ws = (1 to sampleSize).map(_ => ProofFinder.randomWord(length).reduce)
-    val values = Task.gather(ws.map(w => (recNorm(w, threshold, maximize).map(a => a/ length)))).memoize
+    val values = Task
+      .gather(
+        ws.map(w => (recNorm(w, threshold, maximize).map(a => a / length)))
+      )
+      .memoize
     val total =
       values.map(_.sum)
-    val totalSquare = values.map(v =>  v.map(x => x * x).sum) 
-    Task.parMap2(total, totalSquare){
-        case (sum, sumOfSquares) =>
-            val mean = sum / sampleSize
-            val variance = (sumOfSquares / sampleSize) - (mean * mean)
-            (mean, math.sqrt(variance))
+    val totalSquare = values.map(v => v.map(x => x * x).sum)
+    Task.parMap2(total, totalSquare) {
+      case (sum, sumOfSquares) =>
+        val mean = sum / sampleSize
+        val variance = (sumOfSquares / sampleSize) - (mean * mean)
+        (mean, math.sqrt(variance))
     }
   }
 
@@ -113,18 +117,29 @@ object HybridAlgos {
       threshold: Int,
       sampleSize: Int,
       depth: Int,
-      extraBranches: Int
+      extraBranches: Int,
+      clearSize: Option[Int] = None
   ): Task[(Double, Double)] = {
     val ws = (1 to sampleSize).map(_ => ProofFinder.randomWord(length).reduce)
-    val values = Task.gather(ws.map(w => (branchedNorm(w, threshold, depth, extraBranches).map(a => a/ length)))).memoize
+    val values = Task
+      .sequence(
+        ws.map { w =>
+          val pT = (branchedNorm(w, threshold, depth, extraBranches)
+            .map(a => a / length)).memoize
+          pT.foreach(p => println(s"proportion obtained: $p"))
+          clearSize.foreach(n => LinearNorm.clearMap(n))
+          pT
+        }
+      )
+      .memoize
     val total =
       values.map(_.sum)
-    val totalSquare = values.map(v =>  v.map(x => x * x).sum) 
-    Task.parMap2(total, totalSquare){
-        case (sum, sumOfSquares) =>
-            val mean = sum / sampleSize
-            val variance = (sumOfSquares / sampleSize) - (mean * mean)
-            (mean, math.sqrt(variance))
+    val totalSquare = values.map(v => v.map(x => x * x).sum)
+    Task.parMap2(total, totalSquare) {
+      case (sum, sumOfSquares) =>
+        val mean = sum / sampleSize
+        val variance = (sumOfSquares / sampleSize) - (mean * mean)
+        (mean, math.sqrt(variance))
     }
   }
 
