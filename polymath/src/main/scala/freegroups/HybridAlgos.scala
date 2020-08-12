@@ -73,7 +73,6 @@ object HybridAlgos {
           val head = Word(w.ls.take(i))
           val tail = Word(w.ls.drop(j + 1))
           val mid = Word(w.ls.take(j).drop(i + 1))
-          // println(s"$w becomes $head, $mid, $tail split at ($i : ${Word(Vector(w.ls(i)))}, $j : ${Word(Vector(w.ls(j)))})")
           Task.parMap3(
             branchedNorm(head, threshold, depth - 1, extraBranches),
             branchedNorm(tail, threshold, depth - 1, extraBranches),

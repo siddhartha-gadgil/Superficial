@@ -1,7 +1,7 @@
 package freegroups
 
 
-import scala.collection.mutable.{Map => mMap}
+import scala.collection.mutable
 
 
 import LinNormBound._, LinearNorm._
@@ -11,7 +11,7 @@ import annotation.tailrec
 object LinearNormSyncProofs {
 
 
-  val memoNormProof: mMap[Word, LinNormBound] = mMap()
+  val memoNormProof: mutable.Map[Word, LinNormBound] = mutable.Map()
 
   def justSave(w: Word, pf: LinNormBound) = {
     memoNormProof += (w -> pf)
