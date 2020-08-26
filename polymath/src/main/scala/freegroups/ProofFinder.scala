@@ -2,7 +2,7 @@ package freegroups
 
 import monix.eval._, monix.tail._, cats.implicits._
 
-// import scala.collection.mutable.{Map => mMap}
+// import scala.collection.mutable
 
 import monix.execution.Scheduler.Implicits.global
 
@@ -19,7 +19,7 @@ object ProofScript extends App {
   val t20 = egTask(20)
   val f20 = t20.runToFuture
   f20.foreach { norms =>
-    val normData = NormData(memMap, norms)
+    val normData = NormData(mMap, norms)
     val proofOpt = quickProof(Word("aba!b!"), normData)
     proofOpt.foreach { proof =>
       Console.err.println("\n")
@@ -71,7 +71,7 @@ object ProofFinder {
     val t20 = egTask(20)
     val f20 = t20.runToFuture
     f20.map { norms =>
-      val normData = NormData(memMap, norms)
+      val normData = NormData(mMap, norms)
       quickProof(Word("aba!b!"), normData).getOrElse(LinNormBound.Empty)
     }
   }
@@ -105,7 +105,7 @@ object ProofFinder {
       }
     )
 
-  implicit val ec = ExecutionContext.global
+  // implicit val ec = ExecutionContext.global
 
   def makeSeq(n: Int, target: Word, preCalcs: Word*): Vector[(Word, Int)] =
     preCalcs.toVector.flatMap(w => (1 to n).toVector.map(j => w -> j)) ++
@@ -115,7 +115,7 @@ object ProofFinder {
 
   def egTask(n: Int) = homogeneityTask(egSeq(n))
 
-  def memMap: Map[Word, Double] =
+  def mMap: Map[Word, Double] =
     memoNorm.map { case (v, x) => Word(v) -> x }.toMap ++ Map(
       Word("a") -> 1.0,
       Word("a!") -> 1.0,

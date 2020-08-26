@@ -2,7 +2,7 @@ package freegroups
 
 import monix.eval._, monix.tail._, cats.implicits._
 
-import scala.collection.mutable.{Map => mMap}
+import scala.collection.mutable
 
 import monix.execution.Scheduler.Implicits.global
 
@@ -11,7 +11,7 @@ import LinNormBound._
 import annotation.tailrec
 
 object LinearNormProofs {
-  val memoNormProof: mMap[Word, LinNormBound] = mMap()
+  val memoNormProof: mutable.Map[Word, LinNormBound] = mutable.Map()
 
   def justSave(w: Word, pf: LinNormBound) = {
     memoNormProof += (w -> pf)

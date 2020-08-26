@@ -2,19 +2,26 @@ package freegroups
 
 import monix.eval._, monix.tail._, cats.implicits._
 
-import scala.collection.mutable.{Map => mMap}
+import scala.collection.mutable
 
 import monix.execution.Scheduler.Implicits.global
 
 import scala.util.Random
 
 object LinearNorm {
-  val memoNorm: mMap[Vector[Int], Double] = mMap()
+  val memoNorm: mutable.Map[Vector[Int], Double] = mutable.Map()
+
+  var memoLimit: Option[Int] = None
 
   def update(word: Vector[Int], res: Double) = {
     val size = word.length
-    memoNorm += word -> res
+    if (memoLimit.map(b => size <= b).getOrElse(true)) memoNorm += word -> res
   }
+
+  def clearMap(limit: Int) = memoNorm.filterInPlace{
+    case (k, _) => k.size <= limit
+  }
+
 
   def power(v: Vector[Int], n: Int) : Vector[Int] = 
     if (n == 0) Vector()

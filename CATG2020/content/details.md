@@ -29,7 +29,11 @@ Grades will based entirely on contributions to the repository [Superficial](http
 2. Only pull requests that pass all tests will be merged.
 3. Please update your report with a brief account of what you have implemented.
 
-The deadline for the second midterm, worth 20% of the total score, is __6:00 am on March 31, 2020__. Note that this is one day before the date for dropping courses __with__ mention in transcript.
+The deadline for the second midterm, worth 20% of the total score, is __6:00 am on June 14, 2020__. Note that this is one day before the revised date for dropping courses __without__ mention in transcript, as per the revised schedule. 
+
+The deadline for the final submission is 6:00 a.m. on June 20, 2020. This is the first day of the final examination in the revised schedule.
+
+__Note:__ The schedule of classes in IISc is likely to be revised again, however the above dates __will not be revised__.
 
 ##### Timings and Venues
 
