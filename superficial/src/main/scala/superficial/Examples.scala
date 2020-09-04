@@ -53,6 +53,7 @@ object Examples {
   
 }
 
+/*Sphere with n and Surface with given genus and boundary components.*/
 trait sphereWithHoles {
   def generateComplex (numberOfHoles: Int): TwoComplex
 }
