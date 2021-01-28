@@ -97,7 +97,7 @@ object sphereWithHoles {
 
     val EdgeRelations = (RelationsA++RelationsB++RelationsE).toList
 
-    TwoComplex.symbolic(boundaryVertices:_*)(EdgeRelations:_*)(("p1",SeqUp), ("p2",SeqDown))
+    TwoComplex.symbolic(boundaryVertices.toIndexedSeq:_*)(EdgeRelations.toIndexedSeq:_*)(("p1",SeqUp.toIndexedSeq), ("p2",SeqDown.toIndexedSeq))
   }
 }
 
@@ -166,7 +166,7 @@ object surfaceWithBoundary{
     val duals = duals1.map(List(_)).zipAll(duals2.map(List(_)), Nil, Nil).flatMap(Function.tupled(_ ::: _)).toSeq
     val boundarySeq = initHas++duals
 
-    TwoComplex.symbolic(VertexList:_*)(SumRelations:_*)("P" -> boundarySeq)
+    TwoComplex.symbolic(VertexList.toIndexedSeq:_*)(SumRelations.toIndexedSeq:_*)("P" -> boundarySeq)
     
   }
 }

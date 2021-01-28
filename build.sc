@@ -4,7 +4,7 @@ import ammonite.ops._
 import $ivy.`org.eclipse.jgit:org.eclipse.jgit:3.5.0.201409260305-r`
 
 trait CommonModule extends ScalaModule {
-  def scalaVersion = "2.13.1"
+  def scalaVersion = "2.13.4"
 
   def scalacOptions = Seq("-deprecation")
 }
@@ -16,16 +16,16 @@ def glog = {
   val builder = new FileRepositoryBuilder()
   val repo = builder.findGitDir(new File(".")).readEnvironment(). build()
   val git = new api.Git(repo)
-  import scala.collection.JavaConversions._
-  git.log().call().head
+  import scala.jdk.CollectionConverters._
+  git.log().call().asScala.head
 }
 
 object superficial extends CommonModule with SbtModule{
   def scalaJSVersion = "0.6.32"
 
   def ivyDeps = Agg(
-    ivy"org.scala-lang.modules::scala-xml:1.2.0",
-    ivy"com.lihaoyi::fastparse:2.2.2"
+    ivy"org.scala-lang.modules::scala-xml:1.3.0",
+    ivy"com.lihaoyi::fastparse:2.3.0"
   )
 
   def bin() : define.Command[PathRef] = T.command {
@@ -50,15 +50,15 @@ object superficial extends CommonModule with SbtModule{
   }
 
   object test extends Tests {
-    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.1")
+    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.7")
     def testFrameworks = Seq("utest.runner.Framework")
   }
 }
 
 object freegroups extends CommonModule with SbtModule {
   def ivyDeps = Agg(
-    ivy"io.monix::monix:3.1.0",
-    ivy"org.typelevel::spire:0.17.0-M1"
+    ivy"io.monix::monix:3.3.0",
+    ivy"org.typelevel::spire:0.17.0"
   )
 
   override def mainClass = Some("freegroups.ProofScript")
@@ -66,9 +66,9 @@ object freegroups extends CommonModule with SbtModule {
 
 object polymath extends CommonModule with SbtModule {
   def ivyDeps = Agg(
-    ivy"io.monix::monix:3.1.0",
-    ivy"org.typelevel::spire:0.17.0-M1",
-    ivy"com.lihaoyi::pprint::0.5.6"
+    ivy"io.monix::monix:3.3.0",
+    ivy"org.typelevel::spire:0.17.0",
+    ivy"com.lihaoyi::pprint::0.6.0"
   )
 
   override def mainClass = Some("freegroups.ProofScript")
