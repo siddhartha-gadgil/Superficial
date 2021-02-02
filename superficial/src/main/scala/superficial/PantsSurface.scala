@@ -47,10 +47,10 @@ case class BoundaryEdge(
 ) extends OrientedEdge {
   lazy val flip = BoundaryEdge(pb, top, !positivelyOriented)
   lazy val terminal: BoundaryVertex =
-    BoundaryVertex(pb, positivelyOriented)
+    BoundaryVertex(pb, !positivelyOriented)
 
   lazy val initial: BoundaryVertex =
-    BoundaryVertex(pb, !positivelyOriented)
+    BoundaryVertex(pb, positivelyOriented)
 
 }
 
@@ -117,8 +117,12 @@ object Hexagon {
   }
 }
 
-case class PantsSeam(pants: Index, initial: Vertex, terminal: Vertex, positivelyOriented: Boolean = true)
-    extends OrientedEdge {
+case class PantsSeam(
+    pants: Index,
+    initial: Vertex,
+    terminal: Vertex,
+    positivelyOriented: Boolean = true
+) extends OrientedEdge {
   lazy val flip = PantsSeam(pants, terminal, initial, !positivelyOriented)
 }
 
@@ -138,7 +142,12 @@ case class Curve(left: PantsBoundary, right: PantsBoundary) {
 
 import SkewCurve._
 
-case class SkewCurve(left: PantsBoundary, right: PantsBoundary, twist: Double, length: Double) {
+case class SkewCurve(
+    left: PantsBoundary,
+    right: PantsBoundary,
+    twist: Double,
+    length: Double
+) {
   curve =>
 
   def base = Curve(left, right)
@@ -226,18 +235,27 @@ case class SkewCurve(left: PantsBoundary, right: PantsBoundary, twist: Double, l
 object SkewCurve {
   def mod1(x: Double) = x - math.floor(x)
 
-  def untwisted(c: Curve, length: Double = 1) = SkewCurve(c.left, c.right, 0, length)
+  def untwisted(c: Curve, length: Double = 1) =
+    SkewCurve(c.left, c.right, 0, length)
 
-  def enumerate(c: Curve, twists: Vector[Double], lengths: Vector[Double]) : Vector[SkewCurve] = 
+  def enumerate(
+      c: Curve,
+      twists: Vector[Double],
+      lengths: Vector[Double]
+  ): Vector[SkewCurve] =
     for {
       t <- twists
       l <- lengths
     } yield SkewCurve(c.left, c.right, t, l)
 
-  def polyEnumerate(cs: Vector[Curve], twists: Vector[Double], lengths: Vector[Double]) : Vector[Vector[SkewCurve]] = 
+  def polyEnumerate(
+      cs: Vector[Curve],
+      twists: Vector[Double],
+      lengths: Vector[Double]
+  ): Vector[Vector[SkewCurve]] =
     cs match {
       case Vector() => Vector(Vector())
-      case x +: ys => 
+      case x +: ys =>
         for {
           c <- enumerate(x, twists, lengths)
           tcs <- polyEnumerate(ys, twists, lengths)
@@ -269,7 +287,9 @@ case class SkewCurveEdge(
     if (positivelyOriented) curve.nextVertex(position)
     else curve.previousVertex(position)
 
-  lazy val length = if (positivelyOriented) mod1(finalPosition - position) else mod1(position - finalPosition)
+  lazy val length =
+    if (positivelyOriented) mod1(finalPosition - position)
+    else mod1(position - finalPosition)
 
   lazy val flip = SkewCurveEdge(curve, finalPosition, !positivelyOriented)
 
@@ -287,9 +307,10 @@ case class PantsHexagon(pants: Index, top: Boolean, cs: Set[Curve])
       first <- Set(true, false)
     } yield vertex(PantsBoundary(pants, direction), first, cs)
 
+  val enum = if (top) Z3.enum else Vector(0, 2, 1).map(Z3(_))
   val boundary: Vector[Edge] =
     for {
-      direction <- Z3.enum
+      direction <- enum
       e <- Vector(
         edge(
           PantsBoundary(pants, direction),
@@ -297,7 +318,7 @@ case class PantsHexagon(pants: Index, top: Boolean, cs: Set[Curve])
           positivelyOriented = top,
           cs
         ),
-        seam(pants, direction, cs)
+        seam(pants, direction, cs, top)
       )
     } yield e
 
@@ -336,23 +357,27 @@ case class SkewPantsSurface(numPants: Index, cs: Set[SkewCurve])
     } yield SkewPantsHexagon(pants, top, cs)
 
   lazy val fundamentalClass = {
-    val cv = faces.toVector.collect{
-      case ph: SkewPantsHexagon => (ph : Polygon, if (ph.top) 1 else -1)
+    val cv = faces.toVector.collect {
+      case ph: SkewPantsHexagon => (ph: Polygon, if (ph.top) 1 else -1)
     }
     FormalSum.reduced(cv)
   }
 }
 
-object SkewPantsSurface{
+object SkewPantsSurface {
   def untwisted(surf: PantsSurface, m: Map[Curve, Double] = Map()) = {
     def l(c: Curve) = m.getOrElse(c, 0.0)
     val cs = surf.cs.map(c => SkewCurve.untwisted(c, l(c)))
     SkewPantsSurface(surf.numPants, cs)
   }
 
-  def enumerate(surf: PantsSurface, twists: Vector[Double], lengths: Vector[Double] = Vector(1)) =
-    SkewCurve.polyEnumerate(surf.cs.toVector, twists, lengths).map{
-      tcs => SkewPantsSurface(surf.numPants, tcs.toSet)
+  def enumerate(
+      surf: PantsSurface,
+      twists: Vector[Double],
+      lengths: Vector[Double] = Vector(1)
+  ) =
+    SkewCurve.polyEnumerate(surf.cs.toVector, twists, lengths).map { tcs =>
+      SkewPantsSurface(surf.numPants, tcs.toSet)
     }
 }
 
@@ -366,13 +391,13 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
       top <- Set(true, false)
     } yield PantsHexagon(pants, top, cs)
 
-  val topFaces = faces.toVector.collect{
+  val topFaces = faces.toVector.collect {
     case ph: PantsHexagon if ph.top => ph
   }
 
   val fundamentalClass = {
-    val cv = faces.toVector.collect{
-      case ph: PantsHexagon => (ph : Polygon, if (ph.top) 1 else -1)
+    val cv = faces.toVector.collect {
+      case ph: PantsHexagon => (ph: Polygon, if (ph.top) 1 else -1)
     }
     FormalSum.reduced(cv)
   }
@@ -588,21 +613,23 @@ object PantsSurface {
   ): Edge =
     getCurve(pb, cs)
       .map {
-        case (curve, positivelyOriented) => CurveEdge(curve, top, positivelyOriented)
+        case (curve, positivelyOriented) =>
+          CurveEdge(curve, top, positivelyOriented)
       }
       .getOrElse(BoundaryEdge(pb, top, positivelyOriented))
 
   def vertex(pb: PantsBoundary, first: Boolean, cs: Set[Curve]): Vertex =
     getCurve(pb, cs)
       .map {
-        case (curve, positivelyOriented) => CurveVertex(curve, !(first ^ positivelyOriented))
+        case (curve, positivelyOriented) =>
+          CurveVertex(curve, !(first ^ positivelyOriented))
       }
       .getOrElse(BoundaryVertex(pb, first))
 
-  def seam(pants: Index, direction: Z3, cs: Set[Curve]): PantsSeam = {
-    val initial = vertex(PantsBoundary(pants, direction), first = false, cs)
+  def seam(pants: Index, direction: Z3, cs: Set[Curve], top: Boolean): PantsSeam = {
+    val initial = vertex(PantsBoundary(pants, direction), first = !top, cs)
     val terminal =
-      vertex(PantsBoundary(pants, direction.next), first = true, cs)
+      vertex(PantsBoundary(pants, if (top) direction.next else direction.prev), first = top, cs)
     PantsSeam(pants, initial, terminal)
   }
 
@@ -645,7 +672,7 @@ object PantsSurface {
     fillSeamsRec(
       pants,
       segments.init,
-      segments.last :+( 
+      segments.last :+ (
         PantsSeam(
           pants,
           segments.last.last.terminal,
