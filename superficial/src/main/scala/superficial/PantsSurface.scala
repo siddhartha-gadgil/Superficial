@@ -17,6 +17,8 @@ case class Z3(n: Int) {
 
 object Z3 {
   val enum: Vector[Z3] = Vector(0, 1, 2).map(Z3(_))
+
+  val flipEnum = Vector(0, 2, 1).map(Z3(_))
 }
 
 /**
@@ -307,7 +309,7 @@ case class PantsHexagon(pants: Index, top: Boolean, cs: Set[Curve])
       first <- Set(true, false)
     } yield vertex(PantsBoundary(pants, direction), first, cs)
 
-  val enum = if (top) Z3.enum else Vector(0, 2, 1).map(Z3(_))
+  val enum = if (top) Z3.enum else Z3.flipEnum
   val boundary: Vector[Edge] =
     for {
       direction <- enum
@@ -331,6 +333,9 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
       skewVertices(PantsBoundary(pants, direction), top, cs)
     }
 
+  val enum = if (top) Z3.enum else Z3.flipEnum
+
+
   lazy val segments: Vector[Vector[Edge]] =
     Z3.enum.map { direction: Z3 =>
       skewEdges(
@@ -341,8 +346,9 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
       )
     }
 
-  lazy val boundary = fillSeams(pants, segments)
+  lazy val baseBoundary = fillSeams(pants, segments, top)
 
+  lazy val boundary = if (top) baseBoundary else baseBoundary.reverse.map(_.flip)
   lazy val sides = boundary.size
 }
 
@@ -659,16 +665,17 @@ object PantsSurface {
   def fillSeamsRec(
       pants: Index,
       segments: Vector[Vector[Edge]],
-      gapLess: Vector[Edge]
+      gapLess: Vector[Edge],
+      top: Boolean
   ): Vector[Edge] =
     segments match {
       case Vector() => gapLess
       case ys :+ x =>
         val newSeam = PantsSeam(pants, x.last.terminal, gapLess.head.initial)
-        fillSeamsRec(pants, ys, x ++ (newSeam +: gapLess))
+        fillSeamsRec(pants, ys, x ++ (newSeam +: gapLess), top)
     }
 
-  def fillSeams(pants: Index, segments: Vector[Vector[Edge]]) =
+  def fillSeams(pants: Index, segments: Vector[Vector[Edge]], top: Boolean) =
     fillSeamsRec(
       pants,
       segments.init,
@@ -678,6 +685,7 @@ object PantsSurface {
           segments.last.last.terminal,
           segments.head.head.initial
         )
-      )
+      ),
+      top
     )
 }
