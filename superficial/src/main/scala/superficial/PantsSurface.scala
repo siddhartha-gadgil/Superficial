@@ -630,7 +630,7 @@ object PantsSurface {
     val initial = vertex(PantsBoundary(pants, direction), first = !top, cs)
     val terminal =
       vertex(PantsBoundary(pants, if (top) direction.next else direction.prev), first = top, cs)
-    PantsSeam(pants, initial, terminal)
+    PantsSeam(pants, initial, terminal, top)
   }
 
   def skewEdges(
