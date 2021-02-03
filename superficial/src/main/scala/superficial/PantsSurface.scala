@@ -482,7 +482,7 @@ object SkewCurve {
     * @param cs the collection of base curves to use
     * @param twists a vector of twists
     * @param lengths a vector of lengths
-    * @return a vector, each component of which is twisted forms of the given vector of base curves; 
+    * @return a vector, each component of which is twisted forms of the given vector of base curves;
     */
   def polyEnumerate(
       cs: Vector[Curve],
@@ -533,27 +533,51 @@ case class CurveEdge(curve: Curve, top: Boolean, positivelyOriented: Boolean)
     CurveVertex(curve, positivelyOriented ^ top) // the vertex different from the initial vertex
 }
 
+/**
+  * An edge on a skew-curve, i.e., curve in a pants decomposition glued with a twist
+  *
+  * @param curve the skew-curve in the pants decomposition
+  * @param initialPosition the position of the initial vertex
+  * @param positivelyOriented whether the edge is positively oriented
+  */
 case class SkewCurveEdge(
     curve: SkewCurve,
-    position: Double,
+    initialPosition: Double,
     positivelyOriented: Boolean
 ) extends OrientedEdge {
-  lazy val finalPosition =
-    if (positivelyOriented) curve.nextVertex(position)
-    else curve.previousVertex(position)
 
+  /**
+    * the position of the final vertex
+    */
+  lazy val finalPosition =
+    if (positivelyOriented) curve.nextVertex(initialPosition)
+    else curve.previousVertex(initialPosition)
+
+  /**
+    * length of the edge
+    *
+    * @return the length
+    */
   lazy val length =
-    if (positivelyOriented) mod1(finalPosition - position)
-    else mod1(position - finalPosition)
+    curve.length * (if (positivelyOriented)
+                      mod1(finalPosition - initialPosition)
+                    else mod1(initialPosition - finalPosition))
 
   lazy val flip = SkewCurveEdge(curve, finalPosition, !positivelyOriented)
 
-  lazy val initial = SkewCurveVertex(curve, position)
+  lazy val initial = SkewCurveVertex(curve, initialPosition)
 
   lazy val terminal = SkewCurveVertex(curve, finalPosition)
 
 }
 
+/**
+  * Hexagon in a pair of pants
+  *
+  * @param pants the index of the pair of pants
+  * @param top whether this is the top face
+  * @param cs system of curves giving the pants decomposition
+  */
 case class PantsHexagon(pants: Index, top: Boolean, cs: Set[Curve])
     extends Hexagon {
   val vertices: Set[Vertex] =
@@ -562,7 +586,7 @@ case class PantsHexagon(pants: Index, top: Boolean, cs: Set[Curve])
       first <- Set(true, false)
     } yield vertex(PantsBoundary(pants, direction), first, cs)
 
-  val enum = if (top) Z3.enum else Z3.flipEnum
+  private val enum = if (top) Z3.enum else Z3.flipEnum
   val boundary: Vector[Edge] =
     for {
       direction <- enum
@@ -579,6 +603,13 @@ case class PantsHexagon(pants: Index, top: Boolean, cs: Set[Curve])
 
 }
 
+/**
+  * "hexagon" in a skew pair of pants; note that this is not in general a hexagon as some of the edges are subdivided
+  *
+  * @param pants the index of the pair of (skew) pants
+  * @param top whether this is the top face
+  * @param cs system of curves giving the pants decomposition
+  */
 case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
     extends Polygon {
   lazy val vertices: Set[Vertex] =
@@ -586,9 +617,7 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
       skewVertices(PantsBoundary(pants, direction), top, cs)
     }
 
-  val enum = if (top) Z3.enum else Z3.flipEnum
-
-  lazy val segments: Vector[Vector[Edge]] =
+  private lazy val segments: Vector[Vector[Edge]] =
     Z3.enum.map { direction: Z3 =>
       skewEdges(
         PantsBoundary(pants, direction),
@@ -598,7 +627,7 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
       )
     }
 
-  lazy val baseBoundary = fillSeams(pants, segments, top)
+  private lazy val baseBoundary = fillSeams(pants, segments)
 
   lazy val boundary =
     if (top) baseBoundary else baseBoundary.reverse.map(_.flip)
@@ -624,12 +653,28 @@ case class SkewPantsSurface(numPants: Index, cs: Set[SkewCurve])
 }
 
 object SkewPantsSurface {
+
+  /**
+    * untwisted "skew pants surface" from a pants surface
+    *
+    * @param surf the original surface with a pants decomposition
+    * @param m lengths of curves
+    * @return skew pant surface without twists
+    */
   def untwisted(surf: PantsSurface, m: Map[Curve, Double] = Map()) = {
     def l(c: Curve) = m.getOrElse(c, 0.0)
     val cs = surf.cs.map(c => SkewCurve.untwisted(c, l(c)))
     SkewPantsSurface(surf.numPants, cs)
   }
 
+  /**
+    * all hyperbolic (skew) surfaces with pants decomposition, starting from a surface with pants decompostion with twists and lengths specified
+    *
+    * @param surf the base surface with pants decomposition
+    * @param twists the collection of twists to use
+    * @param lengths the collection of lengths to use
+    * @return
+    */
   def enumerate(
       surf: PantsSurface,
       twists: Vector[Double],
@@ -640,6 +685,12 @@ object SkewPantsSurface {
     }
 }
 
+/**
+  * Surface with a pants decomposition (compact, possibly with boundary and possibly disconnected)
+  *
+  * @param numPants the number of pairs of pants
+  * @param cs the curve system giving the pants decomposition
+  */
 case class PantsSurface(numPants: Index, cs: Set[Curve])
     extends PureTwoComplex {
   val indices: Vector[Index] = (0 until numPants).toVector
@@ -650,11 +701,11 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
       top <- Set(true, false)
     } yield PantsHexagon(pants, top, cs)
 
-  val topFaces = faces.toVector.collect {
+  val topFaces: Vector[PantsHexagon] = faces.toVector.collect {
     case ph: PantsHexagon if ph.top => ph
   }
 
-  val fundamentalClass = {
+  val fundamentalClass: FormalSum[Polygon] = {
     val cv = faces.toVector.collect {
       case ph: PantsHexagon => (ph: Polygon, if (ph.top) 1 else -1)
     }
@@ -669,23 +720,54 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
 
   val csSupp: Set[PantsBoundary] = cs.flatMap(_.support)
 
+  /**
+    * curves in the boundary; we can attach other pairs of pants to these.
+    */
   val boundaryCurves: Set[PantsBoundary] = allCurves -- csSupp
 
+  /**
+    * indices of pairs of pants for which two boundary components are glued to each other, i.e., which contain a loop.
+    */
   val loopIndices: Set[Index] =
     cs.collect {
       case p if p.left.pants == p.right.pants => p.left.pants
     }
 
+  /**
+    * indices of pants that intersect the boundary of the surface
+    */
   val boundaryIndices: Set[Index] = boundaryCurves.map(_.pants)
 
+  /**
+    * whether the surface is closed
+    *
+    * @return boolean for surface being closed
+    */
   def isClosed: Boolean = boundaryIndices.isEmpty
 
+  /**
+    * number of curves in the boundary of a pair of pants that are interior to the surface
+    *
+    * @param index
+    */
   def innerCurves(index: Index): Int =
     csSupp.count((p) => p.pants == index)
 
+  /**
+    * surface obtained by deleting a pair of pants
+    *
+    * @param n
+    * @return
+    */
   def drop(n: Index): PantsSurface =
     PantsSurface(numPants - 1, cs.flatMap(_.dropOpt(n)))
 
+  /**
+    * pants neighbouring a given set
+    *
+    * @param pantSet set whose neighbourhood is sought
+    * @return indices of the neighbouring pants
+    */
   def neighbourhood(pantSet: Set[Index]): Set[Index] =
     indices
       .filter(
@@ -698,6 +780,12 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
       )
       .toSet
 
+  /**
+    * connected component given a set of pants (should start with a single one)
+    *
+    * @param pantSet starting set of pants
+    * @return set of indices for the component
+    */
   @annotation.tailrec
   final def component(pantSet: Set[Index]): Set[Index] = {
     val expand = neighbourhood(pantSet)
@@ -705,15 +793,38 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
     else component(expand)
   }
 
+  /**
+    * whether the surface is connected
+    *
+    * @return connectivity
+    */
   lazy val isConnected: Boolean =
     (numPants <= 1) || (component(Set(0)) == indices.toSet)
 
+  /**
+    * peripheral pairs of pants, i.e., so that the complement of the pants is connected.
+    *
+    * @return indices of peripheral pants
+    */
   lazy val peripheral: Set[Index] =
     indices.filter((m) => drop(m).isConnected).toSet
 
+  /**
+    * attach a new pair of pants along one specified boundary component
+    *
+    * @param pb pants boundary of the given surface along which to attach the new pants
+    * @return pants surface with new pants attached
+    */
   def glue1(pb: PantsBoundary) =
     PantsSurface(numPants + 1, cs + Curve(pb, PantsBoundary(numPants, Z3(0))))
 
+  /**
+    * attach a new pair of pants along two specified boundary components
+    *
+    * @param pb1 first pants boundary of the given surface along which to attach the new pants
+    * @param pb2 second pants boundary of the given surface along which to attach the new pants
+    * @return pants surface with new pants attached
+    */
   def glue2(pb1: PantsBoundary, pb2: PantsBoundary) =
     PantsSurface(
       numPants + 1,
@@ -723,6 +834,14 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
       )
     )
 
+  /**
+    * attach a new pair of pants along three specified boundary components
+    *
+    * @param pb1 first pants boundary of the given surface along which to attach the new pants
+    * @param pb2 second pants boundary of the given surface along which to attach the new pants
+    * @param pb3 third pants boundary of the given surface along which to attach the new pants
+    * @return pants surface with new pants attached
+    */
   def glue3(pb1: PantsBoundary, pb2: PantsBoundary, pb3: PantsBoundary) =
     PantsSurface(
       numPants + 1,
@@ -733,6 +852,12 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
       )
     )
 
+  /**
+    * attach a new pair of pants along one specified boundary component, with the other two boundary components of the new pants glued to each other.
+    *
+    * @param pb pants boundary of the given surface along which to attach the new pants
+    * @return pants surface with new pants attached
+    */
   def glueLoop(pb: PantsBoundary) =
     PantsSurface(
       numPants + 1,
@@ -742,10 +867,25 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
       )
     )
 
+  /**
+    * attach new pants along a single boundary component in all possible ways
+    *
+    * @return set of pants surfaces obtained by attachment
+    */
   def allGlue1: Set[PantsSurface] = boundaryCurves.map(glue1)
 
+  /**
+    * attach new pants along a single boundary component, with the other two components of the new pants glued, in all possible ways
+    *
+    * @return set of pants surfaces obtained by attachment
+    */
   def allGlueLoop: Set[PantsSurface] = boundaryCurves.map(glueLoop)
 
+  /**
+    * attach new pants along two boundary components in all possible ways
+    *
+    * @return set of pants surfaces obtained by attachment
+    */
   def allGlue2: Set[PantsSurface] =
     for {
       pb1 <- boundaryCurves
@@ -753,6 +893,11 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
       if pb2 < pb1
     } yield glue2(pb1, pb2)
 
+  /**
+    * attach new pants along three boundary components in all possible ways
+    *
+    * @return set of pants surfaces obtained by attachment
+    */
   def allGlue3: Set[PantsSurface] =
     for {
       pb1 <- boundaryCurves
@@ -762,6 +907,11 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
       if pb2 < pb3
     } yield glue3(pb1, pb2, pb3)
 
+  /**
+    * attach new pants along a positive number of boundary components in all possible ways
+    *
+    * @return set of pants surfaces obtained by attachment
+    */
   def allGlued: Set[PantsSurface] =
     allGlue1 union allGlue2 union allGlue3 union allGlueLoop
 
@@ -769,11 +919,27 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
 
 object PantsSurface {
 
+  /**
+    * Bers constant - upper bound on the length of pants in a minimal pants decomposition
+    *
+    * @param g the genus
+    * @return the Bers upper bound
+    */
   def bers(g: Int) = 26 * (g - 1)
 
+  /**
+    * Margulis constant
+    */
   val margulis =
     Hexagon.arccosh(sqrt((2 * cos(2 * Pi / 7) - 1) / (8 * cos(Pi / 7) + 7)))
 
+  /**
+    * determine whether the pants decompositions are isomorphic
+    *
+    * @param first the first pants decomposition
+    * @param second the second pants decomposition
+    * @return boolean : whether isomorphic
+    */
   def isomorphic(first: PantsSurface, second: PantsSurface): Boolean =
     if (first.numPants == 0) second.numPants == 0
     else
@@ -804,6 +970,12 @@ object PantsSurface {
         }
       }
 
+  /**
+    * vector of surfaces with duplicates up to isomorphism purged
+    *
+    * @param surfaces an initial collection of surfaces
+    * @return vector of isomorphism class representatives for the original collection
+    */
   def distinct(surfaces: Vector[PantsSurface]): Vector[PantsSurface] =
     surfaces match {
       case Vector()         => Vector()
@@ -814,8 +986,17 @@ object PantsSurface {
         else head +: newTail
     }
 
+  /**
+    * lazy list of vectors of all connected surfaces, possibly with boundary, with a given number of pants
+    */
   val all: LazyList[Vector[PantsSurface]] = LazyList.from(0).map(getAll)
 
+  /**
+    * determine isomorophism classes of connected pants decompositions recursively
+    *
+    * @param n number of pairs of pants
+    * @return Vector of representatives of isomorphism classes of connected pants decompositions
+    */
   def getAll(n: Int): Vector[PantsSurface] =
     if (n == 0) Vector()
     else if (n == 1)
@@ -833,8 +1014,19 @@ object PantsSurface {
         )
       )
 
-  def allClosed: LazyList[Vector[PantsSurface]] = all.map(_.filter(_.isClosed))
+  /**
+    * lazy list of vectors of all closed surfaces, with a given number of pants
+    */
+  val allClosed: LazyList[Vector[PantsSurface]] = all.map(_.filter(_.isClosed))
 
+  /**
+    * given a pants boundary, returns a curve if any that contains this (each curve is obtained by identifying two pants boundaries),
+    * and whether this is on the left
+    *
+    * @param pb the pants boundary
+    * @param cs the curve system
+    * @return optionally pair consisting of a curve and a boolean (whether on left)
+    */
   def getCurve(pb: PantsBoundary, cs: Set[Curve]): Option[(Curve, Boolean)] =
     cs.find(
         (c) => c.left == pb
@@ -847,6 +1039,14 @@ object PantsSurface {
           .map((c) => c -> false)
       )
 
+  /**
+    * given a pants boundary, returns a skew curve if any that contains this (each curve is obtained by identifying two pants boundaries),
+    * and whether this is on the left
+    *
+    * @param pb the pants boundary
+    * @param cs the curve system
+    * @return optionally pair consisting of a skew curve and a boolean (whether on left)
+    */
   def getSkewCurve(
       pb: PantsBoundary,
       cs: Set[SkewCurve]
@@ -862,6 +1062,15 @@ object PantsSurface {
           .map((c) => c -> false)
       )
 
+  /**
+    * given an edge in a pants boundary, returns an edge in the two complex from the pants decomposition correspoding to this (image in the quotient)
+    *
+    * @param pb the pants boundary
+    * @param top whether this is the top edge
+    * @param positivelyOriented whether the edge is positively oriented
+    * @param cs the curve system
+    * @return edge in the quotient two complex
+    */
   def edge(
       pb: PantsBoundary,
       top: Boolean,
@@ -875,6 +1084,14 @@ object PantsSurface {
       }
       .getOrElse(BoundaryEdge(pb, top, positivelyOriented))
 
+  /**
+    * given a vertex in a pants boundary, returns a vertex in the two complex from the pants decomposition correspoding to this (image in the quotient)
+    *
+    * @param pb the pants boundary
+    * @param first whether this is the first vertex
+    * @param cs the curve sysem
+    * @return vertex in the quotient two complex
+    */
   def vertex(pb: PantsBoundary, first: Boolean, cs: Set[Curve]): Vertex =
     getCurve(pb, cs)
       .map {
@@ -883,6 +1100,15 @@ object PantsSurface {
       }
       .getOrElse(BoundaryVertex(pb, first))
 
+  /**
+    * seam as an edge in the two complex from the pants decomposition
+    *
+    * @param pants index of pants
+    * @param direction direction of the (initial point of the) seam
+    * @param cs the curve system
+    * @param top whether the seam is from the top face
+    * @return edge in the two complex
+    */
   def seam(
       pants: Index,
       direction: Z3,
@@ -899,6 +1125,16 @@ object PantsSurface {
     PantsSeam(pants, initial, terminal, top)
   }
 
+  /**
+    * given an edge in a pants boundary, returns a vector ofedges in the two complex from the skew pants decomposition
+    * correspoding to this (image in the quotient); the vector has one or two edges
+    *
+    * @param pb the pants boundary
+    * @param top whether this is the top edge
+    * @param positivelyOriented whether the edge is positively oriented
+    * @param cs the curve system
+    * @return edge in the quotient two complex
+    */
   def skewEdges(
       pb: PantsBoundary,
       top: Boolean,
@@ -911,6 +1147,15 @@ object PantsSurface {
       }
       .getOrElse(Vector(BoundaryEdge(pb, top, positivelyOriented)))
 
+  /**
+    * given an edge in a pants boundary, returns a vector of the vertices in the two complex from the skew pants decomposition
+    * contained in the image of the edge
+    *
+    * @param pb the pants boundary
+    * @param first whether this is the first vertex
+    * @param cs the curve sysem
+    * @return vector of vertices in the quotient two complex
+    */
   def skewVertices(
       pb: PantsBoundary,
       top: Boolean,
@@ -922,20 +1167,34 @@ object PantsSurface {
       }
       .getOrElse(Set(true, false).map(BoundaryVertex(pb, _)))
 
+  /**
+    * recursively fill in seams in a skew pants decomposition given collections of edges that are in a fixed pair of pants
+    *
+    * @param pants index of pants containing the edges
+    * @param segments the collections of sequences of edges
+    * @param gapLess the sequence of edges obtained so far without gaps
+    * @return sequence of edges with gaps filled in by seams
+    */
   def fillSeamsRec(
       pants: Index,
       segments: Vector[Vector[Edge]],
-      gapLess: Vector[Edge],
-      top: Boolean
+      gapLess: Vector[Edge]
   ): Vector[Edge] =
     segments match {
       case Vector() => gapLess
       case ys :+ x =>
         val newSeam = PantsSeam(pants, x.last.terminal, gapLess.head.initial)
-        fillSeamsRec(pants, ys, x ++ (newSeam +: gapLess), top)
+        fillSeamsRec(pants, ys, x ++ (newSeam +: gapLess))
     }
 
-  def fillSeams(pants: Index, segments: Vector[Vector[Edge]], top: Boolean) =
+  /**
+    * fill in seams in a skew pants decomposition given collections of edges that are in a fixed pair of pants
+    *
+    * @param pants index of pants containing the edges
+    * @param segments the collections of sequences of edges
+    * @return sequence of edges with gaps filled in by seams
+    */  
+  def fillSeams(pants: Index, segments: Vector[Vector[Edge]]) =
     fillSeamsRec(
       pants,
       segments.init,
@@ -945,7 +1204,6 @@ object PantsSurface {
           segments.last.last.terminal,
           segments.head.head.initial
         )
-      ),
-      top
+      )
     )
 }

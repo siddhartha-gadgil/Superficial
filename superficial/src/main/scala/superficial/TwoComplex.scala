@@ -16,6 +16,9 @@ trait Polygon extends TwoComplex {
 
   lazy val indices: Vector[Index] = (0 until sides).toVector
 
+  /**
+    * a vector of (oriented) edges giving the boundary in the correct order
+    */
   val boundary: Vector[Edge]
 
   lazy val basePoint : Vertex = boundary.head.initial // override for empty boundary
