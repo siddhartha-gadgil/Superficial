@@ -3,8 +3,14 @@ package superficial
 import PantsSurface._, Polygon.Index
 import scala.math._
 
-case class Z3(n: Int) {
-  require(0 <= n && n <= 2, s"$n not valid mod 3 representative")
+/**
+  * One of 0, 1 and 2, indexing the boundaries of a pair of pants.
+  * Class created to avoid accidentally mixing with integers
+  *
+  * @param n
+  */
+case class Z3(n: Int) extends AnyVal {
+  // require(0 <= n && n <= 2, s"$n not valid mod 3 representative")
 
   def next = Z3((n + 1) % 3)
 
@@ -16,32 +22,70 @@ case class Z3(n: Int) {
 }
 
 object Z3 {
+
+  /**
+    * Enumeration of the indices
+    */
   val enum: Vector[Z3] = Vector(0, 1, 2).map(Z3(_))
 
+  /**
+    * flipped enumeration
+    */
   val flipEnum = Vector(0, 2, 1).map(Z3(_))
 }
 
 /**
-  * index for boundary of pants, may be in the curve system
-  * or the boundary of the surface
+  * label for boundary of pants, may be a curve in the curve system
+  * or a component of the boundary of the surface; if part of the curve system
+  * it will be identified with another PantsBoundary
   *
   * @param pants     the index of the pair of pants
   * @param direction the prong of the pair of pants
   */
 case class PantsBoundary(pants: Index, direction: Z3) {
-  def prev = PantsBoundary(pants - 1, direction)
+  def prev = {
+    require(pants > 0)
+    PantsBoundary(pants - 1, direction)
+  }
 
+  /**
+    * When pants with specified index are deleted, returns pants boundary optionally;
+    * if part of the deleleted pants returns `None` else returns the pants
+    *
+    * @param n the index of pants that are deleted
+    * @return optional pants bouundary after deletion, with index shifted if needed.
+    */
   def dropOpt(n: Index): Option[PantsBoundary] =
     if (pants == n) None
     else if (pants > n) Some(prev)
     else Some(this)
 
+  /**
+    * less than for order on pants boundaries, lexicographic
+    *
+    * @param that
+    * @return
+    */
   def <(that: PantsBoundary): Boolean =
     (pants < that.pants) || ((pants == that.pants) && (direction < that.direction))
 }
 
-case class BoundaryVertex(pb: PantsBoundary, first: Boolean) extends Vertex
+/**
+  * Vertex on the boundary of a pair of pants decomposed into a pair of hexagons
+  *
+  * @param pb the component of the boundary on which the vertex lies
+  * @param isFirst whether the vertex is the first vertex.
+  */
+case class BoundaryVertex(pb: PantsBoundary, isFirst: Boolean) extends Vertex
 
+/**
+  * An edge in the boundary of a pair of pants which is not identified with a boundary component of another pair of pants,
+  * i.e., this is part of the boundary of the surface.
+  *
+  * @param pb the pants boundary of which this is a part
+  * @param top whether this is in the top face
+  * @param positivelyOriented whether the edge is positively oriented
+  */
 case class BoundaryEdge(
     pb: PantsBoundary,
     top: Boolean,
@@ -56,24 +100,53 @@ case class BoundaryEdge(
 
 }
 
+/**
+  * A hexagon
+  */
 trait Hexagon extends Polygon {
   val sides = 6
 }
 
+/**
+  * Formulas for hyperbolic hexagons
+  */
 object Hexagon {
   def arccosh(x: Double): Double = log(x + sqrt(x * x - 1))
 
   def arcsinh(x: Double): Double = log(x + sqrt(x * x + 1))
 
+  /**
+    * length of a side of a hyperbolic right-angled hexagon given lengths of adjacent sides and the opposite side
+    *
+    * @param l1
+    * @param l2
+    * @param l3
+    * @return
+    */
   def side(l1: Double, l2: Double, l3: Double): Double =
     arccosh((cosh(l1) * cosh(l2) + cosh(l3)) / (sinh(l1) * sinh(l2)))
 
-  def length2(a: Double, b: Double): Double = arccosh(cosh(a) * cosh(b))
+  /**
+    * distance between points on adjacent sides of a right-angled hexagon
+    *
+    * @param a distance of first point from the common vertex
+    * @param b distance of second point from the common vertex
+    * @return distance between the points
+    */
+  def distance2(a: Double, b: Double): Double = arccosh(cosh(a) * cosh(b))
 
-  def length3(a: Double, l: Double, b: Double): Double =
+  /**
+    * distance between points on sides of a right-angled hexagon with one side in between
+    *
+    * @param a distance of the first vertex to the (common vertex with) the side in between
+    * @param l length of the first side in between.
+    * @param b distance of the first vertex to the (common vertex with) the side in between
+    * @return
+    */
+  def distance3(a: Double, l: Double, b: Double): Double =
     arccosh(cosh(a) * cosh(l) * cosh(b) - sinh(a) * sinh(b))
 
-  def length4(a: Double, l1: Double, l2: Double, b: Double): Double =
+  def distance4(a: Double, l1: Double, l2: Double, b: Double): Double =
     arccosh(
       cosh(a) * cosh(l1) * cosh(l2) * cosh(b) -
         sinh(a) * sinh(l2) * cosh(b) - cosh(a) * sinh(l1) * sinh(b)
@@ -84,6 +157,13 @@ object Hexagon {
     if (m >= 0) m else m + 6
   } ensuring ((m) => 0 <= m && m < 6)
 
+  /**
+    * Hyperbolic right-angled hexagon determined by lengths of alternating sides
+    *
+    * @param a the first side
+    * @param b the third side
+    * @param c the fifth side
+    */
   case class Hyperbolic(a: Double, b: Double, c: Double) {
     def sideLength(n: Index): Double =
       if (n % 2 == 0) Vector(a, b, c)(n / 2)
@@ -101,9 +181,9 @@ object Hexagon {
       val init = length(i) - initShift
       val last = lastShift
       j - i match {
-        case 1 => length2(init, last)
-        case 2 => length3(init, length(i + 1), last)
-        case 3 => length4(init, length(i + 1), length(i + 2), last)
+        case 1 => distance2(init, last)
+        case 2 => distance3(init, length(i + 1), last)
+        case 3 => distance4(init, length(i + 1), length(i + 2), last)
       }
     }
 
@@ -119,6 +199,14 @@ object Hexagon {
   }
 }
 
+/**
+  * An edge that is the seam of a pair of pants
+  *
+  * @param pants the index of the pair of pants of which this is a seam
+  * @param initial the initial vertex
+  * @param terminal the terminal vertex
+  * @param positivelyOriented whether the edge is positively oriented
+  */
 case class PantsSeam(
     pants: Index,
     initial: Vertex,
@@ -128,13 +216,39 @@ case class PantsSeam(
   lazy val flip = PantsSeam(pants, terminal, initial, !positivelyOriented)
 }
 
+/**
+  * A curve in the curve system (i.e., the collection of terms) along which we split to get the pants decomposition.
+  * This is a quotient of two pants boundaries that have been identified, with orientation determining one as on the left.
+  *
+  * @param left the pants boundary on the left.
+  * @param right the pants boundary on the right.
+  */
 case class Curve(left: PantsBoundary, right: PantsBoundary) {
+
+  /**
+    * the pants boundaries identified to get this curve.
+    */
   val support: Set[PantsBoundary] = Set(left, right)
 
+  /**
+    * (indices of) adjacent pairs of pants
+    */
   val neighbours: Set[Index] = support.map(_.pants)
 
+  /**
+    * whether a pants boundary is contained in the curve
+    *
+    * @param pb a pants boundary
+    * @return boolean for containment
+    */
   def contains(pb: PantsBoundary): Boolean = support.contains(pb)
 
+  /**
+    * Curve in curve system after a pair of pants is deleted
+    *
+    * @param n the index of the deleted pants
+    * @return optionally the curve with indices shifted; nothing if curve in deleted pants
+    */
   def dropOpt(n: Index): Option[Curve] =
     for {
       newLeft <- left.dropOpt(n)
@@ -144,42 +258,87 @@ case class Curve(left: PantsBoundary, right: PantsBoundary) {
 
 import SkewCurve._
 
+/**
+  * A curve in the curve system for a pants decomposition for a hyperbolic surface obtained by twisting and regluing along the pants system
+  * Twists and vertex positions are parametrized as fractions of the length, so are in [0, 1].
+  *
+  * Generically, there are 4 vertices, two at 0 and 0.5 and the other two at `twist` and `twist + 0.5 (mod 1)`.
+  *
+  * @param left the pants boundary to the left
+  * @param right the pants boundary to the right
+  * @param twist the twist, parametrized as a fraction of the length, so is in [0, 1]
+  * @param length the length of the curve in the hyperbolic structure.
+  */
 case class SkewCurve(
     left: PantsBoundary,
     right: PantsBoundary,
     twist: Double,
     length: Double
-) {
-  curve =>
+) { curve => // `curve` gives this curve
 
+  /**
+    * the corresponding curve in the untwisted surface
+    *
+    */
   def base = Curve(left, right)
 
+  /**
+    * whether the vertices and edges of the two pants match, either directly or with exchange;
+    * this also determines whether the number of vertices is 2 (otherwise it is 4)
+    */
   val skewLess: Boolean = twist == 0 || twist == 0.5
 
+  /**
+    * the pants boundaries identified to get this curve.
+    */
   val support: Set[PantsBoundary] = Set(left, right)
 
+  /**
+    * (indices of) adjacent pairs of pants
+    */
   val neighbours: Set[Index] = support.map(_.pants)
 
+  /**
+    * the position (in [0, 1]) of the next vertex after 0; the next vertex after 0.5 is `0.5 + shift`.
+    */
   val shift = math.min(twist, mod1(twist + 0.5))
 
+  /**
+    * whether a pants boundary is contained in the curve
+    *
+    * @param pb a pants boundary
+    * @return boolean for containment
+    */
   def contains(pb: PantsBoundary): Boolean = support.contains(pb)
 
+  /**
+    * the postion of the next vertex (in [0, 1))
+    *
+    * @param position position of the given vertex
+    * @return position of the next vertex
+    */
   def nextVertex(position: Double): Double =
     if (skewLess) {
       assert(
         position == 0 || position == 0.5,
-        s"twist is $twist but vertex at $position"
+        s"twist is $twist (hence untwisted) but vertex at $position"
       )
       mod1(position + 0.5)
     } else if (position == 0 || position == 0.5) position + shift
     else if (position < 0.5) 0.5
     else 0
 
+  /**
+    * the postion of the previous vertex (in [0, 1))
+    *
+    * @param position position of the given vertex
+    * @return position of the previous vertex
+    */
   def previousVertex(position: Double): Double =
     if (skewLess) {
       assert(
         position == 0 || position == 0.5,
-        s"twist is $twist but vertex at $position"
+        s"twist is $twist (hence untwisted) but vertex at $position"
       )
       mod1(position + 0.5)
     } else if (position == 0) 0.5 + shift
@@ -187,10 +346,28 @@ case class SkewCurve(
     else if (position > 0.5) 0.5
     else 0
 
+  /**
+    * position of the next vertex along the orientation
+    *
+    * @param position position of the present vertex
+    * @param positivelyOriented whether orientation is poistive
+    * @return position of the next vertex along the orientation
+    */
   def shiftedVertex(position: Double, positivelyOriented: Boolean) =
     if (positivelyOriented) nextVertex(position) else (previousVertex(position))
 
-  def edgesFrom(position: Double, positivelyOriented: Boolean): Vector[Edge] =
+  /**
+    * edges between the given vertex and the opposite one along the given orientation;
+    * a single edge if untwisted and two edges if twisted
+    *
+    * @param position
+    * @param positivelyOriented
+    * @return
+    */
+  def edgesToOppositeVertex(
+      position: Double,
+      positivelyOriented: Boolean
+  ): Vector[Edge] =
     if (skewLess) Vector(SkewCurveEdge(curve, position, positivelyOriented))
     else
       Vector(
@@ -202,7 +379,18 @@ case class SkewCurve(
         )
       )
 
-  def verticesFrom(position: Double, positivelyOriented: Boolean): Set[Vertex] =
+  /**
+    * vetices on edges between the given vertex and the opposite vertex along the given orientation;
+    * we have a single edge, hence two vertices, if untwisted and two edges, hence three vertices, if twisted
+    *
+    * @param position
+    * @param positivelyOriented
+    * @return
+    */
+  def verticesToOppositeVertex(
+      position: Double,
+      positivelyOriented: Boolean
+  ): Set[Vertex] =
     if (skewLess)
       Set(
         SkewCurveVertex(curve, position),
@@ -221,15 +409,37 @@ case class SkewCurve(
         )
       )
 
+  /**
+    * position of the first vertex on the given pants boundary in the curve after gluing with a twist
+    *
+    * @param left whether we consider the pants
+    * @return position
+    */
   def initPos(left: Boolean) = if (left) 0.0 else twist
 
+  /**
+    * the edges in the twisted pants complex on an edge in a pants boundary adjacent to the given curve;
+    * a pair of edges if twisted, otherwise a single edge
+    *
+    * @param left whether the pants we consider are on the left
+    * @param top whether we consider the top edge
+    * @return edges in the twisted pants complex
+    */
   def edgesOn(left: Boolean, top: Boolean): Vector[Edge] = {
-    val es = edgesFrom(initPos(left), top)
+    val es = edgesToOppositeVertex(initPos(left), top)
     if (left) es else es.map(_.flip).reverse
   }
 
+  /**
+    * the vertices in the twisted pants complex on an edge in a pants boundary adjacent to the given curve;
+    * three vertices if twisted, otherwise two vertices
+    *
+    * @param left whether the pants we consider are on the left
+    * @param top whether we consider the top edge
+    * @return vertices in the twisted pants complex
+    */
   def verticesOn(left: Boolean, top: Boolean): Set[Vertex] = {
-    verticesFrom(initPos(left), top)
+    verticesToOppositeVertex(initPos(left), top)
   }
 
 }
@@ -237,9 +447,24 @@ case class SkewCurve(
 object SkewCurve {
   def mod1(x: Double) = x - math.floor(x)
 
+  /**
+    * untwisted skew curve corresponding to a curve in a pants decomposition
+    *
+    * @param c the original curve
+    * @param length the length in the hyperbolic structure
+    * @return skew curve with given length and no twist
+    */
   def untwisted(c: Curve, length: Double = 1) =
     SkewCurve(c.left, c.right, 0, length)
 
+  /**
+    * enumerate twisted curves
+    *
+    * @param c the base curve to use
+    * @param twists a vector of twists
+    * @param lengths a vector of lengths
+    * @return a vector of twisted curves from the base curve with all given lengths and twists
+    */
   def enumerate(
       c: Curve,
       twists: Vector[Double],
@@ -250,6 +475,15 @@ object SkewCurve {
       l <- lengths
     } yield SkewCurve(c.left, c.right, t, l)
 
+  /**
+    * enumerate collections of twisted curves; giving a vector of vectors
+    * the outer vector entries are for different twists and lengths
+    *
+    * @param cs the collection of base curves to use
+    * @param twists a vector of twists
+    * @param lengths a vector of lengths
+    * @return a vector, each component of which is twisted forms of the given vector of base curves; 
+    */
   def polyEnumerate(
       cs: Vector[Curve],
       twists: Vector[Double],
@@ -265,19 +499,38 @@ object SkewCurve {
     }
 }
 
+/**
+  * vertex on a curve
+  *
+  * @param curve the curve
+  * @param first whether this is the first vertex
+  */
 case class CurveVertex(curve: Curve, first: Boolean) extends Vertex
 
+/**
+  * vertex on a skew curve
+  *
+  * @param curve the curve
+  * @param position position on the curve in [0, 1)
+  */
 case class SkewCurveVertex(curve: SkewCurve, position: Double) extends Vertex
 
+/**
+  * An edge on a curve
+  *
+  * @param curve the curve on which the edge lies
+  * @param top whether this is the top edge
+  * @param positivelyOriented whether the edge is positively oriented
+  */
 case class CurveEdge(curve: Curve, top: Boolean, positivelyOriented: Boolean)
     extends OrientedEdge {
   lazy val flip = CurveEdge(curve, top, !positivelyOriented)
 
   lazy val initial: Vertex =
-    CurveVertex(curve, !(positivelyOriented ^ top))
+    CurveVertex(curve, !(positivelyOriented ^ top)) // is the first vertex for the top edge with positive orientation and the bottom with negative orientation
 
   lazy val terminal: Vertex =
-    CurveVertex(curve, positivelyOriented ^ top)
+    CurveVertex(curve, positivelyOriented ^ top) // the vertex different from the initial vertex
 }
 
 case class SkewCurveEdge(
@@ -335,7 +588,6 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
 
   val enum = if (top) Z3.enum else Z3.flipEnum
 
-
   lazy val segments: Vector[Vector[Edge]] =
     Z3.enum.map { direction: Z3 =>
       skewEdges(
@@ -348,7 +600,8 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
 
   lazy val baseBoundary = fillSeams(pants, segments, top)
 
-  lazy val boundary = if (top) baseBoundary else baseBoundary.reverse.map(_.flip)
+  lazy val boundary =
+    if (top) baseBoundary else baseBoundary.reverse.map(_.flip)
   lazy val sides = boundary.size
 }
 
@@ -457,8 +710,6 @@ case class PantsSurface(numPants: Index, cs: Set[Curve])
 
   lazy val peripheral: Set[Index] =
     indices.filter((m) => drop(m).isConnected).toSet
-
-//  assert(numPants ==0 || (loopIndices union boundaryIndices union peripheral).nonEmpty, s"strange $this")
 
   def glue1(pb: PantsBoundary) =
     PantsSurface(numPants + 1, cs + Curve(pb, PantsBoundary(numPants, Z3(0))))
@@ -577,7 +828,7 @@ object PantsSurface {
       )
     else
       distinct(
-        getAll(n - 1).flatMap(
+        all(n - 1).flatMap(
           (s) => s.allGlued.toVector
         )
       )
@@ -632,10 +883,19 @@ object PantsSurface {
       }
       .getOrElse(BoundaryVertex(pb, first))
 
-  def seam(pants: Index, direction: Z3, cs: Set[Curve], top: Boolean): PantsSeam = {
+  def seam(
+      pants: Index,
+      direction: Z3,
+      cs: Set[Curve],
+      top: Boolean
+  ): PantsSeam = {
     val initial = vertex(PantsBoundary(pants, direction), first = !top, cs)
     val terminal =
-      vertex(PantsBoundary(pants, if (top) direction.next else direction.prev), first = top, cs)
+      vertex(
+        PantsBoundary(pants, if (top) direction.next else direction.prev),
+        first = top,
+        cs
+      )
     PantsSeam(pants, initial, terminal, top)
   }
 
