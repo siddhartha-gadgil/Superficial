@@ -1,4 +1,4 @@
-val scalaV = "2.13.4"
+val scalaV = "2.13.5"
 
 ThisBuild / organization := "in.ac.iisc"
 ThisBuild / version := "0.1.1"
