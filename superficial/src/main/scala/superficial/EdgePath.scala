@@ -34,7 +34,7 @@ sealed trait EdgePath{ edgePath =>
       * @param twoComplex
       * @return
       */
-    def inTwoComplex(twoComplex: TwoComplex): Boolean = edgeVectors(edgePath).toSet.subsetOf(twoComplex.edges)
+    def inTwoComplex[P <: Polygon](twoComplex: TwoComplex[P]): Boolean = edgeVectors(edgePath).toSet.subsetOf(twoComplex.edges)
     def reverse : (EdgePath) = {
       edgePath match {
         case Constant(vertex) => Constant(vertex)
@@ -127,7 +127,7 @@ sealed trait EdgePath{ edgePath =>
     /**
      * Given another loop gives intersection along with signs.
      */
-    def intersectionsWith(otherPath : EdgePath , twoComplex : TwoComplex) : Set[Intersection] = {
+    def intersectionsWith(otherPath : EdgePath , twoComplex : TwoComplex[Polygon]) : Set[Intersection] = {
       require(edgePath.inTwoComplex(twoComplex), s"$edgePath is not inside $twoComplex")
       require(otherPath.inTwoComplex(twoComplex), s"$otherPath is not inside $twoComplex")
       require(edgePath.isLoop, s"The method for finding intersections does not work for non-loops such as $edgePath")
@@ -528,7 +528,7 @@ object EdgePath{
       * @param predicate condition to be satisfied
       * @return
       */
-    def enumerate(complex: TwoComplex, length: Int, predicate: EdgePath => Boolean = (_) => true) : LazyList[EdgePath] = 
+    def enumerate(complex: TwoComplex[Polygon], length: Int, predicate: EdgePath => Boolean = (_) => true) : LazyList[EdgePath] = 
     {
         if (length == 0) complex.vertices.map(Constant(_)).to(LazyList)
         else for {
@@ -557,7 +557,7 @@ object EdgePath{
       * @param path
       * @return
       */
-    def turnPath(path: EdgePath, twoComplex : TwoComplex): (Edge, Vector[Int]) = {
+    def turnPath(path: EdgePath, twoComplex : TwoComplex[Polygon]): (Edge, Vector[Int]) = {
         path match {
           case Constant(initial) => (makeEmptyEdge(initial), Vector[Int]())
           case Append(init, last) => {
@@ -577,7 +577,7 @@ object EdgePath{
       * @param e
       * @return
       */
-    def turnPathToEdgePath(edge: Edge, v: Vector[Int], twoComplex : TwoComplex): EdgePath = {
+    def turnPathToEdgePath(edge: Edge, v: Vector[Int], twoComplex : TwoComplex[Polygon]): EdgePath = {
       if (edge.isEmpty == true) Constant(edge.initial)
       else {
           def accumTurnPathToEdgePath(edge: Edge, vect: Vector[Int], accum: EdgePath): EdgePath = {
@@ -654,7 +654,7 @@ object EdgePath{
       * @param twoComplex
       * @return
       */
-    def isGeodesic(path: EdgePath, twoComplex: TwoComplex): Boolean = {
+    def isGeodesic(path: EdgePath, twoComplex: TwoComplex[Polygon]): Boolean = {
         assert(edgeVectors(path).toSet.subsetOf(twoComplex.edges), s"$path is not a path in $twoComplex")
 
         val turnVect = turnPath(path, twoComplex)._2
@@ -671,7 +671,7 @@ object EdgePath{
       * @param twoComplex
       * @return
       */
-    def turnPathStandardForm(edge: Edge, turnVect: Vector[Int], twoComplex : TwoComplex): Vector[Int] = 
+    def turnPathStandardForm(edge: Edge, turnVect: Vector[Int], twoComplex : TwoComplex[Polygon]): Vector[Int] = 
       turnPath(turnPathToEdgePath(edge, turnVect, twoComplex), twoComplex)._2
 
     /**
@@ -682,7 +682,7 @@ object EdgePath{
       * @param twoComplex
       * @return
       */
-    def turnPathReduce(edge: Edge, turnVect1: Vector[Int], twoComplex : TwoComplex): (Edge, Vector[Int]) = {
+    def turnPathReduce(edge: Edge, turnVect1: Vector[Int], twoComplex : TwoComplex[Polygon]): (Edge, Vector[Int]) = {
       if (edge.isEmpty == true) (edge, turnVect1)
       else {
         val turnVect = turnPathStandardForm(edge, turnVect1, twoComplex)
@@ -715,7 +715,7 @@ object EdgePath{
       * @param twoComplex
       * @return
       */
-    def turnPathToGeodesicHelper(edge: Edge, turnVect: Vector[Int], twoComplex : TwoComplex): (Edge, Vector[Int], TwoComplex) = {
+    def turnPathToGeodesicHelper(edge: Edge, turnVect: Vector[Int], twoComplex : TwoComplex[Polygon]): (Edge, Vector[Int], TwoComplex[Polygon]) = {
       if (edge.isEmpty == true) (edge, turnVect, twoComplex)
       else {
         def rectifyBracket(edge: Edge, vect: Vector[Int], bracket: (Int,Int), correction: Int): Vector[Int] = {
@@ -789,7 +789,7 @@ object EdgePath{
       * @param twoComplex
       * @return
       */
-    def turnPathToGeodesic(e: Edge, turnVect: Vector[Int], twoComplex : TwoComplex): (Edge, Vector[Int]) = {
+    def turnPathToGeodesic(e: Edge, turnVect: Vector[Int], twoComplex : TwoComplex[Polygon]): (Edge, Vector[Int]) = {
         val v = turnPathToGeodesicHelper(e, turnVect, twoComplex)
         (v._1, v._2)
     }
@@ -801,7 +801,7 @@ object EdgePath{
       * @param twoComplex
       * @return
       */
-      def edgePathReduce(path: EdgePath, twoComplex : TwoComplex): EdgePath = {
+      def edgePathReduce(path: EdgePath, twoComplex : TwoComplex[Polygon]): EdgePath = {
           val (e, tvect) = turnPath(path, twoComplex)
           val (edge, turnVect) = turnPathReduce(e, tvect, twoComplex)
           turnPathToEdgePath(edge, turnVect, twoComplex)
@@ -814,7 +814,7 @@ object EdgePath{
       * @param twoComplex
       * @return
       */
-    def edgePathToGeodesic(path: EdgePath, twoComplex : TwoComplex): EdgePath = {
+    def edgePathToGeodesic(path: EdgePath, twoComplex : TwoComplex[Polygon]): EdgePath = {
         val (e, tvect) = turnPath(path, twoComplex)
         val geodesic = turnPathToGeodesic(e, tvect, twoComplex)
         turnPathToEdgePath(geodesic._1, geodesic._2, twoComplex)

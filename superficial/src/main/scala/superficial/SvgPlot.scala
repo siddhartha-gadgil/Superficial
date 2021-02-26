@@ -50,9 +50,9 @@ object SvgPlot {
     }
   }
 
-  def faceSides(
-      face: Polygon,
-      complex: TwoComplex,
+  def faceSides[P <: Polygon](
+      face: P,
+      complex: TwoComplex[P],
       offset: (Double, Double) = (0, 0),
       radius: Double = 100
   ): Vector[Elem] = {
@@ -79,7 +79,7 @@ object SvgPlot {
     }
   }
 
-  def faceRowSides(complex: TwoComplex, r: Double = 50) = {
+  def faceRowSides(complex: TwoComplex[Polygon], r: Double = 50) = {
     def offset(n: Int) = (r/2 + (3 * r * n), r/2)
     complex.faces.toVector.zipWithIndex.flatMap{
       case (face, n) => faceSides(face, complex, offset(n), r)
@@ -138,7 +138,7 @@ object SvgPlot {
     svgPlot(allHexagonSides(complex), 150 * math.max(complex.numPants, 4), 300)
 
 
-  def plotComplex(complex: TwoComplex, radius: Double = 50) : Elem = 
+  def plotComplex(complex: TwoComplex[Polygon], radius: Double = 50) : Elem = 
     svgPlot(faceRowSides(complex,radius), complex.faces.size * radius * 3 , radius * 3)
 
   def writeFile(text: String, fileName: String, append: Boolean = false) = {
@@ -162,6 +162,6 @@ object SvgPlot {
     desktop.browse(new URI("file",  file.getAbsolutePath, ""))
   }
 
-  def apply(complex: TwoComplex, radius: Double = 50) : Unit = 
+  def apply(complex: TwoComplex[Polygon], radius: Double = 50) : Unit = 
     viewPage(plotComplex(complex, radius))
 }

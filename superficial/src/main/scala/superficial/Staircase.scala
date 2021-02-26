@@ -119,7 +119,7 @@ object Staircase {
    *
    * @return A pair. The first co-ordinate is the staircase. The second component is the set of all spokes.
    */
-  def getStairCase (left : EdgePath, right : EdgePath, twoComplex : TwoComplex) : (TwoComplex, Set[Edge]) = {
+  def getStairCase (left : EdgePath, right : EdgePath, twoComplex : TwoComplex[Polygon]) : (TwoComplex[Polygon], Set[Edge]) = {
     require(left.initial == right.initial, s"Initial vertices of $left and $right are not same")
     require(left.terminal == right.terminal, s"Terminal vertices of $left and $right are not same")
 
@@ -127,7 +127,7 @@ object Staircase {
     val boundaryVector : Vector[Edge] = edgeVectors(boundaryOfStaircase)
     val boundaryEdgeSet : Set[Edge]  = boundaryVector.toSet
     val facesInStairCase : Set[Polygon] = boundaryEdgeSet.flatMap(el => twoComplex.facesWithEdge(el))
-    val staircase : TwoComplex = PureComplex(facesInStairCase)
+    val staircase : TwoComplex[Polygon] = PureComplex(facesInStairCase)
     val spokes : Set[Edge] = staircase.edges -- (boundaryEdgeSet)
     (staircase, spokes)
   }
