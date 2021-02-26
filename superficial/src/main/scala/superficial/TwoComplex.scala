@@ -287,12 +287,12 @@ trait TwoComplex[P <: Polygon] { twoComplex =>
   def facesWithEdge(edge: Edge): Set[P] =
     faces.filter((face) => face.edges.contains(edge))
 
-  def edgeIndices(edge: Edge): Set[(Polygon, Index, Boolean)] =
+  def edgeIndices(edge: Edge): Set[(P, Index, Boolean)] =
     faces.flatMap(
       (f) => f.boundaryIndex(edge).map { case (n, flipped) => (f, n, flipped) }
     )
 
-  def normalArcs: Set[NormalArc] =
+  def normalArcs: Set[NormalArc[P]] =
     for {
       face <- faces
       initial <- face.indices

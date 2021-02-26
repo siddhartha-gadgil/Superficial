@@ -8,20 +8,20 @@ import Polygon.Index
   * @param terminal the edge containing the final point
   * @param face the face containing the arc
   */
-case class NormalArc(initial: Index, terminal: Index, face: Polygon) {
+case class NormalArc[P<: Polygon](initial: Index, terminal: Index, face: P) {
   val terminalEdge = face.boundary(terminal)
 
   val initialEdge = face.boundary(initial)
 
   def vertexLinking = math.abs(terminal - initial) == 1
 
-  def crosses(that: NormalArc) =
+  def crosses(that: NormalArc[P]) =
     (that.initial - initial) * (that.terminal - terminal) * (that.initial - terminal) * (that.terminal - initial) < 0
 
 }
 
 object NormalArc {
-  def enumerate(complex: TwoComplex[Polygon]): Set[NormalArc] =
+  def enumerate[P <: Polygon](complex: TwoComplex[P]): Set[NormalArc[P]] =
     for {
       face <- complex.faces
       initial <- face.indices
@@ -30,7 +30,7 @@ object NormalArc {
     } yield NormalArc(initial, terminal, face)
 }
 
-case class NormalPath(edges: Vector[NormalArc]) {
+case class NormalPath[P <: Polygon](edges: Vector[NormalArc[P]]) {
   edges.zip(edges.tail).foreach {
     case (e1, e2) =>
       require(
@@ -39,9 +39,9 @@ case class NormalPath(edges: Vector[NormalArc]) {
       )
   }
 
-  def +:(arc: NormalArc) = NormalPath(arc +: edges)
+  def +:(arc: NormalArc[P]) = NormalPath(arc +: edges)
 
-  def :+(arc: NormalArc) = NormalPath(edges :+ arc)
+  def :+(arc: NormalArc[P]) = NormalPath(edges :+ arc)
   //
   //  def appendOpt(arc: NormalArc): Option[NormalPath] =
   //    if (arc.initial == terminalEdge && arc != edges.last.flip) Some(this :+ arc)
@@ -83,13 +83,13 @@ case class NormalPath(edges: Vector[NormalArc]) {
 object NormalPath {
 
   @annotation.tailrec
-  def enumerateRec(
-      complex: TwoComplex[Polygon],
+  def enumerateRec[P <: Polygon](
+      complex: TwoComplex[P],
       maxAppendLength: Option[Int],
-      p: NormalPath => Boolean,
-      latest: Set[NormalPath],
-      accum: Set[NormalPath]
-  ): Set[NormalPath] = {
+      p: NormalPath[P] => Boolean,
+      latest: Set[NormalPath[P]],
+      accum: Set[NormalPath[P]]
+  ): Set[NormalPath[P]] = {
     if (maxAppendLength.contains(0) || latest.isEmpty) accum
     else {
       val newPaths =
@@ -125,11 +125,11 @@ object NormalPath {
     * @param p a hereditary condition
     * @return set of patbs with bounded length satisfying the condition
     */
-  def enumerate(
-      complex: TwoComplex[Polygon],
+  def enumerate[P <: Polygon](
+      complex: TwoComplex[P],
       maxLength: Option[Int] = None,
-      p: NormalPath => Boolean = (_) => true
-  ): Set[NormalPath] =
+      p: NormalPath[P] => Boolean = (p : NormalPath[P]) => true
+  ): Set[NormalPath[P]] =
     if (maxLength.exists(_ < 1)) Set()
     else {
       val lengthOne =
