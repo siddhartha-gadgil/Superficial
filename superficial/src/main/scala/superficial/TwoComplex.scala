@@ -9,7 +9,7 @@ import EdgePath._
   * Abstract polygon, with given edges and vertices, i.e. a two-complex with a single face.
   * @param sides number of sides
   */
-trait Polygon extends TwoComplex {
+trait Polygon extends TwoComplex[Polygon] {
   val sides: Int
 
   lazy val faces = Set(this)
@@ -142,14 +142,14 @@ object Polygon {
 }
 
 object TwoComplex {
-  def pure(fs: Polygon*): TwoComplex = {
+  def pure[P <: Polygon](fs: P*): TwoComplex[P] = {
     fs.foreach(f => assert(f.checkBoundary))
-    new PureTwoComplex {
-      val faces: Set[Polygon] = fs.toSet
+    new PureTwoComplex[P] {
+      val faces: Set[P] = fs.toSet
     }
   }
   case class Concrete(vertices: Set[Vertex], edges: Set[Edge], faces: Set[Polygon])
-      extends TwoComplex
+      extends TwoComplex[Polygon]
 
   @annotation.tailrec
   def halfEdges(edges: List[Edge], accum: Set[Edge]): Set[Edge] = edges match {
@@ -160,17 +160,17 @@ object TwoComplex {
   }
 
   // collapse all edges that are not loops
-  def allCollapsed1(complex: TwoComplex): TwoComplex =
+  def allCollapsed1(complex: TwoComplex[Polygon]): TwoComplex[Polygon] =
     nonLoop(complex)
       .map { e =>
         allCollapsed1(complex.collapseEdge(e)._1)
       }
       .getOrElse(complex).ensuring{_.checkComplex}
 
-  def allCollapsed (complex : TwoComplex) : (TwoComplex, ((EdgePath => EdgePath), (EdgePath => EdgePath))) = {
+  def allCollapsed (complex : TwoComplex[Polygon]) : (TwoComplex[Polygon], ((EdgePath => EdgePath), (EdgePath => EdgePath))) = {
 
-    def helper (twoComplex: TwoComplex, forwardEdgePathMap: (EdgePath => EdgePath), backwardEdgePathMap: (EdgePath => EdgePath)) :
-           (TwoComplex, ((EdgePath => EdgePath), (EdgePath => EdgePath))) = {
+    def helper (twoComplex: TwoComplex[Polygon], forwardEdgePathMap: (EdgePath => EdgePath), backwardEdgePathMap: (EdgePath => EdgePath)) :
+           (TwoComplex[Polygon], ((EdgePath => EdgePath), (EdgePath => EdgePath))) = {
       nonLoop(twoComplex).map(
         e => {
           val eCollapsed = twoComplex.collapseEdge(e)
@@ -185,7 +185,7 @@ object TwoComplex {
     helper(complex, identityFun, identityFun)
   }
 
-  def nonLoop(complex: TwoComplex): Option[Edge] =
+  def nonLoop(complex: TwoComplex[Polygon]): Option[Edge] =
     complex.edges.find(edge => edge.initial != edge.terminal)
 
   def mergeFaces(e: Edge, first: Polygon, second: Polygon): Polygon = {
@@ -220,7 +220,7 @@ object TwoComplex {
     */
   def symbolic(vertexNames: String*)(edgeMap: (String, (String, String))*)(
       faceMap: (String, Seq[(String, Boolean)])*
-  ): TwoComplex = {
+  ): TwoComplex[Polygon] = {
     val vertices: Set[Vertex] = vertexNames.toSet.map(Vertex.Symbolic(_))
     val edges: Set[Edge] =
       edgeMap.toMap.flatMap {
@@ -248,8 +248,8 @@ object TwoComplex {
 /**
   *  A polyheadral two complex, with faces polygons, a collection of edges and
   */
-trait TwoComplex { twoComplex =>
-  val faces: Set[Polygon]
+trait TwoComplex[P <: Polygon] { twoComplex =>
+  val faces: Set[P]
 
   val edges: Set[Edge] // these come in pairs, related by flip (reversing orientation)
 
@@ -284,7 +284,7 @@ trait TwoComplex { twoComplex =>
 
   def vertexIndex(v: Vertex) = indexedVertices.find(_._1 == v).map(_._2)
 
-  def facesWithEdge(edge: Edge): Set[Polygon] =
+  def facesWithEdge(edge: Edge): Set[P] =
     faces.filter((face) => face.edges.contains(edge))
 
   def edgeIndices(edge: Edge): Set[(Polygon, Index, Boolean)] =
@@ -306,7 +306,7 @@ trait TwoComplex { twoComplex =>
    * The other method is also an edgePath map but in the opposite direction. That is it takes
    * edgePaths in the resulting TwoComplex and returns an edgePath in the original twoComplex.
    **/
-  def collapseEdge(e: Edge): (TwoComplex, (EdgePath => EdgePath, EdgePath => EdgePath)) = {
+  def collapseEdge(e: Edge): (TwoComplex[Polygon], (EdgePath => EdgePath, EdgePath => EdgePath)) = {
     require(e.initial != e.terminal, s"cannot collapse loop $e at ${e.initial}")
     // map from edges to new edges
     val newEdgeHalfMap: Map[Edge, Edge] =
@@ -344,7 +344,7 @@ trait TwoComplex { twoComplex =>
         assert(checkBoundary)
       }
 
-    object newComplex extends TwoComplex {
+    object newComplex extends TwoComplex[Polygon] {
       val edges: Set[Edge] = newEdgeMap.values.toSet
       val faces: Set[Polygon] = twoComplex.faces.map(newPoly(_))
       val vertices: Set[Vertex] = twoComplex.vertices - e.terminal
@@ -596,18 +596,18 @@ trait TwoComplex { twoComplex =>
   }  
 
   /** 
-   *Given a set of vertices vs gives the TwoComplex got by adding vs 
+   *Given a set of vertices vs gives the TwoComplex[Polygon] got by adding vs 
    *to the existing twoComplex. If vs is already inside gives the same 
    *twoComplex 
    */
-  def addVertices (vs : Set[Vertex]) : TwoComplex ={
+  def addVertices (vs : Set[Vertex]) : TwoComplex[P] ={
     if (twoComplex.vertices.intersect(vs).nonEmpty) {
       System.err.println("[Warning] The following vertices already belong to the twocomplex" 
         + twoComplex + "\n" + twoComplex.vertices.intersect(vs))
     }
 
-    object newComplex extends TwoComplex {
-      val faces: Set[Polygon] = twoComplex.faces
+    object newComplex extends TwoComplex[P] {
+      val faces: Set[P] = twoComplex.faces
       val edges: Set[Edge] = twoComplex.edges
       val vertices: Set[Vertex] = twoComplex.vertices ++ vs
     }
@@ -618,14 +618,14 @@ trait TwoComplex { twoComplex =>
    *Given a set of edges eds gives the TwoComplex got by adding eds 
    *and there flips to the existing twoComplex.
    */
-  def addEdges (eds : Set[Edge]) : TwoComplex ={
+  def addEdges (eds : Set[Edge]) : TwoComplex[P] ={
     if (twoComplex.edges.intersect(eds).nonEmpty) {
       System.err.println("[Warning] The following edges already belong to the twocomplex" 
         + twoComplex + "\n" + twoComplex.edges.intersect(eds))
     }
 
-    object newComplex extends TwoComplex {
-      val faces: Set[Polygon] = twoComplex.faces
+    object newComplex extends TwoComplex[P] {
+      val faces: Set[P] = twoComplex.faces
       val edges: Set[Edge] = twoComplex.edges ++ eds ++ eds.map(_.flip)
       val vertices: Set[Vertex] = 
         twoComplex.vertices ++ eds.flatMap(ed => Set(ed.initial, ed.terminal))
@@ -637,13 +637,14 @@ trait TwoComplex { twoComplex =>
    *Given a set of faces fcs gives the TwoComplex got by adding fcs 
    *to the existing twoComplex.
    */
-  def addFaces (fcs : Set[Polygon]) : TwoComplex = {
-    if (twoComplex.faces.intersect(fcs).nonEmpty) {
+  def addFaces (fcs : Set[Polygon]) : TwoComplex[Polygon] = {
+    val polys = faces.map(x => x : Polygon)
+    if (polys.intersect(fcs).nonEmpty) {
       System.err.println("[Warning] The following edges already belong to the twocomplex" 
-        + twoComplex + "\n" + twoComplex.faces.intersect(fcs))
+        + twoComplex + "\n" + polys.intersect(fcs))
     }
 
-    object newComplex extends TwoComplex {
+    object newComplex extends TwoComplex[Polygon] {
       val faces: Set[Polygon] = twoComplex.faces ++ fcs
       val edges: Set[Edge] = twoComplex.edges ++ fcs.flatMap(_.edges)
       val vertices: Set[Vertex] = 
@@ -655,8 +656,8 @@ trait TwoComplex { twoComplex =>
   /**
    * Gives the result of adding the given set of twocomplexes to the existing one.
    */
-  def addTwoComplexes (complexes : Set[TwoComplex]) = {
-    object newComplex extends TwoComplex {
+  def addTwoComplexes (complexes : Set[TwoComplex[Polygon]]) = {
+    object newComplex extends TwoComplex[Polygon] {
       val faces: Set[Polygon] = twoComplex.faces ++ complexes.flatMap(_.faces)
       val edges: Set[Edge] = twoComplex.edges ++ complexes.flatMap(_.edges)
       val vertices: Set[Vertex] = 
@@ -668,14 +669,14 @@ trait TwoComplex { twoComplex =>
   /**
    * Given a set of vertices gives the subcomplex on the vertices
    */
-  def subComplex (vs : Set[Vertex]) : TwoComplex = {
+  def subComplex (vs : Set[Vertex]) : TwoComplex[P] = {
     if (!vs.subsetOf(twoComplex.vertices)) {
       System.err.println("[Warning] The following vertices don't belong to the twoComplex : " + "\n " +
         vs.filter(!twoComplex.vertices.contains(_)))
     } 
 
-    object newComplex extends TwoComplex {
-      val faces: Set[Polygon] = twoComplex.faces.filter(_.vertices.subsetOf(vs))
+    object newComplex extends TwoComplex[P] {
+      val faces: Set[P] = twoComplex.faces.filter(_.vertices.subsetOf(vs))
       val edges: Set[Edge] = twoComplex.edges.filter(ed => (Set(ed.initial, ed.terminal).subsetOf(vs)))
       val vertices: Set[Vertex] = vs
     }
@@ -860,8 +861,8 @@ trait TwoComplex { twoComplex =>
 /**
   * A two-complex with all vertices and edges contained in faces, hence determined by its faces.
   */
-trait PureTwoComplex extends TwoComplex {
-  val faces: Set[Polygon]
+trait PureTwoComplex[P <: Polygon] extends TwoComplex[P] {
+  val faces: Set[P]
 
   lazy val edges: Set[Edge] =
     faces.map(_.edges).foldLeft(Set.empty[Edge])(_ union _)
@@ -870,7 +871,7 @@ trait PureTwoComplex extends TwoComplex {
     faces.map(_.vertices).foldLeft(Set.empty[Vertex])(_ union _)
 }
 
-case class PureComplex(polys: Set[Polygon]) extends PureTwoComplex{
-  val faces: Set[Polygon] = polys
+case class PureComplex[P <: Polygon](polys: Set[P]) extends PureTwoComplex[P]{
+  val faces: Set[P] = polys
 }
 

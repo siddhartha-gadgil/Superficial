@@ -21,7 +21,7 @@ case class NormalArc(initial: Index, terminal: Index, face: Polygon) {
 }
 
 object NormalArc {
-  def enumerate(complex: TwoComplex): Set[NormalArc] =
+  def enumerate(complex: TwoComplex[Polygon]): Set[NormalArc] =
     for {
       face <- complex.faces
       initial <- face.indices
@@ -84,7 +84,7 @@ object NormalPath {
 
   @annotation.tailrec
   def enumerateRec(
-      complex: TwoComplex,
+      complex: TwoComplex[Polygon],
       maxAppendLength: Option[Int],
       p: NormalPath => Boolean,
       latest: Set[NormalPath],
@@ -126,7 +126,7 @@ object NormalPath {
     * @return set of patbs with bounded length satisfying the condition
     */
   def enumerate(
-      complex: TwoComplex,
+      complex: TwoComplex[Polygon],
       maxLength: Option[Int] = None,
       p: NormalPath => Boolean = (_) => true
   ): Set[NormalPath] =

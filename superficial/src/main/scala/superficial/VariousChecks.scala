@@ -16,7 +16,7 @@ object CheckQuadrangulation {
    * Given a twoComplex and an integer n it checks that the forward and backward EdgePaths
    * Works for EdgePaths upto length n.
    */ 
-  def Termination (twoComplex : TwoComplex, n : Int) : Boolean = {
+  def Termination (twoComplex : TwoComplex[Polygon], n : Int) : Boolean = {
     val quadWithMaps = Quadrangulation.quadrangulate(twoComplex)
     val quad = quadWithMaps._1
     def forwardMap = quadWithMaps._2._1
@@ -326,7 +326,7 @@ object CollectionOfHomotopyClasses {
     CollectionOfHomotopyClasses.apply(newClasses)
   }
 
-  def starter (twoComplex : TwoComplex) : CollectionOfHomotopyClasses = {
+  def starter (twoComplex : TwoComplex[Polygon]) : CollectionOfHomotopyClasses = {
     val newClasses : Set[HomotopyClassesOfPaths] = 
       twoComplex.faces.flatMap(fc => CollectionOfHomotopyClasses.starter(fc).classes)
     CollectionOfHomotopyClasses.apply(newClasses)  

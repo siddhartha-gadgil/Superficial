@@ -8,7 +8,7 @@ import superficial.Generator.a
 object Triangles {
   import SphereComplex._
 
-  object HollowTriangle extends TwoComplex {
+  object HollowTriangle extends TwoComplex[Polygon] {
     val sides = 3
     val faces = Set.empty
     val boundary = Vector(A.Positive, B.Positive, C.Positive)
@@ -55,11 +55,11 @@ object Examples {
 
 /*Sphere with n and Surface with given genus and boundary components.*/
 trait sphereWithHoles {
-  def generateComplex (numberOfHoles: Int): TwoComplex
+  def generateComplex (numberOfHoles: Int): TwoComplex[Polygon]
 }
 
 object sphereWithHoles {
-  def generateComplex (numberOfHoles: Int) :  TwoComplex = {
+  def generateComplex (numberOfHoles: Int) :  TwoComplex[Polygon] = {
 
     require(numberOfHoles>=1)
     var boundaryVertices = (0 to (2*numberOfHoles-1)).toArray.map(_.toString).map("v" + _)
@@ -103,12 +103,12 @@ object sphereWithHoles {
 
 
 trait surfaceWithBoundary{
-  def generateComplex (genus: Int, boundaryComponents: Int): TwoComplex
+  def generateComplex (genus: Int, boundaryComponents: Int): TwoComplex[Polygon]
 }
 
 
 object surfaceWithBoundary{
-  def generateComplex (genus: Int, boundaryComponents: Int) : TwoComplex = {
+  def generateComplex (genus: Int, boundaryComponents: Int) : TwoComplex[Polygon] = {
 
     val VertexList = (0 to boundaryComponents).toVector.map(_.toString).map("v"+_)
     val normalEdges = (3 to 2*genus).toArray.map(_.toString).map("e"+_)

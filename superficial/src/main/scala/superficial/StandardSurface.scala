@@ -2,7 +2,7 @@ package superficial
 
 import fastparse._, SingleLineWhitespace._
 
-class StandardSurface(val genus: Int) extends TwoComplex{surface =>
+class StandardSurface(val genus: Int) extends TwoComplex[Polygon]{surface =>
     lazy val faces: Set[Polygon] = Set(face)
     lazy val edges: Set[Edge] = face.edges
     lazy val vertices: Set[Vertex] = Set(vertex)

@@ -16,7 +16,7 @@ trait Intersection { intersection =>
    *Checks that the intersection is a valid intersection between 
    *thisPath and thatPath. For now it does not check turns.
    */
-  def isValidBetween (thisPath : EdgePath, thatPath : EdgePath, twoComplex : TwoComplex) : Boolean = {
+  def isValidBetween (thisPath : EdgePath, thatPath : EdgePath, twoComplex : TwoComplex[Polygon]) : Boolean = {
     val inThis : EdgePath = thisPath.cyclicalTake(intersection.start._1, intersection.end._1)
     val inThat : EdgePath = thatPath.cyclicalTake(intersection.start._2, intersection.end._2)
     val condition1 : Boolean = inThis == inThat
@@ -49,7 +49,7 @@ trait Intersection { intersection =>
   def findMergable(inside : Vector[Intersection], thisLimit : Int, thatLimit : Int) : Option[Intersection] = 
     inside.find(el => intersection.isMergableWith(el, thisLimit, thatLimit))
 
-  def getEdgePathWithSigns(thisPath : EdgePath, thatPath : EdgePath, twoComplex : TwoComplex) : (EdgePath, Int) = {
+  def getEdgePathWithSigns(thisPath : EdgePath, thatPath : EdgePath, twoComplex : TwoComplex[Polygon]) : (EdgePath, Int) = {
     require(intersection.isValidBetween(thisPath, thatPath, twoComplex), 
       s"$intersection is not a valid intersection between $thisPath and $thatPath")
     val sign : Int = {
@@ -61,7 +61,7 @@ trait Intersection { intersection =>
     (newPath, sign)
   }
 
-  def getSign(thisPath : EdgePath, thatPath : EdgePath, twoComplex : TwoComplex): Int = {
+  def getSign(thisPath : EdgePath, thatPath : EdgePath, twoComplex : TwoComplex[Polygon]): Int = {
     require(intersection.isValidBetween(thisPath, thatPath, twoComplex), 
       s"$intersection is not a valid intersection between $thisPath and $thatPath")
     val sign : Int = {
@@ -81,7 +81,7 @@ trait Intersection { intersection =>
   /**
    * Decides whether the given (maximal) intersection of non-zero length is a crossing or non-crossing.    
    */
-  def isCrossing(thisPath : EdgePath, thatPath : EdgePath, twoComplex : TwoComplex) : Boolean = {
+  def isCrossing(thisPath : EdgePath, thatPath : EdgePath, twoComplex : TwoComplex[Polygon]) : Boolean = {
     
     require(intersection.isValidBetween(thisPath, thatPath, twoComplex), 
       s"$intersection is not a valid intersection between $thisPath and $thatPath")

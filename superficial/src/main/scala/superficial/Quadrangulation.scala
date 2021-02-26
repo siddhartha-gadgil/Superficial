@@ -13,17 +13,17 @@ trait Quadrilateral extends Polygon {
     val sides: Int = 4
 }
 
-trait Quadrangulation extends TwoComplex {
+trait Quadrangulation extends TwoComplex[Polygon] {
 
 }
 
 object Quadrangulation {
 
-  def isQuadrangulation (twoComplex : TwoComplex) : Boolean = {
+  def isQuadrangulation (twoComplex : TwoComplex[Polygon]) : Boolean = {
     twoComplex.faces.forall(f => (f.boundary.length == 4))
   }
 
-  def apply(twoComplex: TwoComplex): Quadrangulation = {
+  def apply(twoComplex: TwoComplex[Polygon]): Quadrangulation = {
         assert(twoComplex.isClosedSurface)
         assert(twoComplex.faces.forall(_.sides == 4))
         twoComplex.asInstanceOf[Quadrangulation]
@@ -79,7 +79,7 @@ object Quadrangulation {
    *In the second case because the pre existing vertices and the barycenters form a bipartite set in the quadrangulation,
    *shifting the basepoint makes the loop start and end at a pre existing vertex.
    */
-  def quadrangulate (twoComplex : TwoComplex) : (TwoComplex, (EdgePath => EdgePath, EdgePath => EdgePath)) = {
+  def quadrangulate (twoComplex : TwoComplex[Polygon]) : (TwoComplex[Polygon], (EdgePath => EdgePath, EdgePath => EdgePath)) = {
  
     require(twoComplex.isClosedSurface, "Algorithm only works for closed surfaces")       
 

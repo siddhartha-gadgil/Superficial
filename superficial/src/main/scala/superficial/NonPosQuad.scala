@@ -2,7 +2,7 @@ package superficial
 
 import TwoComplex._
 
-trait NonPosQuad extends TwoComplex {nonPosQuad =>
+trait NonPosQuad extends TwoComplex[Polygon] {nonPosQuad =>
 
     /**
       * Gives the designated index (1 L, 2 SL, -1 R, -2 SR, higher values by turn distance) associated to a turn
@@ -48,7 +48,7 @@ trait NonPosQuad extends TwoComplex {nonPosQuad =>
 
 object NonPosQuad{
 
-  def apply(twoComplex: TwoComplex): NonPosQuad = {
+  def apply(twoComplex: TwoComplex[Polygon]): NonPosQuad = {
     assert(twoComplex.isClosedSurface)
     assert(twoComplex.faces.forall(_.sides == 4))
     assert(twoComplex.vertices.forall(twoComplex.degree(_) >= 5))

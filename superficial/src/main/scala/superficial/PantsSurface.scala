@@ -635,7 +635,7 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
 }
 
 case class SkewPantsSurface(numPants: Index, cs: Set[SkewCurve])
-    extends PureTwoComplex {
+    extends PureTwoComplex[Polygon] {
   lazy val indices: Vector[Index] = (0 until numPants).toVector
 
   lazy val faces: Set[Polygon] =
@@ -692,7 +692,7 @@ object SkewPantsSurface {
   * @param cs the curve system giving the pants decomposition
   */
 case class PantsSurface(numPants: Index, cs: Set[Curve])
-    extends PureTwoComplex {
+    extends PureTwoComplex[Polygon] {
   val indices: Vector[Index] = (0 until numPants).toVector
 
   val faces: Set[Polygon] =

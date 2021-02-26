@@ -8,7 +8,7 @@ object Clockwise {
   /**
    * Checks that starting from u if we take rotate by left we reach v before reaching w.
    */
-  def isInOrder (u : Edge, v : Edge, w : Edge, twoComplex : TwoComplex) : Boolean = {
+  def isInOrder (u : Edge, v : Edge, w : Edge, twoComplex : TwoComplex[Polygon]) : Boolean = {
 
     require(twoComplex.edges.contains(u), s"$u is not a vertex of $twoComplex")
     require(twoComplex.edges.contains(v), s"$v is not a vertex of $twoComplex")
@@ -41,7 +41,7 @@ object Clockwise {
    * we will first reach b and then c. 
    * Checks about the inputs are not given as they are already done in isInOrder
    */
-  def isClockwise (a : Edge, b : Edge, c : Edge, twoComplex : TwoComplex) : Boolean = {
+  def isClockwise (a : Edge, b : Edge, c : Edge, twoComplex : TwoComplex[Polygon]) : Boolean = {
     
     val condition1 : Boolean = isInOrder(a, b, c, twoComplex)
     val condition2 : Boolean = isInOrder(b, c, a, twoComplex)
