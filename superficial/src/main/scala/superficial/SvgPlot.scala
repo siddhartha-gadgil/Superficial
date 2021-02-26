@@ -50,9 +50,9 @@ object SvgPlot {
     }
   }
 
-  def faceSides(
-      face: Polygon,
-      complex: TwoComplex[Polygon],
+  def faceSides[P <: Polygon](
+      face: P,
+      complex: TwoComplex[P],
       offset: (Double, Double) = (0, 0),
       radius: Double = 100
   ): Vector[Elem] = {
