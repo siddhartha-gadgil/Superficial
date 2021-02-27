@@ -4,7 +4,7 @@ import ammonite.ops._
 import $ivy.`org.eclipse.jgit:org.eclipse.jgit:3.5.0.201409260305-r`
 
 trait CommonModule extends ScalaModule {
-  def scalaVersion = "2.13.5"
+  def scalaVersion = "2.13.4"
 
   def scalacOptions = Seq("-deprecation")
 }
