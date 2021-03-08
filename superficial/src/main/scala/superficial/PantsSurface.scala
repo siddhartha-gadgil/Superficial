@@ -617,21 +617,46 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
       skewVertices(PantsBoundary(pants, direction), top, cs)
     }
 
-  private lazy val segments: Vector[Vector[Edge]] =
-    Z3.enum.map { direction: Z3 =>
+  private lazy val segments: Vector[Vector[Edge]] = {
+    if (top) {
+      Z3.enum.map { direction: Z3 =>
       skewEdges(
         PantsBoundary(pants, direction),
         top,
         positivelyOriented = top,
         cs
       )
+      }
+    } else {
+      Z3.flipEnum.map { direction: Z3 =>
+      skewEdges(
+        PantsBoundary(pants, direction),
+        top,
+        positivelyOriented = top,
+        cs
+      )
+      }
+    }
+  } 
+
+  lazy val boundary = fillSeams(pants, segments)
+  lazy val sides = boundary.size
+}
+
+object SkewPantsHexagon {
+  def edgeLengths(sph: SkewPantsHexagon): Vector[Option[Double]] = 
+    Z3.enum.map { direction: Z3 =>
+      getSkewCurve(PantsBoundary(sph.pants, direction), sph.cs)
+        .map {
+          case (curve, left) => Some(curve.length)
+        }
+        .getOrElse(None)
     }
 
-  private lazy val baseBoundary = fillSeams(pants, segments)
-
-  lazy val boundary =
-    if (top) baseBoundary else baseBoundary.reverse.map(_.flip)
-  lazy val sides = boundary.size
+  def seamLengths(sph: SkewPantsHexagon, n: Index): Double = {
+    require(edgeLengths(sph).forall(x => x.isDefined))
+    Hexagon.side(edgeLengths(sph)(n).getOrElse(0), edgeLengths(sph)((n+1)%3).getOrElse(0), edgeLengths(sph)((n+2)%3).getOrElse(0))   
+  }
 }
 
 case class SkewPantsSurface(numPants: Index, cs: Set[SkewCurve])
