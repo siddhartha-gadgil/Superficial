@@ -644,7 +644,7 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
 }
 
 object SkewPantsHexagon {
-  def edgeLengths(sph: SkewPantsHexagon): Vector[Option[Double]] = 
+  def edgeLengths(sph: SkewPantsHexagon): Vector[Option[Double]] = {
     Z3.enum.map { direction: Z3 =>
       getSkewCurve(PantsBoundary(sph.pants, direction), sph.cs)
         .map {
@@ -652,10 +652,10 @@ object SkewPantsHexagon {
         }
         .getOrElse(None)
     }
-
+  }
   def seamLengths(sph: SkewPantsHexagon, n: Index): Double = {
     require(edgeLengths(sph).forall(x => x.isDefined))
-    Hexagon.side(edgeLengths(sph)(n).getOrElse(0), edgeLengths(sph)((n+1)%3).getOrElse(0), edgeLengths(sph)((n+2)%3).getOrElse(0))   
+    Hexagon.side(edgeLengths(sph)(n).getOrElse(0), edgeLengths(sph)((n+1)%3).getOrElse(0), edgeLengths(sph)((n+2)%3).getOrElse(0)) 
   }
 }
 
