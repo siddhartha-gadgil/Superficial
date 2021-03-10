@@ -211,7 +211,7 @@ case class PantsSeam(
     pants: Index,
     initial: Vertex,
     terminal: Vertex,
-    positivelyOriented: Boolean = true
+    positivelyOriented: Boolean
 ) extends OrientedEdge {
   lazy val flip = PantsSeam(pants, terminal, initial, !positivelyOriented)
 }
@@ -413,9 +413,14 @@ case class SkewCurve(
     * position of the first vertex on the given pants boundary in the curve after gluing with a twist
     *
     * @param left whether we consider the pants
+    * @param top whether we consider the top edge
     * @return position
     */
-  def initPos(left: Boolean) = if (left) 0.0 else twist
+  def initPos(left: Boolean, top: Boolean) = if(left){
+    if(top) 0.0 else 0.5
+  } else {
+    if(top) (0.5+twist) else twist
+  }
 
   /**
     * the edges in the twisted pants complex on an edge in a pants boundary adjacent to the given curve;
@@ -425,10 +430,7 @@ case class SkewCurve(
     * @param top whether we consider the top edge
     * @return edges in the twisted pants complex
     */
-  def edgesOn(left: Boolean, top: Boolean): Vector[Edge] = {
-    val es = edgesToOppositeVertex(initPos(left), top)
-    if (left) es else es.map(_.flip).reverse
-  }
+  def edgesOn(left: Boolean, top: Boolean): Vector[Edge] = edgesToOppositeVertex(initPos(left, top), left)
 
   /**
     * the vertices in the twisted pants complex on an edge in a pants boundary adjacent to the given curve;
@@ -439,7 +441,7 @@ case class SkewCurve(
     * @return vertices in the twisted pants complex
     */
   def verticesOn(left: Boolean, top: Boolean): Set[Vertex] = {
-    verticesToOppositeVertex(initPos(left), top)
+    verticesToOppositeVertex(initPos(left, top), left)
   }
 
 }
@@ -617,21 +619,46 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
       skewVertices(PantsBoundary(pants, direction), top, cs)
     }
 
-  private lazy val segments: Vector[Vector[Edge]] =
-    Z3.enum.map { direction: Z3 =>
+  private lazy val segments: Vector[Vector[Edge]] = {
+    if (top) {
+      Z3.enum.map { direction: Z3 =>
       skewEdges(
         PantsBoundary(pants, direction),
         top,
         positivelyOriented = top,
         cs
       )
+      }
+    } else {
+      Z3.flipEnum.map { direction: Z3 =>
+      skewEdges(
+        PantsBoundary(pants, direction),
+        top,
+        positivelyOriented = top,
+        cs
+      )
+      }
     }
+  } 
 
-  private lazy val baseBoundary = fillSeams(pants, segments)
-
-  lazy val boundary =
-    if (top) baseBoundary else baseBoundary.reverse.map(_.flip)
+  lazy val boundary = fillSeams(pants, segments, top)
   lazy val sides = boundary.size
+}
+
+object SkewPantsHexagon {
+  def edgeLengths(sph: SkewPantsHexagon): Vector[Option[Double]] = {
+    Z3.enum.map { direction: Z3 =>
+      getSkewCurve(PantsBoundary(sph.pants, direction), sph.cs)
+        .map {
+          case (curve, left) => Some(curve.length)
+        }
+        .getOrElse(None)
+    }
+  }
+  def seamLengths(sph: SkewPantsHexagon, n: Index): Double = {
+    require(edgeLengths(sph).forall(x => x.isDefined))
+    Hexagon.side(edgeLengths(sph)(n).getOrElse(0), edgeLengths(sph)((n+1)%3).getOrElse(0), edgeLengths(sph)((n+2)%3).getOrElse(0)) 
+  }
 }
 
 case class SkewPantsSurface(numPants: Index, cs: Set[SkewCurve])
@@ -1168,41 +1195,46 @@ object PantsSurface {
       .getOrElse(Set(true, false).map(BoundaryVertex(pb, _)))
 
   /**
-    * recursively fill in seams in a skew pants decomposition given collections of edges that are in a fixed pair of pants
+    * recursively fill in seams in a SkewPantsHexagon given collections of edges that are in a fixed SkewPantsHexagon
     *
     * @param pants index of pants containing the edges
+    * @param top whether the hexagon is the top face
     * @param segments the collections of sequences of edges
     * @param gapLess the sequence of edges obtained so far without gaps
     * @return sequence of edges with gaps filled in by seams
     */
   def fillSeamsRec(
       pants: Index,
+      top: Boolean,
       segments: Vector[Vector[Edge]],
       gapLess: Vector[Edge]
   ): Vector[Edge] =
     segments match {
       case Vector() => gapLess
       case ys :+ x =>
-        val newSeam = PantsSeam(pants, x.last.terminal, gapLess.head.initial)
-        fillSeamsRec(pants, ys, x ++ (newSeam +: gapLess))
+        val newSeam = PantsSeam(pants, x.last.terminal, gapLess.head.initial, top)
+        fillSeamsRec(pants, top, ys, x ++ (newSeam +: gapLess))
     }
 
   /**
-    * fill in seams in a skew pants decomposition given collections of edges that are in a fixed pair of pants
+    * fill in seams in a SkewPantsHexagon given collections of edges that are in a fixed SkewPantsHexagon
     *
     * @param pants index of pants containing the edges
     * @param segments the collections of sequences of edges
+    * @param top whether the hexagon is the top face
     * @return sequence of edges with gaps filled in by seams
     */  
-  def fillSeams(pants: Index, segments: Vector[Vector[Edge]]) =
+  def fillSeams(pants: Index, segments: Vector[Vector[Edge]], top: Boolean) =
     fillSeamsRec(
       pants,
+      top,
       segments.init,
       segments.last :+ (
         PantsSeam(
           pants,
           segments.last.last.terminal,
-          segments.head.head.initial
+          segments.head.head.initial,
+          top
         )
       )
     )
