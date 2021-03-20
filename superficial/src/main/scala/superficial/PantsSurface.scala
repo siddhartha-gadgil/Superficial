@@ -272,8 +272,8 @@ import SkewCurve._
 case class SkewCurve(
     left: PantsBoundary,
     right: PantsBoundary,
-    twist: Double,
-    length: Double
+    twist: BigDecimal,
+    length: BigDecimal
 ) { curve => // `curve` gives this curve
 
   /**
@@ -301,7 +301,7 @@ case class SkewCurve(
   /**
     * the position (in [0, 1]) of the next vertex after 0; the next vertex after 0.5 is `0.5 + shift`.
     */
-  val shift = math.min(twist, mod1(twist + 0.5))
+  val shift = if (twist <= mod1(twist + 0.5)) twist else mod1(twist + 0.5)
 
   /**
     * whether a pants boundary is contained in the curve
@@ -317,7 +317,7 @@ case class SkewCurve(
     * @param position position of the given vertex
     * @return position of the next vertex
     */
-  def nextVertex(position: Double): Double =
+  def nextVertex(position: BigDecimal): BigDecimal =
     if (skewLess) {
       assert(
         position == 0 || position == 0.5,
@@ -334,7 +334,7 @@ case class SkewCurve(
     * @param position position of the given vertex
     * @return position of the previous vertex
     */
-  def previousVertex(position: Double): Double =
+  def previousVertex(position: BigDecimal): BigDecimal =
     if (skewLess) {
       assert(
         position == 0 || position == 0.5,
@@ -353,7 +353,7 @@ case class SkewCurve(
     * @param positivelyOriented whether orientation is poistive
     * @return position of the next vertex along the orientation
     */
-  def shiftedVertex(position: Double, positivelyOriented: Boolean) =
+  def shiftedVertex(position: BigDecimal, positivelyOriented: Boolean) =
     if (positivelyOriented) nextVertex(position) else (previousVertex(position))
 
   /**
@@ -365,7 +365,7 @@ case class SkewCurve(
     * @return
     */
   def edgesToOppositeVertex(
-      position: Double,
+      position: BigDecimal,
       positivelyOriented: Boolean
   ): Vector[Edge] =
     if (skewLess) Vector(SkewCurveEdge(curve, position, positivelyOriented))
@@ -388,7 +388,7 @@ case class SkewCurve(
     * @return
     */
   def verticesToOppositeVertex(
-      position: Double,
+      position: BigDecimal,
       positivelyOriented: Boolean
   ): Set[Vertex] =
     if (skewLess)
@@ -409,6 +409,8 @@ case class SkewCurve(
         )
       )
 
+  
+
   /**
     * position of the first vertex on the given pants boundary in the curve after gluing with a twist
     *
@@ -417,9 +419,9 @@ case class SkewCurve(
     * @return position
     */
   def initPos(left: Boolean, top: Boolean) = if(left){
-    if(top) 0.0 else 0.5
+    if(top) BigDecimal(0) else  BigDecimal(0.5)
   } else {
-    if(top) (0.5+twist) else twist
+    if(top) mod1(BigDecimal(0.5) +twist) else twist
   }
 
   /**
@@ -447,7 +449,11 @@ case class SkewCurve(
 }
 
 object SkewCurve {
-  def mod1(x: Double) = x - math.floor(x)
+  @annotation.tailrec
+  def mod1(x: BigDecimal): BigDecimal = 
+    if (x >= 1) (mod1(x -1))
+    else if (x >= 0) x
+    else (mod1(x + 1))
 
   /**
     * untwisted skew curve corresponding to a curve in a pants decomposition
@@ -456,7 +462,7 @@ object SkewCurve {
     * @param length the length in the hyperbolic structure
     * @return skew curve with given length and no twist
     */
-  def untwisted(c: Curve, length: Double = 1) =
+  def untwisted(c: Curve, length: BigDecimal = 1) =
     SkewCurve(c.left, c.right, 0, length)
 
   /**
@@ -469,8 +475,8 @@ object SkewCurve {
     */
   def enumerate(
       c: Curve,
-      twists: Vector[Double],
-      lengths: Vector[Double]
+      twists: Vector[BigDecimal],
+      lengths: Vector[BigDecimal]
   ): Vector[SkewCurve] =
     for {
       t <- twists
@@ -488,8 +494,8 @@ object SkewCurve {
     */
   def polyEnumerate(
       cs: Vector[Curve],
-      twists: Vector[Double],
-      lengths: Vector[Double]
+      twists: Vector[BigDecimal],
+      lengths: Vector[BigDecimal]
   ): Vector[Vector[SkewCurve]] =
     cs match {
       case Vector() => Vector(Vector())
@@ -515,7 +521,7 @@ case class CurveVertex(curve: Curve, first: Boolean) extends Vertex
   * @param curve the curve
   * @param position position on the curve in [0, 1)
   */
-case class SkewCurveVertex(curve: SkewCurve, position: Double) extends Vertex
+case class SkewCurveVertex(curve: SkewCurve, position: BigDecimal) extends Vertex
 
 /**
   * An edge on a curve
@@ -544,7 +550,7 @@ case class CurveEdge(curve: Curve, top: Boolean, positivelyOriented: Boolean)
   */
 case class SkewCurveEdge(
     curve: SkewCurve,
-    initialPosition: Double,
+    initialPosition: BigDecimal,
     positivelyOriented: Boolean
 ) extends OrientedEdge {
 
@@ -650,7 +656,7 @@ object SkewPantsHexagon {
     Z3.enum.map { direction: Z3 =>
       getSkewCurve(PantsBoundary(sph.pants, direction), sph.cs)
         .map {
-          case (curve, left) => Some(curve.length)
+          case (curve, left) => Some(curve.length.toDouble)
         }
         .getOrElse(None)
     }
@@ -711,8 +717,8 @@ object SkewPantsSurface {
     * @param m lengths of curves
     * @return skew pant surface without twists
     */
-  def untwisted(surf: PantsSurface, m: Map[Curve, Double] = Map()) = {
-    def l(c: Curve) = m.getOrElse(c, 0.0)
+  def untwisted(surf: PantsSurface, m: Map[Curve, BigDecimal] = Map()) = {
+    def l(c: Curve) = m.getOrElse(c, BigDecimal(0))
     val cs = surf.cs.map(c => SkewCurve.untwisted(c, l(c)))
     SkewPantsSurface(surf.numPants, cs)
   }
@@ -727,8 +733,8 @@ object SkewPantsSurface {
     */
   def enumerate(
       surf: PantsSurface,
-      twists: Vector[Double],
-      lengths: Vector[Double] = Vector(1)
+      twists: Vector[BigDecimal],
+      lengths: Vector[BigDecimal] = Vector(1)
   ) =
     SkewCurve.polyEnumerate(surf.cs.toVector, twists, lengths).map { tcs =>
       SkewPantsSurface(surf.numPants, tcs.toSet)
