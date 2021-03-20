@@ -30,6 +30,24 @@ object NormalArc {
     } yield NormalArc(initial, terminal, face)
 }
 
+case class PLArc(base: NormalArc[SkewPantsHexagon], initialDisplacement: Double, finalDisplacement: Double) {
+  // require(!( base.face.boundary(base.initial).isInstanceOf[BoundaryEdge] || base.face.boundary(base.terminal).isInstanceOf[BoundaryEdge] ))
+  val hexagonInitialDisplacement: Option[Double] = base.face.boundary(base.initial) match {
+    case b: BoundaryEdge => None
+    case s: SkewCurveEdge => Some(SkewPantsHexagon.DisplacementFromPBVertex(base.face, s, initialDisplacement))
+    case p: PantsSeam => Some(initialDisplacement)
+  }
+  val hexagonFinalDisplacement: Option[Double] = base.face.boundary(base.terminal) match {
+    case b: BoundaryEdge => None
+    case s: SkewCurveEdge => Some(SkewPantsHexagon.DisplacementFromPBVertex(base.face, s, finalDisplacement))
+    case p: PantsSeam => Some(finalDisplacement)
+  }
+  val length: Double = {
+    require(SkewPantsHexagon.edgeLengths(base.face).forall(x => x.isDefined) && hexagonInitialDisplacement.isDefined && hexagonFinalDisplacement.isDefined)
+    Hexagon.Hyperbolic(SkewPantsHexagon.edgeLengths(base.face)(0).get, SkewPantsHexagon.edgeLengths(base.face)(1).get, SkewPantsHexagon.edgeLengths(base.face)(2).get).arcLength(SkewPantsHexagon.SkewIndexToHexagonIndex(base.face, base.initial), SkewPantsHexagon.SkewIndexToHexagonIndex(base.face, base.terminal), hexagonInitialDisplacement.get, hexagonFinalDisplacement.get)
+  }
+}
+
 case class NormalPath[P <: Polygon](edges: Vector[NormalArc[P]]) {
   edges.zip(edges.tail).foreach {
     case (e1, e2) =>
@@ -37,6 +55,7 @@ case class NormalPath[P <: Polygon](edges: Vector[NormalArc[P]]) {
         e1.terminalEdge == e2.initialEdge || e1.terminalEdge == e2.initialEdge.flip,
         s"terminal point on ${e1.terminalEdge} of $e1 is not initial point of $e2 on ${e2.initialEdge}"
       )
+      require(!(e1.terminalEdge.isInstanceOf[BoundaryEdge]))
   }
 
   def +:(arc: NormalArc[P]) = NormalPath(arc +: edges)
