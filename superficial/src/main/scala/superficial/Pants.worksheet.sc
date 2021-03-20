@@ -18,5 +18,5 @@ genus4.size
 
 PantsSurface.all(5).forall(_.isSurfaceWithBoundary)
 
-val twistSurfs = PantsSurface.allClosed(4).flatMap(s => SkewPantsSurface.enumerate(s, Vector(0, 0.2)))
-twistSurfs.forall(_.isClosedSurface)
+val twistSurfs = PantsSurface.allClosed(4).flatMap(s => SkewPantsSurface.enumerate(s, Vector(0, 0.2, 0.6)))
+twistSurfs.forall(_.isClosedSurface) 
