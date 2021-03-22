@@ -665,11 +665,11 @@ object SkewPantsHexagon {
     require(edgeLengths(sph).forall(x => x.isDefined))
     Hexagon.side(edgeLengths(sph)(n).getOrElse(0), edgeLengths(sph)((n+1)%3).getOrElse(0), edgeLengths(sph)((n+2)%3).getOrElse(0)) 
   }
-  def DisplacementFromPBVertex(sph: SkewPantsHexagon, edge: SkewCurveEdge, initialDisplacement: Double) = sph.boundary.indexOf(edge) match {
+  def DisplacementFromPBVertex(sph: SkewPantsHexagon, edge: SkewCurveEdge, initialDisplacement: Double): Double = sph.boundary.indexOf(edge) match {
     case 0 => initialDisplacement
     case _ => sph.boundary(sph.boundary.indexOf(edge)-1) match {
       case b: BoundaryEdge => initialDisplacement
-      case s: SkewCurveEdge => (initialDisplacement+s.length)
+      case s: SkewCurveEdge => (initialDisplacement+s.length.doubleValue)
       case p: PantsSeam => initialDisplacement
     }
   }

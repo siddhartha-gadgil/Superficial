@@ -30,17 +30,17 @@ object NormalArc {
     } yield NormalArc(initial, terminal, face)
 }
 
-case class PLArc(base: NormalArc[SkewPantsHexagon], initialDisplacement: Double, finalDisplacement: Double) {
+case class PLArc(base: NormalArc[SkewPantsHexagon], initialDisplacement: BigDecimal, finalDisplacement: BigDecimal) {
   // require(!( base.face.boundary(base.initial).isInstanceOf[BoundaryEdge] || base.face.boundary(base.terminal).isInstanceOf[BoundaryEdge] ))
   val hexagonInitialDisplacement: Option[Double] = base.face.boundary(base.initial) match {
     case b: BoundaryEdge => None
-    case s: SkewCurveEdge => Some(SkewPantsHexagon.DisplacementFromPBVertex(base.face, s, initialDisplacement))
-    case p: PantsSeam => Some(initialDisplacement)
+    case s: SkewCurveEdge => Some(SkewPantsHexagon.DisplacementFromPBVertex(base.face, s, initialDisplacement.doubleValue))
+    case p: PantsSeam => Some(initialDisplacement.doubleValue)
   }
   val hexagonFinalDisplacement: Option[Double] = base.face.boundary(base.terminal) match {
     case b: BoundaryEdge => None
-    case s: SkewCurveEdge => Some(SkewPantsHexagon.DisplacementFromPBVertex(base.face, s, finalDisplacement))
-    case p: PantsSeam => Some(finalDisplacement)
+    case s: SkewCurveEdge => Some(SkewPantsHexagon.DisplacementFromPBVertex(base.face, s, finalDisplacement.doubleValue))
+    case p: PantsSeam => Some(finalDisplacement.doubleValue)
   }
   val length: Double = {
     require(SkewPantsHexagon.edgeLengths(base.face).forall(x => x.isDefined) && hexagonInitialDisplacement.isDefined && hexagonFinalDisplacement.isDefined)
