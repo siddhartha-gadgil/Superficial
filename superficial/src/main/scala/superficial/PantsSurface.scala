@@ -649,22 +649,42 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
 
   lazy val boundary = fillSeams(pants, segments, top)
   lazy val sides = boundary.size
-}
 
-object SkewPantsHexagon {
-  def edgeLengths(sph: SkewPantsHexagon): Vector[Option[Double]] = {
-    Z3.enum.map { direction: Z3 =>
-      getSkewCurve(PantsBoundary(sph.pants, direction), sph.cs)
+  def edgeLengths: Vector[Option[Double]] = {
+    if(top) {
+      Z3.enum.map { direction: Z3 =>
+      getSkewCurve(PantsBoundary(pants, direction), cs)
         .map {
-          case (curve, left) => Some(curve.length.toDouble)
+          case (curve, left) => Some((curve.length.toDouble)/2)
         }
         .getOrElse(None)
+      }
+    } else {
+      Z3.flipEnum.map { direction: Z3 =>
+      getSkewCurve(PantsBoundary(pants, direction), cs)
+        .map {
+          case (curve, left) => Some((curve.length.toDouble)/2)
+        }
+        .getOrElse(None)
+      }
     }
   }
-  def seamLengths(sph: SkewPantsHexagon, n: Index): Double = {
-    require(edgeLengths(sph).forall(x => x.isDefined))
-    Hexagon.side(edgeLengths(sph)(n).getOrElse(0), edgeLengths(sph)((n+1)%3).getOrElse(0), edgeLengths(sph)((n+2)%3).getOrElse(0)) 
+
+  def seamAndLength: Vector[(PantsSeam, Double)] = {
+    require(edgeLengths.forall(x => x.isDefined))
+    if (top) {
+      for (i <- Vector(0,1,2)) yield {
+        (PantsSeam(pants, skewEdges(PantsBoundary(pants, Z3(i)), top, top, cs).last.terminal, skewEdges(PantsBoundary(pants, Z3((i+1)%3)), top, top, cs).head.initial, top), Hexagon.side(edgeLengths(i).getOrElse(0), edgeLengths((i+1)%3).getOrElse(0), edgeLengths((i+2)%3).getOrElse(0)))
+      }
+    } else {
+      for (i <- Vector(0,2,1)) yield {
+        (PantsSeam(pants, skewEdges(PantsBoundary(pants, Z3(i)), top, top, cs).last.terminal, skewEdges(PantsBoundary(pants, Z3((i+2)%3)), top, top, cs).head.initial, top), Hexagon.side(edgeLengths(i).getOrElse(0), edgeLengths((i+2)%3).getOrElse(0), edgeLengths((i+1)%3).getOrElse(0)))
+      }
+    }
   }
+}
+
+object SkewPantsHexagon{
   def DisplacementFromPBVertex(sph: SkewPantsHexagon, edge: SkewCurveEdge, initialDisplacement: Double): Double = sph.boundary.indexOf(edge) match {
     case 0 => initialDisplacement
     case _ => sph.boundary(sph.boundary.indexOf(edge)-1) match {

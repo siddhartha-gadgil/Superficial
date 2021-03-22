@@ -43,8 +43,12 @@ case class PLArc(base: NormalArc[SkewPantsHexagon], initialDisplacement: BigDeci
     case p: PantsSeam => Some(finalDisplacement.doubleValue)
   }
   val length: Double = {
-    require(SkewPantsHexagon.edgeLengths(base.face).forall(x => x.isDefined) && hexagonInitialDisplacement.isDefined && hexagonFinalDisplacement.isDefined)
-    Hexagon.Hyperbolic(SkewPantsHexagon.edgeLengths(base.face)(0).get, SkewPantsHexagon.edgeLengths(base.face)(1).get, SkewPantsHexagon.edgeLengths(base.face)(2).get).arcLength(SkewPantsHexagon.SkewIndexToHexagonIndex(base.face, base.initial), SkewPantsHexagon.SkewIndexToHexagonIndex(base.face, base.terminal), hexagonInitialDisplacement.get, hexagonFinalDisplacement.get)
+    require(base.face.edgeLengths.forall(x => x.isDefined) && hexagonInitialDisplacement.isDefined && hexagonFinalDisplacement.isDefined)
+    if (base.face.top) {
+      Hexagon.Hyperbolic(base.face.edgeLengths(0).get, base.face.edgeLengths(1).get, base.face.edgeLengths(2).get).arcLength(SkewPantsHexagon.SkewIndexToHexagonIndex(base.face, base.initial), SkewPantsHexagon.SkewIndexToHexagonIndex(base.face, base.terminal), hexagonInitialDisplacement.get, hexagonFinalDisplacement.get)
+    } else {
+      Hexagon.Hyperbolic(base.face.edgeLengths(0).get, base.face.edgeLengths(2).get, base.face.edgeLengths(1).get).arcLength(SkewPantsHexagon.SkewIndexToHexagonIndex(base.face, base.initial), SkewPantsHexagon.SkewIndexToHexagonIndex(base.face, base.terminal), hexagonInitialDisplacement.get, hexagonFinalDisplacement.get)
+    }
   }
 }
 
