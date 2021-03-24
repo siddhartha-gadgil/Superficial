@@ -163,3 +163,21 @@ object NormalPath {
       enumerateRec(complex, maxLength.map(_ - 1), p, lengthOne, lengthOne)
     }
 }
+
+case class PLPath(base: NormalPath[SkewPantsHexagon], initialDisplacements: Vector[BigDecimal], finalDisplacements: Vector[BigDecimal]){
+  val PLArcs: Vector[PLArc] = for(i <- (0 to base.edges.size-1).toVector) yield PLArc(base.edges(i), initialDisplacements(i), finalDisplacements(i))
+  require(
+    PLArcs.zip(PLArcs.tail).forall {
+      case (arc1, arc2) => arc1.base.terminalEdge match {
+        case s1: SkewCurveEdge => arc2.base.initialEdge match {
+          case s2: SkewCurveEdge => SkewCurveEdge.getPos(s1, arc1.finalDisplacement) == SkewCurveEdge.getPos(s2, arc2.initialDisplacement)
+          case p2: PantsSeam => false 
+        }
+        case p1: PantsSeam => arc2.base.initialEdge match {
+          case s2: SkewCurveEdge => false
+          case p2: PantsSeam => PantsSeam.compareSeamPoints(p1, arc1.finalDisplacement, p2, arc2.initialDisplacement, SkewPantsHexagon.getSeamLength(arc1.base.face, p1))
+        }
+      }
+    }
+  )
+}

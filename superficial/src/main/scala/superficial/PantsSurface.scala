@@ -216,6 +216,14 @@ case class PantsSeam(
   lazy val flip = PantsSeam(pants, terminal, initial, !positivelyOriented)
 }
 
+object PantsSeam {
+  def compareSeamPoints(ps1: PantsSeam, pos1: BigDecimal, ps2: PantsSeam, pos2: BigDecimal, len: BigDecimal): Boolean = {
+    require((ps1 == ps2)||(ps1 == ps2.flip))
+    if (ps1 == ps2) (pos1 == pos2)
+    else (pos1+pos2 == len)
+  }
+}
+
 /**
   * A curve in the curve system (i.e., the collection of terms) along which we split to get the pants decomposition.
   * This is a quotient of two pants boundaries that have been identified, with orientation determining one as on the left.
@@ -579,6 +587,13 @@ case class SkewCurveEdge(
 
 }
 
+object SkewCurveEdge {
+  def getPos(edge: SkewCurveEdge, pos: BigDecimal): BigDecimal = {
+    if (edge.positivelyOriented) mod1(edge.initialPosition+pos) 
+    else mod1(edge.initialPosition - pos)
+  }
+}
+
 /**
   * Hexagon in a pair of pants
   *
@@ -707,6 +722,9 @@ object SkewPantsHexagon{
         }
       }
     }
+  }
+  def getSeamLength(sph: SkewPantsHexagon, ps: PantsSeam): BigDecimal = {
+    BigDecimal(sph.seamAndLength.filter(x => x._1 == ps)(0)._2)
   }
 }
 
