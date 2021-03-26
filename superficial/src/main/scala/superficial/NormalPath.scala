@@ -52,6 +52,22 @@ case class PLArc(base: NormalArc[SkewPantsHexagon], initialDisplacement: BigDeci
   }
 }
 
+object PLArc {
+  def enumerate(arc: NormalArc[SkewPantsHexagon], sep: BigDecimal): Set[PLArc] = {
+    require(!(arc.terminalEdge.isInstanceOf[BoundaryEdge] || arc.initialEdge.isInstanceOf[BoundaryEdge]))
+    arc.initialEdge match {
+      case e1: SkewCurveEdge => arc.terminalEdge match {
+        case e2: SkewCurveEdge => for (d1: BigDecimal <- Range.BigDecimal(0, e1.length/2, sep).toSet ; d2: BigDecimal <- Range.BigDecimal(0, e2.length/2, sep).toSet) yield PLArc(arc, d1, d2)
+        case s2: PantsSeam => for (d1: BigDecimal <- Range.BigDecimal(0, e1.length/2, sep).toSet ; d2: BigDecimal <- Range.BigDecimal(0, SkewPantsHexagon.getSeamLength(arc.face, s2)/2, sep).toSet) yield PLArc(arc, d1, d2)
+      }
+      case s1: PantsSeam => arc.terminalEdge match {
+        case e2: SkewCurveEdge => for (d1: BigDecimal <- Range.BigDecimal(0, SkewPantsHexagon.getSeamLength(arc.face, s1)/2, sep).toSet ; d2: BigDecimal <- Range.BigDecimal(0, e2.length/2, sep).toSet) yield PLArc(arc, d1, d2)
+        case s2: PantsSeam => for (d1: BigDecimal <- Range.BigDecimal(0, SkewPantsHexagon.getSeamLength(arc.face, s1)/2, sep).toSet ; d2: BigDecimal <- Range.BigDecimal(0, SkewPantsHexagon.getSeamLength(arc.face, s2)/2, sep).toSet) yield PLArc(arc, d1, d2)
+      }
+    }
+  }
+}
+
 case class NormalPath[P <: Polygon](edges: Vector[NormalArc[P]]) {
   edges.zip(edges.tail).foreach {
     case (e1, e2) =>
