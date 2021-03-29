@@ -47,7 +47,7 @@ object Examples {
     "face1" -> Seq("a1" -> true)
   )
 
-  val doubleTriangle: TwoComplex[Polygon] =
+  val twoTriangles: TwoComplex[Polygon] =
     TwoComplex.symbolic("A", "B", "C", "D")(
       "AB" -> ("A", "B"),
       "AC" -> ("A", "C"),

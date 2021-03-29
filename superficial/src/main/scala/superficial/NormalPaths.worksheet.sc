@@ -1,12 +1,12 @@
 import superficial._
 
-import Examples.doubleTriangle
+import Examples.twoTriangles
 
 // Two triangles glued in one edge
-doubleTriangle
+twoTriangles
 
 // Normal paths with length at most 3.
-val paths = NormalPath.enumerate(doubleTriangle, Some(3))
+val paths = NormalPath.enumerate(twoTriangles, Some(3))
 
 val longPaths = paths.filter(p => p.edges.map(_.face).distinct.size > 1).toVector
 
@@ -19,5 +19,5 @@ paths.filter(p => p.edges.map(_.face).distinct.size > 1) == paths.filter(p => p.
 
 paths.forall(p => p.edges.map(_.face).size < 3)
 
-val paths4 = NormalPath.enumerate(doubleTriangle, Some(4))
+val paths4 = NormalPath.enumerate(twoTriangles, Some(4))
 (paths4 -- paths).isEmpty
