@@ -57,11 +57,11 @@ object PLArc {
     require(!(arc.terminalEdge.isInstanceOf[BoundaryEdge] || arc.initialEdge.isInstanceOf[BoundaryEdge]))
     arc.initialEdge match {
       case e1: SkewCurveEdge => arc.terminalEdge match {
-        case e2: SkewCurveEdge => for (d1: BigDecimal <- Range.BigDecimal(0, e1.length/2, sep).toSet ; d2: BigDecimal <- Range.BigDecimal(0, e2.length/2, sep).toSet) yield PLArc(arc, d1, d2)
-        case s2: PantsSeam => for (d1: BigDecimal <- Range.BigDecimal(0, e1.length/2, sep).toSet ; d2: BigDecimal <- Range.BigDecimal(0, SkewPantsHexagon.getSeamLength(arc.face, s2), sep).toSet) yield PLArc(arc, d1, d2)
+        case e2: SkewCurveEdge => for (d1: BigDecimal <- Range.BigDecimal(0, e1.length, sep).toSet ; d2: BigDecimal <- Range.BigDecimal(0, e2.length, sep).toSet) yield PLArc(arc, d1, d2)
+        case s2: PantsSeam => for (d1: BigDecimal <- Range.BigDecimal(0, e1.length, sep).toSet ; d2: BigDecimal <- Range.BigDecimal(0, SkewPantsHexagon.getSeamLength(arc.face, s2), sep).toSet) yield PLArc(arc, d1, d2)
       }
       case s1: PantsSeam => arc.terminalEdge match {
-        case e2: SkewCurveEdge => for (d1: BigDecimal <- Range.BigDecimal(0, SkewPantsHexagon.getSeamLength(arc.face, s1), sep).toSet ; d2: BigDecimal <- Range.BigDecimal(0, e2.length/2, sep).toSet) yield PLArc(arc, d1, d2)
+        case e2: SkewCurveEdge => for (d1: BigDecimal <- Range.BigDecimal(0, SkewPantsHexagon.getSeamLength(arc.face, s1), sep).toSet ; d2: BigDecimal <- Range.BigDecimal(0, e2.length, sep).toSet) yield PLArc(arc, d1, d2)
         case s2: PantsSeam => for (d1: BigDecimal <- Range.BigDecimal(0, SkewPantsHexagon.getSeamLength(arc.face, s1), sep).toSet ; d2: BigDecimal <- Range.BigDecimal(0, SkewPantsHexagon.getSeamLength(arc.face, s2), sep).toSet) yield PLArc(arc, d1, d2)
       }
     }
@@ -70,11 +70,11 @@ object PLArc {
     require(!(arc.terminalEdge.isInstanceOf[BoundaryEdge] || arc.initialEdge.isInstanceOf[BoundaryEdge]))
     arc.initialEdge match {
       case e1: SkewCurveEdge => arc.terminalEdge match {
-        case e2: SkewCurveEdge => for (d1: BigDecimal <- Range.BigDecimal(0, e1.length/2, sep).toSet ; d2: BigDecimal <- Range.BigDecimal(0, e2.length/2, sep).toSet) yield PLPath(NormalPath[SkewPantsHexagon](Vector(arc)), Vector(d1), Vector(d2))
-        case s2: PantsSeam => for (d1: BigDecimal <- Range.BigDecimal(0, e1.length/2, sep).toSet ; d2: BigDecimal <- Range.BigDecimal(0, SkewPantsHexagon.getSeamLength(arc.face, s2), sep).toSet) yield PLPath(NormalPath[SkewPantsHexagon](Vector(arc)), Vector(d1), Vector(d2))
+        case e2: SkewCurveEdge => for (d1: BigDecimal <- Range.BigDecimal(0, e1.length, sep).toSet ; d2: BigDecimal <- Range.BigDecimal(0, e2.length, sep).toSet) yield PLPath(NormalPath[SkewPantsHexagon](Vector(arc)), Vector(d1), Vector(d2))
+        case s2: PantsSeam => for (d1: BigDecimal <- Range.BigDecimal(0, e1.length, sep).toSet ; d2: BigDecimal <- Range.BigDecimal(0, SkewPantsHexagon.getSeamLength(arc.face, s2), sep).toSet) yield PLPath(NormalPath[SkewPantsHexagon](Vector(arc)), Vector(d1), Vector(d2))
       }
       case s1: PantsSeam => arc.terminalEdge match {
-        case e2: SkewCurveEdge => for (d1: BigDecimal <- Range.BigDecimal(0, SkewPantsHexagon.getSeamLength(arc.face, s1), sep).toSet ; d2: BigDecimal <- Range.BigDecimal(0, e2.length/2, sep).toSet) yield PLPath(NormalPath[SkewPantsHexagon](Vector(arc)), Vector(d1), Vector(d2))
+        case e2: SkewCurveEdge => for (d1: BigDecimal <- Range.BigDecimal(0, SkewPantsHexagon.getSeamLength(arc.face, s1), sep).toSet ; d2: BigDecimal <- Range.BigDecimal(0, e2.length, sep).toSet) yield PLPath(NormalPath[SkewPantsHexagon](Vector(arc)), Vector(d1), Vector(d2))
         case s2: PantsSeam => for (d1: BigDecimal <- Range.BigDecimal(0, SkewPantsHexagon.getSeamLength(arc.face, s1), sep).toSet ; d2: BigDecimal <- Range.BigDecimal(0, SkewPantsHexagon.getSeamLength(arc.face, s2), sep).toSet) yield PLPath(NormalPath[SkewPantsHexagon](Vector(arc)), Vector(d1), Vector(d2))
       }
     }
@@ -82,7 +82,7 @@ object PLArc {
   def fixedInitialEnumerate(arc: NormalArc[SkewPantsHexagon], initialDisplacement: BigDecimal, sep: BigDecimal): Set[PLArc] = {
     require(!(arc.terminalEdge.isInstanceOf[BoundaryEdge] || arc.initialEdge.isInstanceOf[BoundaryEdge]))
     arc.terminalEdge match {
-      case e2: SkewCurveEdge => for (d2: BigDecimal <- Range.BigDecimal(0, e2.length/2, sep).toSet) yield PLArc(arc, initialDisplacement, d2)
+      case e2: SkewCurveEdge => for (d2: BigDecimal <- Range.BigDecimal(0, e2.length, sep).toSet) yield PLArc(arc, initialDisplacement, d2)
       case s2: PantsSeam => for (d2: BigDecimal <- Range.BigDecimal(0, SkewPantsHexagon.getSeamLength(arc.face, s2), sep).toSet) yield PLArc(arc, initialDisplacement, d2)
     }
   }
@@ -97,6 +97,8 @@ case class NormalPath[P <: Polygon](edges: Vector[NormalArc[P]]) {
       )
       require(!(e1.terminalEdge.isInstanceOf[BoundaryEdge]))
   }
+
+  val length = edges.size
 
   def +:(arc: NormalArc[P]) = NormalPath(arc +: edges)
 
@@ -237,7 +239,7 @@ object PLPath {
       baseedges(numdone).terminalEdge match {
         case e2: SkewCurveEdge => for {
           path <- accum
-          d2: BigDecimal <- Range.BigDecimal(0, e2.length/2, sep).toSet
+          d2: BigDecimal <- Range.BigDecimal(0, e2.length, sep).toSet
         } yield PLPath(path.base.:+(baseedges(numdone)), path.initialDisplacements :+ findInitDisplacement(baseedges(numdone-1), path.finalDisplacements.last, baseedges(numdone)), path.finalDisplacements :+ d2)
         case s2: PantsSeam => for {
           path <- accum
@@ -250,8 +252,7 @@ object PLPath {
   def pickMinimal(paths: Set[PLPath]): Set[PLPath] = {
     for {
       (d1: BigDecimal, d2: BigDecimal) <- paths.collect(path => (path.initialDisplacements.head, path.finalDisplacements.last))
-      //d2: BigDecimal <- paths.collect(path => path.finalDisplacements.last)
-    } yield paths.find(p => (p.length == paths.filter(path => (path.initialDisplacements.head == d1)&&(path.finalDisplacements.last == d2)).map(p => p.length).min)).get
+    } yield paths.filter(path => (path.initialDisplacements.head == d1)&&(path.finalDisplacements.last == d2)).find(p => (p.length == paths.filter(path => (path.initialDisplacements.head == d1)&&(path.finalDisplacements.last == d2)).map(p => p.length).min)).get
   }
 
   def enumMinimalRec(accum: Set[PLPath], baseedges: Vector[NormalArc[SkewPantsHexagon]], numdone: Index, sep: BigDecimal): Set[PLPath] = {
