@@ -193,7 +193,8 @@ object Hexagon {
         initShift: Double,
         lastShift: Double
     ): Double =
-      if (i > j) arcLength(j, i, lastShift, initShift)
+      if (i==j) abs(lastShift-initShift)
+      else if (i > j) arcLength(j, i, lastShift, initShift)
       else if (j - i < 4) getArcLength(i, j, initShift, lastShift)
       else getArcLength(j, i + 6, lastShift, initShift)
   }
