@@ -74,7 +74,7 @@ object PLArc {
   def freeEnumerate(
       arc: NormalArc[SkewPantsHexagon],
       sep: BigDecimal
-  ): Set[PLArc] = {
+  ): ParSet[PLArc] = {
     require(
       !(arc.terminalEdge.isInstanceOf[BoundaryEdge] || arc.initialEdge
         .isInstanceOf[BoundaryEdge])
@@ -125,11 +125,11 @@ object PLArc {
             } yield PLArc(arc, d1, d2)
         }
     }
-  }.toSet
+  }.to(ParSet)
   def freeEnumeratePath(
       arc: NormalArc[SkewPantsHexagon],
       sep: BigDecimal
-  ): Set[PLPath] = {
+  ): ParSet[PLPath] = {
     require(
       !(arc.terminalEdge.isInstanceOf[BoundaryEdge] || arc.initialEdge
         .isInstanceOf[BoundaryEdge])
@@ -203,13 +203,13 @@ object PLArc {
               )
         }
     }
-  }.toSet
+  }.to(ParSet)
 
   def fixedInitialEnumerate(
       arc: NormalArc[SkewPantsHexagon],
       initialDisplacement: BigDecimal,
       sep: BigDecimal
-  ): Set[PLArc] = {
+  ): ParSet[PLArc] = {
     require(
       !(arc.terminalEdge.isInstanceOf[BoundaryEdge] || arc.initialEdge
         .isInstanceOf[BoundaryEdge])
@@ -225,7 +225,7 @@ object PLArc {
             
         } yield PLArc(arc, initialDisplacement, d2)
     }
-  }.toSet
+  }.to(ParSet)
 }
 
 case class PLPath(
@@ -318,11 +318,11 @@ object PLPath {
   }
 
   def addPLArc(
-      accum: Set[PLPath],
+      accum: ParSet[PLPath],
       baseedges: Vector[NormalArc[SkewPantsHexagon]],
       numdone: Index,
       sep: BigDecimal
-  ): Set[PLPath] = {
+  ): ParSet[PLPath] = {
     if (numdone == baseedges.size) accum
     else {
       baseedges(numdone).terminalEdge match {
@@ -360,25 +360,25 @@ object PLPath {
               path.finalDisplacements :+ d2
             )
       }
-    }.toSet
+    }.to(ParSet)
   }
 
-  def pickMinimal(paths: Set[PLPath]): Set[PLPath] = {
+  def pickMinimal(paths: ParSet[PLPath]): ParSet[PLPath] = {
     paths
       .groupBy(p => (p.initialDisplacements, p.finalDisplacements))
       .map {
         case (_, s) => s.minBy(_.length)
       }
-      .toSet
+      .to(ParSet)
   }
 
   @annotation.tailrec
   def enumMinimalRec(
-      accum: Set[PLPath],
+      accum: ParSet[PLPath],
       baseedges: Vector[NormalArc[SkewPantsHexagon]],
       numdone: Index,
       sep: BigDecimal
-  ): Set[PLPath] = {
+  ): ParSet[PLPath] = {
     if (numdone == baseedges.size) accum
     else
       enumMinimalRec(
@@ -392,7 +392,7 @@ object PLPath {
   def enumMinimal(
       base: NormalPath[SkewPantsHexagon],
       sep: BigDecimal
-  ): Set[PLPath] = {
+  ): ParSet[PLPath] = {
     enumMinimalRec(
       PLArc.freeEnumeratePath(base.edges.head, sep),
       base.edges,
