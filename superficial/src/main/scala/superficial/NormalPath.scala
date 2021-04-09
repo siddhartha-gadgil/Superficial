@@ -271,7 +271,7 @@ case class NormalPath[P <: Polygon](edges: Vector[NormalArc[P]]) {
   //    if (arc.initial == terminalEdge && arc != edges.last.flip) Some(this :+ arc)
   //    else None
 
-  val isClosed: Boolean = edges.last.terminalEdge == edges.head.initialEdge
+  val isClosed: Boolean = (edges.last.terminalEdge == edges.head.initialEdge)||(edges.last.terminalEdge == edges.head.initialEdge.flip)
 
   //  val initEdge: Edge = edges.head.initial
   //
@@ -323,8 +323,7 @@ object NormalPath {
             (face, i1) <- complex.edgeIndices(path.terminalEdge).map {
               case (f, i, _) => (f, i)
             } -
-              (path.terminalFace -> path.terminalIndex) -
-              (path.edges.last.face -> path.edges.last.initial)
+              (path.terminalFace -> path.terminalIndex)
             i2 <- face.indices
             if i2 != i1
             arc = NormalArc(i1, i2, face)
@@ -408,6 +407,16 @@ case class PLPath(
     }
   )
   lazy val length: Double = PLArcs.map(arc => arc.length).sum
+  def isClosed(tol: Double): Boolean = base.isClosed match {
+    case false => false
+    case true => (base.initialEdge == base.terminalEdge) match {
+      case true => (math.abs((initialDisplacements.head - finalDisplacements.last).toDouble)<tol)
+      case false => base.terminalEdge match {
+        case s: SkewCurveEdge => (math.abs((initialDisplacements.head - (s.length-finalDisplacements.last)).toDouble)<tol)
+        case p: PantsSeam => (math.abs((initialDisplacements.head - (SkewPantsHexagon.getSeamLength(base.terminalFace, p) -finalDisplacements.last)).toDouble)<tol)
+      }
+    }
+  }
 }
 
 object PLPath {
