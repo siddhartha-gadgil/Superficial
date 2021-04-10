@@ -365,7 +365,7 @@ object PLPath {
 
   def pickMinimal(paths: ParSet[PLPath]): ParSet[PLPath] = {
     paths
-      .groupBy(p => (p.initialDisplacements, p.finalDisplacements))
+      .groupBy(p => (p.initialDisplacements.head, p.finalDisplacements.last))
       .map {
         case (_, s) => s.minBy(_.length)
       }
