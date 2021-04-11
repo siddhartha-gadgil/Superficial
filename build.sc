@@ -82,3 +82,5 @@ object polymath extends CommonModule with SbtModule {
   }
 
 }
+
+object smtwrap extends CommonModule with SbtModule
