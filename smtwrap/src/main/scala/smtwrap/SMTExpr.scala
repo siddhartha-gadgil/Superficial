@@ -1,7 +1,11 @@
 package smtwrap
 
 // quick and dirty implementation with weak typing, for instance not recognizing boolean expressions.
-case class SMTExpr(view: String) extends AnyVal {
+case class SMTExpr(view: String) extends SMTOps
+
+trait SMTOps {
+  val view: String
+
   def op[A: SMTView](opName: String, that: A) =
     SMTExpr(s"($opName $view ${implicitly[SMTView[A]].smtView(that)})")
 
@@ -39,6 +43,13 @@ object SMTExpr {
 
   def varVec(name: String, l: Seq[Int]): Vector[SMTExpr] = l.toVector.map { j =>
     SMTExpr(s"${name}_$j")
+  }
+  implicit class IntSMT(n: Int) extends SMTOps {
+    val view: String = n.toString()
+  }
+
+  implicit class DoubleSMT(n: Double) extends SMTOps {
+    val view: String = n.toString()
   }
 }
 
