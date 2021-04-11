@@ -1,50 +1,50 @@
 package smtwrap
 
 // quick and dirty implementation with weak typing, for instance not recognizing boolean expressions.
-case class SMTExpr(view: String) extends SMTOps
+case class SMTExpr(view: String) extends IntOps with BoolOps
 
 trait SMTOps {
   val view: String
 
   def op[A: SMTView](opName: String, that: A) =
-    SMTExpr(s"($opName $view ${implicitly[SMTView[A]].smtView(that)})")
-
-  def =:=[A: SMTView](that: A): SMTExpr = op("=", that)
-
-  def +[A: SMTView](that: A): SMTExpr = op("+", that)
-
-  def -[A: SMTView](that: A): SMTExpr = op("-", that)
-
-  def *[A: SMTView](that: A): SMTExpr = op("*", that)
-
-  def <[A: SMTView](that: A): SMTExpr = op("<", that)
-
-  def >[A: SMTView](that: A): SMTExpr = op(">", that)
-
-  def <=[A: SMTView](that: A): SMTExpr = op("<=", that)
-
-  def >=[A: SMTView](that: A): SMTExpr = op(">=", that)
-
-  def unary_- = SMTExpr(s"(- $view)")
-
-  def assert = SMTExpr(s"(assert $view)")
+    s"($opName $view ${implicitly[SMTView[A]].smtView(that)})"
 
   def declare(tp: String) = SMTExpr(s"(declare-fun $view() $tp)")
 }
 
-object SMTExpr {
-  def double(name: Double): SMTExpr = SMTExpr(name.toString())
+trait IntOps extends SMTOps {
+  def =:=[A: SMTView](that: A) = SMTExpr(op("=", that))
 
-  def int(name: Int): SMTExpr = SMTExpr(name.toString())
+  def +[A: SMTView](that: A) = SMTExpr(op("+", that))
+
+  def -[A: SMTView](that: A) = SMTExpr(op("-", that))
+
+  def *[A: SMTView](that: A) = SMTExpr(op("*", that))
+
+  def <[A: SMTView](that: A) = SMTExpr(op("<", that))
+
+  def >[A: SMTView](that: A) = SMTExpr(op(">", that))
+
+  def <=[A: SMTView](that: A) = SMTExpr(op("<=", that))
+
+  def >=[A: SMTView](that: A) = SMTExpr(op(">=", that))
+
+  def unary_- = SMTExpr(s"(- $view)")
+}
+
+trait BoolOps extends SMTOps {
+  def assert = SMTExpr(s"(assert $view)")
+}
+
+object SMTExpr {
+  def double(name: Double) = SMTExpr(name.toString())
+
+  def int(name: Int) = SMTExpr(name.toString())
 
   def declReal(name: String): String = s"(declare-fun $name() Real)"
 
   def declInt(name: String): String = s"(declare-fun $name() Int)"
-
-  def varVec(name: String, l: Seq[Int]): Vector[SMTExpr] = l.toVector.map { j =>
-    SMTExpr(s"${name}_$j")
-  }
-  implicit class IntSMT(n: Int) extends SMTOps {
+  implicit class IntSMT(n: Int) extends IntOps {
     val view: String = n.toString()
   }
 
@@ -57,12 +57,14 @@ trait SMTView[A] {
   def smtView(a: A): String
 }
 
+trait IntSMTView[A] extends SMTView[A]
+
 object SMTView {
   implicit val smtWithView: SMTView[SMTExpr] = new SMTView[SMTExpr] {
     def smtView(a: SMTExpr): String = a.view
   }
 
-  implicit val intSMT: SMTView[Int] = new SMTView[Int] {
+  implicit val intSMT: IntSMTView[Int] = new IntSMTView[Int] {
     def smtView(a: Int): String = a.toString()
   }
 
