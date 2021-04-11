@@ -1,9 +1,9 @@
 import smtwrap._ 
 
-val n = SMTExpr("n")
+val n = IntSMTExpr("n")
 
 val exp = (n * n) <= 1
 
-exp.assert
+exp.assert 
 
 0 <= n 
