@@ -3,7 +3,7 @@ import scala.util._
 import SMTDoc._
 case class SMTDoc(
     variables: Vector[SMTExpr],
-    claims: Vector[BoolSMTExpr] = Vector(),
+    claims: Vector[BoolExpr] = Vector(),
     logic: String = "AUFNIRA",
     init: Vector[SMTCommand] = Vector(),
     actions: Vector[SMTCommand] = Vector()
@@ -18,7 +18,7 @@ case class SMTDoc(
 
   val docText: String = commandSeq.map(_.text).mkString("", "\n", "\n")
 
-  def addClaim(bs: BoolSMTExpr*): SMTDoc =
+  def addClaim(bs: BoolExpr*): SMTDoc =
     this.copy(claims = claims ++ bs.toVector)
 
   def addVars(exps: SMTExpr*): SMTDoc =

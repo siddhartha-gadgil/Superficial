@@ -1,6 +1,6 @@
 import smtwrap._ 
 
-val n = IntSMTExpr("n")
+val n = IntExpr("n")
 
 val exp = (n * n) <= 4
 
@@ -8,7 +8,7 @@ exp.assert
 
 1 <= n 
 
-val x = RealSMTExpr("x")
+val x = RealExpr("x")
  
 val exp2 = x + n
 

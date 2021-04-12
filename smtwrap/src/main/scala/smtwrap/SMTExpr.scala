@@ -12,24 +12,28 @@ sealed trait SMTExpr {
   }
 }
 
-case class IntSMTExpr(view: String) extends SMTExpr with IntOps {
-  def toReal = RealSMTExpr(s"(to_real $view)")
+case class IntExpr(view: String) extends SMTExpr with IntOps {
+  def toReal = RealExpr(s"(to_real $view)")
 
   val sort: String = "Int"
 }
 
-case class BoolSMTExpr(view: String) extends SMTExpr with BoolOps {
+case class BoolExpr(view: String) extends SMTExpr with BoolOps {
   val sort: String = "Bool"
 }
 
-object BoolSMTExpr {
-  def apply(bool: Boolean): BoolSMTExpr = BoolSMTExpr(bool.toString())
+object BoolExpr {
+  def apply(bool: Boolean): BoolExpr = BoolExpr(bool.toString())
 }
 
-case class RealSMTExpr(view: String) extends SMTExpr with RealOps {
+case class RealExpr(view: String) extends SMTExpr with RealOps {
   val realView: String = view
 
   val sort: String = "Real"
+}
+
+object RealExpr{
+    def apply(x: Double): RealExpr = RealExpr(x.toString())
 }
 
 case class SMTCommand(text: String)
@@ -54,10 +58,10 @@ trait IntOps extends SMTOps {
   lazy val intView = view
 
   def intOp[A: IntSMTView](opName: String, that: A) =
-    IntSMTExpr(s"($opName $intView ${implicitly[IntSMTView[A]].smtView(that)})")
+    IntExpr(s"($opName $intView ${implicitly[IntSMTView[A]].smtView(that)})")
 
   def intBoolOp[A: IntSMTView](opName: String, that: A) =
-    BoolSMTExpr(
+    BoolExpr(
       s"($opName $intView ${implicitly[IntSMTView[A]].smtView(that)})"
     )
 
@@ -77,22 +81,22 @@ trait IntOps extends SMTOps {
 
   def >=[A: IntSMTView](that: A) = intBoolOp(">=", that)
 
-  def unary_- = IntSMTExpr(s"(- $view)")
+  def unary_- = IntExpr(s"(- $view)")
 }
 
 trait RealOps extends SMTOps {
   val realView: String
 
   def realOp[A: RealSMTView](opName: String, that: A) =
-    RealSMTExpr(
+    RealExpr(
       s"($opName $realView ${implicitly[RealSMTView[A]].smtView(that)})"
     )
   def realBoolOp[A: RealSMTView](opName: String, that: A) =
-    BoolSMTExpr(
+    BoolExpr(
       s"($opName $realView ${implicitly[RealSMTView[A]].smtView(that)})"
     )
 
-  def =:=[A: RealSMTView](that: A) = realOp("=", that)
+  def =:=[A: RealSMTView](that: A) = realBoolOp("=", that)
 
   def +[A: RealSMTView](that: A) = realOp("+", that)
 
@@ -110,23 +114,23 @@ trait RealOps extends SMTOps {
 
   def >=[A: RealSMTView](that: A) = realBoolOp(">=", that)
 
-  def unary_- = RealSMTExpr(s"(- $view)")
+  def unary_- = RealExpr(s"(- $view)")
 }
 
 trait BoolOps extends SMTOps {
   def assert = SMTCommand(s"(assert $view)")
 
-  def &&(that: BoolSMTExpr) = BoolSMTExpr(s"(and $view ${that.view})")
+  def &&(that: BoolExpr) = BoolExpr(s"(and $view ${that.view})")
 
-  def ||(that: BoolSMTExpr) = BoolSMTExpr(s"(or $view ${that.view})")
+  def ||(that: BoolExpr) = BoolExpr(s"(or $view ${that.view})")
 
-  def unary_! = BoolSMTExpr(s"(not $view)")
+  def unary_! = BoolExpr(s"(not $view)")
 }
 
 object SMTExpr {
-  def double(name: Double) = IntSMTExpr(name.toString()) // FIXME: quick fix
+  def double(name: Double) = IntExpr(name.toString()) // FIXME: quick fix
 
-  def int(name: Int) = IntSMTExpr(name.toString())
+  def int(name: Int) = IntExpr(name.toString())
 
   def declReal(name: String): String = s"(declare-fun $name() Real)"
 
@@ -154,19 +158,19 @@ trait RealSMTView[A] extends SMTView[A]
 
 object SMTView {
 
-  implicit val intSmtWithView: IntSMTView[IntSMTExpr] =
-    new IntSMTView[IntSMTExpr] {
-      def smtView(a: IntSMTExpr): String = a.view
+  implicit val intSmtWithView: IntSMTView[IntExpr] =
+    new IntSMTView[IntExpr] {
+      def smtView(a: IntExpr): String = a.view
     }
 
-  implicit val boolSmtWithView: BoolSMTView[BoolSMTExpr] =
-    new BoolSMTView[BoolSMTExpr] {
-      def smtView(a: BoolSMTExpr): String = a.view
+  implicit val boolSmtWithView: BoolSMTView[BoolExpr] =
+    new BoolSMTView[BoolExpr] {
+      def smtView(a: BoolExpr): String = a.view
     }
 
-  implicit val realSmtWithView: RealSMTView[RealSMTExpr] =
-    new RealSMTView[RealSMTExpr] {
-      def smtView(a: RealSMTExpr): String = a.view
+  implicit val realSmtWithView: RealSMTView[RealExpr] =
+    new RealSMTView[RealExpr] {
+      def smtView(a: RealExpr): String = a.view
     }
 
   implicit val intSMT: IntSMTView[Int] = new IntSMTView[Int] {

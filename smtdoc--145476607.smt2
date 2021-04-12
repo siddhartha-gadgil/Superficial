@@ -1,0 +1,8 @@
+(set-option :produce-models true)
+(set-logic AUFNIRA)
+(declare-fun n() Int)
+(declare-fun x() Real)
+(assert (<= (* n n) 4))
+(assert (<= 1 n))
+(check-sat)
+(get-value (n x))
