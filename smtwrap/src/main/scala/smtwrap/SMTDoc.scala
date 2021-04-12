@@ -1,5 +1,6 @@
 package smtwrap
 import scala.util._
+import SMTDoc._
 case class SMTDoc(
     variables: Vector[SMTExpr],
     claims: Vector[BoolSMTExpr] = Vector(),
@@ -11,7 +12,7 @@ case class SMTDoc(
 
   val commandSeq: Vector[SMTCommand] =
     (init :+ SMTCommand(s"(set-logic $logic)")) ++
-    variables.map(_.declare) ++
+      variables.map(_.declare) ++
       claims.map(_.assert) ++
       actions
 
@@ -38,46 +39,69 @@ case class SMTDoc(
 
   val filename = s"smtdoc-$hashCode.smt2"
 
-  def writeDoc(extraInits: Vector[SMTCommand] = Vector(), extraActions: Vector[SMTCommand] = Vector()): Unit = {
-      os.write.over(os.pwd / filename, SMTDoc.doc(extraInits ++ commandSeq ++ extraActions))
+  def writeDoc(
+      extraInits: Vector[SMTCommand] = Vector(),
+      extraActions: Vector[SMTCommand] = Vector()
+  ): Unit = {
+    os.write
+      .over(os.pwd / filename, doc(extraInits ++ commandSeq ++ extraActions))
   }
 
   def z3Run() = {
-      writeDoc()
-      os.proc("z3", "-smt2", filename).call()
+    writeDoc()
+    os.proc("z3", "-smt2", filename).call()
   }
 
-  val z3Interactive = Vector("z3", "-in")
-
-  def seekValues(commands: Vector[String] = z3Interactive): Either[String,Map[String,String]] = {
-      val proc = os.proc((commands).map(os.Shellable.StringShellable(_)) : _*).spawn()
-      commandSeq.foreach(cmd => proc.stdin.writeLine(cmd.text))
-      proc.stdin.writeLine("(check-sat)")
+  def seekValues(
+      commands: Vector[String] = z3Interactive
+  ): Either[String, Map[SMTExpr, String]] = {
+    val proc =
+      os.proc((commands).map(os.Shellable.StringShellable(_)): _*).spawn()
+    (SMTCommand.produceModels +: commandSeq)
+      .foreach(cmd => proc.stdin.writeLine(cmd.text))
+    proc.stdin.writeLine("(check-sat)")
+    proc.stdin.flush()
+    val result = proc.stdout.readLine()
+    if (result == "sat") {
+      proc.stdin.writeLine(SMTCommand.getValues(variables).text)
+      proc.stdin.writeLine("(exit)")
       proc.stdin.flush()
-      val result = proc.stdout.readLine()
-      if (result == "sat") {
-          proc.stdin.writeLine(SMTCommand.getValues(variables).text)
-          proc.stdin.writeLine("(exit)")
-          proc.stdin.flush()
-          val valueString = new String(proc.stdout.readAllBytes()) 
-          Right(SMTDoc.recValues(valueString.trim().drop(1)))
-      } else Left(result)
+      val valueString = new String(proc.stdout.readAllBytes())
+      val m = recValues(valueString.trim().drop(1).dropRight(1))
+      val mVar = m.flatMap{
+          case (name, value) => variables.find(_.view == name).map(v => v -> value)
+      }
+      Right(
+          mVar
+          )
+    } else Left(result)
   }
 }
 
-object SMTDoc{
-    def recValues(data: String, accum: Map[String, String] = Map()): Map[String, String] = data match {
-        case s"($headKey $headValue)$tail" => recValues(tail.trim(), accum + (headKey.trim -> headValue.trim))
-        case _ =>  accum
-    }
+object SMTDoc {
+  val z3Interactive = Vector("z3", "-in")
 
-    def doc(commands: Vector[SMTCommand]) = commands.map(_.text).mkString("", "\n", "\n")
+  val cvc4Interactive = Vector("cvc4", "--lang=smt2", "--output-lang=smt2")
 
-    def parseValues(results: List[String]): Either[String,Map[String,String]] = results match{
-        case List("sat", s"(${data})") =>             
-            Right(recValues(data.trim, Map()))
-        case List("unsat") => Left("unsat")
-        case List("unknown") => Left("unknown")
-        case _ => throw new Exception(s"Could not parse $results as a map of values")
+  def recValues(
+      data: String,
+      accum: Map[String, String] = Map()
+  ): Map[String, String] = data match {
+    case s"($headKey $headValue)$tail" =>
+      recValues(tail.trim(), accum + (headKey.trim -> headValue.trim))
+    case _ => accum
+  }
+
+  def doc(commands: Vector[SMTCommand]) =
+    commands.map(_.text).mkString("", "\n", "\n")
+
+  def parseValues(results: List[String]): Either[String, Map[String, String]] =
+    results match {
+      case List("sat", s"(${data})") =>
+        Right(recValues(data.trim, Map()))
+      case List("unsat")   => Left("unsat")
+      case List("unknown") => Left("unknown")
+      case _ =>
+        throw new Exception(s"Could not parse $results as a map of values")
     }
 }

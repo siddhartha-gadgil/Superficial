@@ -31,3 +31,5 @@ val results = docGet.z3Run().out.chunks.toList.map(_.toString().trim)
 val Right(m) = SMTDoc.parseValues(results) 
 
 val m2Either = doc.seekValues()  
+
+val m3Either = doc.seekValues(Vector("cvc4", "--lang=smt2", "--output-lang=smt2")) 
