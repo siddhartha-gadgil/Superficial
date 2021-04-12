@@ -1,37 +1,47 @@
 package smtwrap
 
 // quick and dirty implementation with weak typing, for instance not recognizing boolean expressions.
-sealed trait SMTExpr{
+sealed trait SMTExpr {
   val view: String
 
   val sort: String
 
   lazy val declare = {
-      require(!view.contains(" "), s"$view is not a variable")
-      SMTCommand(s"(declare-fun $view() $sort)")}
+    require(!view.contains(" "), s"$view is not a variable")
+    SMTCommand(s"(declare-fun $view() $sort)")
+  }
 }
 
-case class IntSMTExpr(view: String) extends SMTExpr with IntOps{
-    def toReal = RealSMTExpr(s"(to_real $view)")
+case class IntSMTExpr(view: String) extends SMTExpr with IntOps {
+  def toReal = RealSMTExpr(s"(to_real $view)")
 
-    val sort: String = "Int"
+  val sort: String = "Int"
 }
 
-case class BoolSMTExpr(view: String) extends SMTExpr with BoolOps{
-    val sort: String = "Bool"
+case class BoolSMTExpr(view: String) extends SMTExpr with BoolOps {
+  val sort: String = "Bool"
 }
 
-object BoolSMTExpr{
-    def apply(bool: Boolean): BoolSMTExpr = BoolSMTExpr(bool.toString())
+object BoolSMTExpr {
+  def apply(bool: Boolean): BoolSMTExpr = BoolSMTExpr(bool.toString())
 }
 
-case class RealSMTExpr(view: String) extends SMTExpr with RealOps{
-    val realView: String = view
+case class RealSMTExpr(view: String) extends SMTExpr with RealOps {
+  val realView: String = view
 
-    val sort: String = "Real"
+  val sort: String = "Real"
 }
 
 case class SMTCommand(text: String)
+
+object SMTCommand {
+  val produceModels = SMTCommand("(set-option :produce-models true)")
+
+  val checkSat = SMTCommand("(check-sat)")
+
+  def getValues(variables: Vector[SMTExpr]) =
+    SMTCommand(s"(get-value (${variables.map(_.view).mkString(" ")}))")
+}
 trait SMTOps {
   val view: String
 
@@ -47,7 +57,9 @@ trait IntOps extends SMTOps {
     IntSMTExpr(s"($opName $intView ${implicitly[IntSMTView[A]].smtView(that)})")
 
   def intBoolOp[A: IntSMTView](opName: String, that: A) =
-    BoolSMTExpr(s"($opName $intView ${implicitly[IntSMTView[A]].smtView(that)})")
+    BoolSMTExpr(
+      s"($opName $intView ${implicitly[IntSMTView[A]].smtView(that)})"
+    )
 
   def =:=[A: IntSMTView](that: A) = intOp("=", that)
 

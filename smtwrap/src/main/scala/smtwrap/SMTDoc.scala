@@ -1,5 +1,5 @@
 package smtwrap
-
+import scala.util._
 case class SMTDoc(
     variables: Vector[SMTExpr],
     claims: Vector[BoolSMTExpr] = Vector(),
@@ -27,8 +27,8 @@ case class SMTDoc(
     this.copy(actions = actions :+ SMTCommand("(check-sat)"))
 
   def valueGetter = {
-    val newInit = init :+ SMTCommand("(set-option :produce-models true)")
-    val getValCommand = SMTCommand(s"(get-value (${variables.map(_.view).mkString(" ")}))")
+    val newInit = init :+ SMTCommand.produceModels
+    val getValCommand = SMTCommand.getValues(variables)
     val newActions =
       if (actions.lastOption.exists(_.text.replace(" ", "") == "(check-sat)"))
         actions :+ getValCommand
@@ -38,21 +38,40 @@ case class SMTDoc(
 
   val filename = s"smtdoc-$hashCode.smt2"
 
-  def writeDoc(): Unit = {
-      os.write.over(os.pwd / filename, docText)
+  def writeDoc(extraInits: Vector[SMTCommand] = Vector(), extraActions: Vector[SMTCommand] = Vector()): Unit = {
+      os.write.over(os.pwd / filename, SMTDoc.doc(extraInits ++ commandSeq ++ extraActions))
   }
 
   def z3Run() = {
       writeDoc()
       os.proc("z3", "-smt2", filename).call()
   }
+
+  val z3Interactive = Vector("z3", "-in")
+
+  def seekValues(commands: Vector[String] = z3Interactive): Either[String,Map[String,String]] = {
+      val proc = os.proc((commands).map(os.Shellable.StringShellable(_)) : _*).spawn()
+      commandSeq.foreach(cmd => proc.stdin.writeLine(cmd.text))
+      proc.stdin.writeLine("(check-sat)")
+      proc.stdin.flush()
+      val result = proc.stdout.readLine()
+      if (result == "sat") {
+          proc.stdin.writeLine(SMTCommand.getValues(variables).text)
+          proc.stdin.writeLine("(exit)")
+          proc.stdin.flush()
+          val valueString = new String(proc.stdout.readAllBytes()) 
+          Right(SMTDoc.recValues(valueString.trim().drop(1)))
+      } else Left(result)
+  }
 }
 
 object SMTDoc{
-    def recValues(data: String, accum: Map[String, String]): Map[String, String] = data match {
+    def recValues(data: String, accum: Map[String, String] = Map()): Map[String, String] = data match {
         case s"($headKey $headValue)$tail" => recValues(tail.trim(), accum + (headKey.trim -> headValue.trim))
         case _ =>  accum
     }
+
+    def doc(commands: Vector[SMTCommand]) = commands.map(_.text).mkString("", "\n", "\n")
 
     def parseValues(results: List[String]): Either[String,Map[String,String]] = results match{
         case List("sat", s"(${data})") =>             

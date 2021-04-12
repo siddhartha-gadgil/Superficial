@@ -29,3 +29,5 @@ print(docGet.docText)
 val results = docGet.z3Run().out.chunks.toList.map(_.toString().trim)
 
 val Right(m) = SMTDoc.parseValues(results) 
+
+val m2Either = doc.seekValues()  
