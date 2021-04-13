@@ -1,6 +1,7 @@
 package smtwrap
 import scala.util._
 import SMTDoc._
+import os.Shellable
 case class SMTDoc(
     variables: Vector[SMTExpr],
     claims: Vector[BoolExpr] = Vector(),
@@ -47,9 +48,10 @@ case class SMTDoc(
       .over(os.pwd / filename, doc(extraInits ++ commandSeq ++ extraActions))
   }
 
-  def z3Run() = {
+  def z3Run(options: String*) = {
     writeDoc()
-    os.proc("z3", "-smt2", filename).call()
+    val commands = "z3" +: (options.toVector ++ Vector("-smt2", filename)) 
+    os.proc(commands.map(Shellable.StringShellable(_)) : _*).call()
   }
 
   def seekValues(
