@@ -85,7 +85,8 @@ object polymath extends CommonModule with SbtModule {
 
 object smtsolve extends CommonModule with SbtModule{
   def ivyDeps = Agg(
-    ivy"com.lihaoyi::os-lib:0.7.4"
+    ivy"com.lihaoyi::os-lib:0.7.4",
+    ivy"com.lihaoyi::fastparse:2.2.2"
   )
 
   def moduleDeps = Seq(freegroups)

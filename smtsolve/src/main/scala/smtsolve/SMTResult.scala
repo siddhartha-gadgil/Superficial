@@ -28,8 +28,12 @@ object SMTResult {
         proc.stdin.writeLine("(exit)")
         proc.stdin.flush()
         val valueString = new String(proc.stdout.readAllBytes())
-        println(valueString)
-        val m = recValues(valueString.trim().drop(1).dropRight(1))
+        // println(valueString)
+        // println(SExpression.get(valueString))
+        // println(SExpression.getMap(valueString))
+        val m = 
+            SExpression.getMap(valueString)
+        // recValues(valueString.trim().drop(1).dropRight(1))
         val mVar = m.flatMap {
           case (name, value) =>
             variables.find(_.view == name).map(v => v -> value)
