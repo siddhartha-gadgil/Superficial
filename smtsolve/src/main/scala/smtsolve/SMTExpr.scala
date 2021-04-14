@@ -41,6 +41,8 @@ case class SMTCommand(text: String)
 object SMTCommand {
   val produceModels = SMTCommand("(set-option :produce-models true)")
 
+  val produceProofs = SMTCommand(s"(set-option :produce-proofs true)")
+
   val checkSat = SMTCommand("(check-sat)")
 
   def getValues(variables: Vector[SMTExpr]) =

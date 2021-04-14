@@ -6,7 +6,7 @@ final case class UnitQuaternion(
     jCoeff: RealExpr,
     kCoeff: RealExpr
 ) {
-  val components: Vector[RealExpr] = Vector(re, iCoeff, jCoeff, kCoeff)
+  lazy val components: Vector[RealExpr] = Vector(re, iCoeff, jCoeff, kCoeff)
 
   def *(that: UnitQuaternion): UnitQuaternion =
     UnitQuaternion(
@@ -20,9 +20,9 @@ final case class UnitQuaternion(
         - jCoeff * that.iCoeff + iCoeff * that.jCoeff
     )
 
-  val unary_- : UnitQuaternion = UnitQuaternion(-re, -iCoeff, -jCoeff, -kCoeff)
+  lazy val unary_- : UnitQuaternion = UnitQuaternion(-re, -iCoeff, -jCoeff, -kCoeff)
 
-  val normEquation: BoolExpr =
+  lazy val normEquation: BoolExpr =
     re * re +
       iCoeff * iCoeff + jCoeff * jCoeff + kCoeff * kCoeff =:= 1.0
 
@@ -45,7 +45,7 @@ object UnitQuaternion {
   def apply(re: Double, i: Double, j: Double, k: Double): UnitQuaternion =
     UnitQuaternion(RealExpr(re), RealExpr(i), RealExpr(j), RealExpr(k))
 
-  val one: UnitQuaternion = UnitQuaternion(1.0, 0.0, 0.0, 0.0)
+  lazy val one: UnitQuaternion = UnitQuaternion(1.0, 0.0, 0.0, 0.0)
 
   import freegroups._
   def fromWord(w: Word, prefix: String = ""): UnitQuaternion =
