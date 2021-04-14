@@ -1,4 +1,4 @@
-package smtwrap
+package smtsolve
 
 object Collinear {
   def apply(

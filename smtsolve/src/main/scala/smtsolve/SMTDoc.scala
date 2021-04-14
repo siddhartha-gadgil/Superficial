@@ -1,4 +1,4 @@
-package smtwrap
+package smtsolve
 import scala.util._
 import SMTDoc._
 import os.Shellable

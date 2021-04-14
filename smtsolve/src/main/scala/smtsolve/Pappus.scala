@@ -1,4 +1,4 @@
-package smtwrap
+package smtsolve
 
 object Pappus {
   val zero = RealExpr(0.0)

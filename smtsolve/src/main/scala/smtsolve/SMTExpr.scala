@@ -1,4 +1,4 @@
-package smtwrap
+package smtsolve
 
 // quick and dirty implementation with weak typing, for instance not recognizing boolean expressions.
 sealed trait SMTExpr {

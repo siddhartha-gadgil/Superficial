@@ -1,4 +1,4 @@
-package smtwrap
+package smtsolve
 
 import Pythagorean._
 

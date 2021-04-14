@@ -83,7 +83,7 @@ object polymath extends CommonModule with SbtModule {
 
 }
 
-object smtwrap extends CommonModule with SbtModule{
+object smtsolve extends CommonModule with SbtModule{
   def ivyDeps = Agg(
     ivy"com.lihaoyi::os-lib:0.7.4"
   )
