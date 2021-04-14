@@ -33,5 +33,5 @@ case class Pythagorean(n: Int, verbose: Boolean = false) {
 
 object Pythagorean {
   def notMonochrome(x: BoolExpr, y: BoolExpr, z: BoolExpr): BoolExpr =
-    (x || y || z) && (!(x && y && z))
+    (x | y | z) & (!(x & y & z))
 }

@@ -120,9 +120,9 @@ trait RealOps extends SMTOps {
 trait BoolOps extends SMTOps {
   def assert = SMTCommand(s"(assert $view)")
 
-  def &&(that: BoolExpr) = BoolExpr(s"(and $view ${that.view})")
+  def &(that: BoolExpr) = BoolExpr(s"(and $view ${that.view})")
 
-  def ||(that: BoolExpr) = BoolExpr(s"(or $view ${that.view})")
+  def |(that: BoolExpr) = BoolExpr(s"(or $view ${that.view})")
 
   def unary_! = BoolExpr(s"(not $view)")
 }
