@@ -13,7 +13,13 @@ case class NormalArc[P <: Polygon](initial: Index, terminal: Index, face: P) {
 
   val initialEdge = face.boundary(initial)
 
-  def vertexLinking = math.abs(terminal - initial) == 1
+  def vertexLinking = math.abs((terminal - initial)%(face.sides)) == 1
+
+  def whichVertexLinking: Option[Vertex] = (terminal - initial)%face.sides match {
+    case 1 => Some(face.boundary(initial).terminal)
+    case -1 => Some(face.boundary(terminal).terminal)
+    case _ => None
+  }
 
   def crosses(that: NormalArc[P]) =
     (that.initial - initial) * (that.terminal - terminal) * (that.initial - terminal) * (that.terminal - initial) < 0
@@ -109,7 +115,7 @@ object NormalPath {
             if i2 != i1
             arc = NormalArc(i1, i2, face)
           } yield path :+ arc
-        ).filter(p)
+        ).filter(path => !(endsGoAround(complex, path))).filter(p)
       enumerateRec(
         complex,
         maxAppendLength.map(_ - 1),
@@ -143,5 +149,24 @@ object NormalPath {
           .filter(p)
       enumerateRec(complex, maxLength.map(_ - 1), p, lengthOne, lengthOne)
     }
+  
+  def startEndSameFace[P <: Polygon](complex: TwoComplex[P], path: NormalPath[P]): Boolean = (complex.edgeIndices(path.edges.head.initialEdge).map {
+    case (f, _, _) => f
+  } - path.edges.head.face).head == (complex.edgeIndices(path.edges.last.terminalEdge).map {
+    case (f, _, _) => f
+  } - path.edges.last.face).head
+  
+  def endsGoAround[P <: Polygon](complex: TwoComplex[P], path: NormalPath[P]): Boolean = endsGoAroundrec(complex, path.edges.init, path.edges.last.whichVertexLinking, NormalPath[P](Vector(path.edges.last)))
+
+  def endsGoAroundrec[P <: Polygon](complex: TwoComplex[P], initedges: Vector[NormalArc[P]], optvertex: Option[Vertex], accum: NormalPath[P]): Boolean = optvertex match {
+    case None => false
+    case Some(v) => initedges.isEmpty match {
+      case true => startEndSameFace(complex, accum)
+      case false => initedges.last.whichVertexLinking match {
+        case Some(newv) => if(newv == v) endsGoAroundrec(complex, initedges.init, optvertex, NormalPath[P](initedges.last +: accum.edges)) else startEndSameFace(complex, accum)
+        case None => startEndSameFace(complex, accum)
+      }
+    }
+  }
 }
 
