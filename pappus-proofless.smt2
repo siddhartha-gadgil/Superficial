@@ -1,4 +1,3 @@
-; (set-logic AUFNIRA)
 (declare-fun u() Real)
 (declare-fun v() Real)
 (declare-fun Ax() Real)
@@ -23,6 +22,6 @@
 (assert (> Ay 0.0))
 (assert (> U 0.0))
 (assert (> V 0.0))
-(assert (= dummy (^ 1.0 1.0)))
 (assert (not (= (* (- Qy Py) (- Rx Px)) (* (- Ry Py) (- Qx Px)))))
+(assert (= dummy (^ 1.0 1.0)))
 (check-sat)

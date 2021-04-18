@@ -1,5 +1,7 @@
 package smtsolve
 
+import spire.syntax.logic
+
 object Pappus {
   val zero = RealExpr(0.0)
 
@@ -56,6 +58,21 @@ object Pappus {
   def smt2(fixed: Vector[String] = Vector()): SMTDoc = {
     val fixEquations = fixed.map(s => setRandomPositive(RealExpr(s)))
     val coded = if (fixed.isEmpty) "" else s"-${fixed.hashCode()}"
-    SMTDoc(variables, equations ++ fixEquations, nameOpt = Some(s"pappus$coded.smt2")).addCheck
+    SMTDoc(
+      variables,
+      equations ++ fixEquations,
+      nameOpt = Some(s"pappus$coded.smt2")
+    ).addCheck
+  }
+
+  val proofLess = {
+    val dummy = RealExpr("dummy")
+    val dummyEq = dummy =:= RealExpr(1.0) ** 1.0
+    SMTDoc(
+      variables :+ dummy,
+      equations :+ dummyEq,
+      logicOpt = None,
+      nameOpt = Some("pappus-proofless.smt2")
+    ).addCheck
   }
 }
