@@ -5,14 +5,17 @@ import os.Shellable
 case class SMTDoc(
     variables: Vector[SMTExpr],
     claims: Vector[BoolExpr] = Vector(),
-    logic: String = "AUFNIRA",
+    logicOpt: Option[String] = Some("AUFNIRA"),
+    nameOpt: Option[String] = None,
     init: Vector[SMTCommand] = Vector(),
     actions: Vector[SMTCommand] = Vector()
 ) {
   require(!variables.exists(_.view.contains(" ")))
 
   val commandSeq: Vector[SMTCommand] =
-    (init :+ SMTCommand(s"(set-logic $logic)")) ++
+    (init ++ logicOpt
+      .map(logic => Vector(SMTCommand(s"(set-logic $logic)")))
+      .getOrElse(Vector.empty[SMTCommand])) ++
       variables.map(_.declare) ++
       claims.map(_.assert) ++
       actions
@@ -38,7 +41,7 @@ case class SMTDoc(
     this.copy(init = newInit, actions = newActions)
   }
 
-  val filename = s"smtdoc-$hashCode.smt2"
+  val filename = nameOpt.getOrElse(s"smtdoc-$hashCode.smt2")
 
   def writeDoc(
       extraInits: Vector[SMTCommand] = Vector(),
@@ -50,8 +53,8 @@ case class SMTDoc(
 
   def z3Run(options: String*) = {
     writeDoc()
-    val commands = "z3" +: (options.toVector ++ Vector("-smt2", filename)) 
-    os.proc(commands.map(Shellable.StringShellable(_)) : _*).call()
+    val commands = "z3" +: (options.toVector ++ Vector("-smt2", filename))
+    os.proc(commands.map(Shellable.StringShellable(_)): _*).call()
   }
 
   def seekValues(
@@ -70,12 +73,13 @@ case class SMTDoc(
       proc.stdin.flush()
       val valueString = new String(proc.stdout.readAllBytes())
       val m = recValues(valueString.trim().drop(1).dropRight(1))
-      val mVar = m.flatMap{
-          case (name, value) => variables.find(_.view == name).map(v => v -> value)
+      val mVar = m.flatMap {
+        case (name, value) =>
+          variables.find(_.view == name).map(v => v -> value)
       }
       Right(
-          mVar
-          )
+        mVar
+      )
     } else Left(result)
   }
 }

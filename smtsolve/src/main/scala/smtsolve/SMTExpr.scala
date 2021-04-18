@@ -108,6 +108,8 @@ trait RealOps extends SMTOps {
 
   def /[A: RealSMTView](that: A) = realOp("/", that)
 
+  def **[A: RealSMTView](that: A) = realOp("^", that)
+
   def <[A: RealSMTView](that: A) = realBoolOp("<", that)
 
   def >[A: RealSMTView](that: A) = realBoolOp(">", that)
@@ -125,6 +127,8 @@ trait BoolOps extends SMTOps {
   def &(that: BoolExpr) = BoolExpr(s"(and $view ${that.view})")
 
   def |(that: BoolExpr) = BoolExpr(s"(or $view ${that.view})")
+
+  def implies(that: BoolExpr) = (!this) | that
 
   def unary_! = BoolExpr(s"(not $view)")
 }

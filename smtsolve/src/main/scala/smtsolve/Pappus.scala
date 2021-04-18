@@ -42,7 +42,7 @@ object Pappus {
   val contra = !Collinear(Px, Py, Qx, Qy, Rx, Ry)
 
   val positiveEquations: Vector[BoolExpr] =
-    Vector(u, v, Ay, U, V).map(exp => exp >= 0.0)
+    Vector(u, v, Ay, U, V).map(exp => exp > 0.0)
 
   val equations = (intersectionEquations ++ positiveEquations) :+ contra
 
@@ -55,6 +55,7 @@ object Pappus {
 
   def smt2(fixed: Vector[String] = Vector()): SMTDoc = {
     val fixEquations = fixed.map(s => setRandomPositive(RealExpr(s)))
-    SMTDoc(variables, equations ++ fixEquations).addCheck
+    val coded = if (fixed.isEmpty) "" else s"-${fixed.hashCode()}"
+    SMTDoc(variables, equations ++ fixEquations, nameOpt = Some(s"pappus$coded.smt2")).addCheck
   }
 }
