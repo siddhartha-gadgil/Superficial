@@ -57,6 +57,15 @@ case class SMTDoc(
     os.proc(commands.map(Shellable.StringShellable(_)): _*).call()
   }
 
+  def proofLess = {
+    val dummy = RealExpr("dummy")
+    val dummyEq = dummy =:= RealExpr(1.0) ** 1.0
+      this.copy(
+      variables = variables :+ dummy,
+      claims =  claims :+ dummyEq,
+      logicOpt = None)
+  }
+
   def seekValues(
       commands: Vector[String] = z3Interactive
   ): Either[String, Map[SMTExpr, String]] = {
