@@ -66,11 +66,11 @@ object Pappus {
   }
 
   val proofLess = {
-    val dummy = RealExpr("dummy")
-    val dummyEq = dummy =:= RealExpr(1.0) ** 1.0
+    // val dummy = RealExpr("dummy")
+    // val dummyEq = dummy =:= RealExpr(1.0) ** 1.0
     SMTDoc(
-      variables :+ dummy,
-      equations :+ dummyEq,
+      variables,
+      equations,
       logicOpt = None,
       nameOpt = Some("pappus-proofless.smt2")
     ).addCheck

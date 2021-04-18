@@ -10,7 +10,6 @@
 (declare-fun Qy() Real)
 (declare-fun Rx() Real)
 (declare-fun Ry() Real)
-(declare-fun dummy() Real)
 (assert (= (* (- Py 0.0) (- (* Ax (+ U 1.0)) 1.0)) (* (- (* Ay (+ U 1.0)) 0.0) (- Px 1.0))))
 (assert (= (* (- Py Ay) (- (+ 1.0 u) Ax)) (* (- 0.0 Ay) (- Px Ax))))
 (assert (= (* (- Qy 0.0) (- (* Ax (+ (+ U V) 1.0)) 1.0)) (* (- (* Ay (+ (+ U V) 1.0)) 0.0) (- Qx 1.0))))
@@ -23,5 +22,4 @@
 (assert (> U 0.0))
 (assert (> V 0.0))
 (assert (not (= (* (- Qy Py) (- Rx Px)) (* (- Ry Py) (- Qx Px)))))
-(assert (= dummy (^ 1.0 1.0)))
 (check-sat)

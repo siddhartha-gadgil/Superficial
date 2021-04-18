@@ -29,7 +29,7 @@ object Menelaus {
   val (fx, fy) = cut(cx, cy, ax, ay, t)
 
   def d(x1: RealExpr, y1: RealExpr, x2: RealExpr, y2: RealExpr) =
-    (x2 - x1) ** 2.0 + (y2 - y1) ** 2.0
+    (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)
 
   val distEq =
     d(ax, ay, dx, dy) * d(bx, by, ex, ey) * d(cx, cy, fx, fy) =:=
@@ -50,6 +50,6 @@ object Menelaus {
     variables,
     Vector(ay > 0.0, Collinear(dx, dy, ex, ey, fx, fy), !distEq),
     logicOpt = None,
-    nameOpt = Some("menelaus.smt2")
+    nameOpt = Some("menelaus-poly.smt2")
   )
 }
