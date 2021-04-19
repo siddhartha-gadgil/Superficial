@@ -115,12 +115,12 @@ object NormalPath {
             if i2 != i1
             arc = NormalArc(i1, i2, face)
           } yield path :+ arc
-        ).filter(path => !(endsGoAround(complex, path))).filter(p)
+        ).filter(p)
       enumerateRec(
         complex,
         maxAppendLength.map(_ - 1),
         p,
-        newPaths,
+        newPaths.filter(path => !(endsGoAround(complex, path))),
         accum union newPaths
       )
     }
@@ -150,11 +150,15 @@ object NormalPath {
       enumerateRec(complex, maxLength.map(_ - 1), p, lengthOne, lengthOne)
     }
   
-  def startEndSameFace[P <: Polygon](complex: TwoComplex[P], path: NormalPath[P]): Boolean = (complex.edgeIndices(path.edges.head.initialEdge).map {
+  def startEndSameFace[P <: Polygon](complex: TwoComplex[P], path: NormalPath[P]): Boolean = complex.edgeIndices(path.edges.head.initialEdge).filter {
+    case (f, i, _) => !((f == path.edges.head.face)&&(i == path.edges.head.initial))
+  }.map {
     case (f, _, _) => f
-  } - path.edges.head.face).head == (complex.edgeIndices(path.edges.last.terminalEdge).map {
+  }.head == complex.edgeIndices(path.edges.last.terminalEdge).filter {
+    case (f, i, _) => !((f == path.edges.last.face)&&(i == path.edges.last.terminal))
+  }.map {
     case (f, _, _) => f
-  } - path.edges.last.face).head
+  }.head
   
   def endsGoAround[P <: Polygon](complex: TwoComplex[P], path: NormalPath[P]): Boolean = endsGoAroundrec(complex, path.edges.init, path.edges.last.whichVertexLinking, NormalPath[P](Vector(path.edges.last)))
 
