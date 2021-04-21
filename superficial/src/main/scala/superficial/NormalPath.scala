@@ -13,13 +13,14 @@ case class NormalArc[P <: Polygon](initial: Index, terminal: Index, face: P) {
 
   val initialEdge = face.boundary(initial)
 
-  def vertexLinking = math.abs((terminal - initial)%(face.sides)) == 1
+  def vertexLinking = math.abs((terminal - initial) % (face.sides)) == 1
 
-  def whichVertexLinking: Option[Vertex] = (terminal - initial)%face.sides match {
-    case 1 => Some(face.boundary(initial).terminal)
-    case -1 => Some(face.boundary(terminal).terminal)
-    case _ => None
-  }
+  def whichVertexLinking: Option[Vertex] =
+    (terminal - initial) % face.sides match {
+      case 1  => Some(face.boundary(initial).terminal)
+      case -1 => Some(face.boundary(terminal).terminal)
+      case _  => None
+    }
 
   def crosses(that: NormalArc[P]) =
     (that.initial - initial) * (that.terminal - terminal) * (that.initial - terminal) * (that.terminal - initial) < 0
@@ -35,8 +36,6 @@ object NormalArc {
       if terminal != initial
     } yield NormalArc(initial, terminal, face)
 }
-
-
 
 case class NormalPath[P <: Polygon](edges: Vector[NormalArc[P]]) {
   edges.zip(edges.tail).foreach {
@@ -58,7 +57,8 @@ case class NormalPath[P <: Polygon](edges: Vector[NormalArc[P]]) {
   //    if (arc.initial == terminalEdge && arc != edges.last.flip) Some(this :+ arc)
   //    else None
 
-  val isClosed: Boolean = (edges.last.terminalEdge == edges.head.initialEdge)||(edges.last.terminalEdge == edges.head.initialEdge.flip)
+  val isClosed
+      : Boolean = (edges.last.terminalEdge == edges.head.initialEdge) || (edges.last.terminalEdge == edges.head.initialEdge.flip)
 
   //  val initEdge: Edge = edges.head.initial
   //
@@ -149,28 +149,65 @@ object NormalPath {
           .filter(p)
       enumerateRec(complex, maxLength.map(_ - 1), p, lengthOne, lengthOne)
     }
-  
-  def startEndSameFace[P <: Polygon](complex: TwoComplex[P], path: NormalPath[P]): Boolean = complex.edgeIndices(path.edges.head.initialEdge).filter {
-    case (f, i, _) => !((f == path.edges.head.face)&&(i == path.edges.head.initial))
-  }.map {
-    case (f, _, _) => f
-  }.head == complex.edgeIndices(path.edges.last.terminalEdge).filter {
-    case (f, i, _) => !((f == path.edges.last.face)&&(i == path.edges.last.terminal))
-  }.map {
-    case (f, _, _) => f
-  }.head
-  
-  def endsGoAround[P <: Polygon](complex: TwoComplex[P], path: NormalPath[P]): Boolean = endsGoAroundrec(complex, path.edges.init, path.edges.last.whichVertexLinking, NormalPath[P](Vector(path.edges.last)))
 
-  def endsGoAroundrec[P <: Polygon](complex: TwoComplex[P], initedges: Vector[NormalArc[P]], optvertex: Option[Vertex], accum: NormalPath[P]): Boolean = optvertex match {
-    case None => false
-    case Some(v) => initedges.isEmpty match {
-      case true => startEndSameFace(complex, accum)
-      case false => initedges.last.whichVertexLinking match {
-        case Some(newv) => if(newv == v) endsGoAroundrec(complex, initedges.init, optvertex, NormalPath[P](initedges.last +: accum.edges)) else startEndSameFace(complex, accum)
-        case None => startEndSameFace(complex, accum)
+  def startEndSameFace[P <: Polygon](
+      complex: TwoComplex[P],
+      path: NormalPath[P]
+  ): Boolean =
+    complex
+      .edgeIndices(path.edges.head.initialEdge)
+      .filter {
+        case (f, i, _) =>
+          !((f == path.edges.head.face) && (i == path.edges.head.initial))
       }
-    }
+      .map {
+        case (f, _, _) => f
+      }
+      .head == complex
+      .edgeIndices(path.edges.last.terminalEdge)
+      .filter {
+        case (f, i, _) =>
+          !((f == path.edges.last.face) && (i == path.edges.last.terminal))
+      }
+      .map {
+        case (f, _, _) => f
+      }
+      .head
+
+  def endsGoAround[P <: Polygon](
+      complex: TwoComplex[P],
+      path: NormalPath[P]
+  ): Boolean =
+    endsGoAroundrec(
+      complex,
+      path.edges.init,
+      path.edges.last.whichVertexLinking,
+      NormalPath[P](Vector(path.edges.last))
+    )
+
+  def endsGoAroundrec[P <: Polygon](
+      complex: TwoComplex[P],
+      initedges: Vector[NormalArc[P]],
+      optvertex: Option[Vertex],
+      accum: NormalPath[P]
+  ): Boolean = optvertex match {
+    case None => false
+    case Some(v) =>
+      initedges.isEmpty match {
+        case true => startEndSameFace(complex, accum)
+        case false =>
+          initedges.last.whichVertexLinking match {
+            case Some(newv) =>
+              if (newv == v)
+                endsGoAroundrec(
+                  complex,
+                  initedges.init,
+                  optvertex,
+                  NormalPath[P](initedges.last +: accum.edges)
+                )
+              else startEndSameFace(complex, accum)
+            case None => startEndSameFace(complex, accum)
+          }
+      }
   }
 }
-
