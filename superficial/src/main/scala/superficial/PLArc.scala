@@ -387,4 +387,32 @@ object PLPath {
       bound
     )
   }
+
+  def enumMinimalClosed(
+      base: NormalPath[SkewPantsHexagon],
+      sep: BigDecimal,
+      bound: Double
+  ): Option[PLPath] = {
+    enumMinimal(base, sep, bound).seq.minByOption(
+      p =>
+        math.abs(
+          p.initialDisplacements.head.toDouble - findInitDisplacement(
+            p.base.edges.last,
+            p.finalDisplacements.last,
+            p.base.edges.head
+          ).toDouble
+        )
+    ) match {
+      case None => None
+      case Some(p) =>
+        if (math.abs(
+              p.initialDisplacements.head.toDouble - findInitDisplacement(
+                p.base.edges.last,
+                p.finalDisplacements.last,
+                p.base.edges.head
+              ).toDouble
+            ) <= (2*sep)) Some(p)
+        else None
+    }
+  }
 }
