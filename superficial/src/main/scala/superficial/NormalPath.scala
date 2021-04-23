@@ -13,6 +13,8 @@ case class NormalArc[P <: Polygon](initial: Index, terminal: Index, face: P) {
 
   val initialEdge = face.boundary(initial)
 
+  lazy val flip = NormalArc[P](terminal, initial, face)
+
   def vertexLinking = math.abs((terminal - initial) % (face.sides)) == 1
 
   def whichVertexLinking: Option[Vertex] =
@@ -48,6 +50,8 @@ case class NormalPath[P <: Polygon](edges: Vector[NormalArc[P]]) {
   }
 
   val length = edges.size
+
+  lazy val flip = NormalPath[P](edges.reverse.map(_.flip))
 
   def +:(arc: NormalArc[P]) = NormalPath(arc +: edges)
 
@@ -209,5 +213,37 @@ object NormalPath {
             case None => startEndSameFace(complex, accum)
           }
       }
+  }
+
+  def removeFlipAndCyclicPerRec[P <: Polygon](
+      accum: Set[NormalPath[P]],
+      paths: Set[NormalPath[P]]
+  ): Set[NormalPath[P]] = {
+    if (paths.isEmpty) accum
+    else {
+      removeFlipAndCyclicPerRec(
+        accum + paths.head,
+        paths.filter(
+          p =>
+            (p.edges.toSet != paths.head.edges.toSet) && (p.edges.toSet != paths.head.flip.edges.toSet)
+        )
+      )
+    }
+  }
+
+  def removeFlipAndCyclicPer[P <: Polygon](
+      paths: Set[NormalPath[P]]
+  ): Set[NormalPath[P]] = {
+    require(paths.forall(_.isClosed))
+    if (paths.isEmpty) paths
+    else {
+      removeFlipAndCyclicPerRec(
+        Set(paths.head),
+        paths.filter(
+          p =>
+            (p.edges.toSet != paths.head.edges.toSet) && (p.edges.toSet != paths.head.flip.edges.toSet)
+        )
+      )
+    }
   }
 }
