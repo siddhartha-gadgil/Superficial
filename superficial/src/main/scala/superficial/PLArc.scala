@@ -411,8 +411,44 @@ object PLPath {
                 p.finalDisplacements.last,
                 p.base.edges.head
               ).toDouble
-            ) <= (2*sep)) Some(p)
+            ) <= (2 * sep)) Some(p)
         else None
     }
+  }
+
+  def setEnumMinimalClosedRec(
+      accum: Set[Option[PLPath]],
+      paths: Set[NormalPath[SkewPantsHexagon]],
+      sep: BigDecimal,
+      bound: Double,
+      tol: Double
+  ): Set[Option[PLPath]] = {
+    if (paths.isEmpty) accum
+    else {
+      val newplpath = enumMinimalClosed(paths.head, sep, bound)
+      setEnumMinimalClosedRec(
+        Set(newplpath),
+        paths.tail,
+        sep,
+        newplpath.map(p => (p.length + tol)).getOrElse(bound).min(bound),
+        tol
+      )
+    }
+  }
+
+  def setEnumMinimalClosed(
+      paths: Set[NormalPath[SkewPantsHexagon]],
+      sep: BigDecimal,
+      bound: Double,
+      tol: Double
+  ): Set[Option[PLPath]] = {
+    val newplpath = enumMinimalClosed(paths.head, sep, bound)
+    setEnumMinimalClosedRec(
+      Set(newplpath),
+      paths.tail,
+      sep,
+      newplpath.map(p => (p.length + tol)).getOrElse(bound).min(bound),
+      tol
+    )
   }
 }
