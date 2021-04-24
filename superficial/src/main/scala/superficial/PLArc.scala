@@ -427,7 +427,7 @@ object PLPath {
     else {
       val newplpath = enumMinimalClosed(paths.head, sep, bound)
       setEnumMinimalClosedRec(
-        Set(newplpath),
+        accum + newplpath,
         paths.tail,
         sep,
         newplpath.map(p => (p.length + tol)).getOrElse(bound).min(bound),
@@ -441,14 +441,19 @@ object PLPath {
       sep: BigDecimal,
       bound: Double,
       tol: Double
-  ): Set[Option[PLPath]] = {
+  ): Set[PLPath] = {
     val newplpath = enumMinimalClosed(paths.head, sep, bound)
-    setEnumMinimalClosedRec(
+    val plpaths = setEnumMinimalClosedRec(
       Set(newplpath),
       paths.tail,
       sep,
       newplpath.map(p => (p.length + tol)).getOrElse(bound).min(bound),
       tol
-    )
+    ).filter(_.isDefined).map(_.get)
+    if (plpaths.isEmpty) plpaths
+    else {
+      val globalmin = plpaths.map(_.length).min
+      plpaths.filter(_.length < globalmin + tol)
+    }
   }
 }

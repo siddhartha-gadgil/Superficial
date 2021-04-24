@@ -62,7 +62,7 @@ case class NormalPath[P <: Polygon](edges: Vector[NormalArc[P]]) {
   //    else None
 
   val isClosed
-      : Boolean = (edges.last.terminalEdge == edges.head.initialEdge) || (edges.last.terminalEdge == edges.head.initialEdge.flip)
+      : Boolean = (edges.last.terminalEdge == edges.head.initialEdge.flip)
 
   //  val initEdge: Edge = edges.head.initial
   //
@@ -223,7 +223,7 @@ object NormalPath {
     else {
       removeFlipAndCyclicPerRec(
         accum + paths.head,
-        paths.filter(
+        paths.tail.filter(
           p =>
             (p.edges.toSet != paths.head.edges.toSet) && (p.edges.toSet != paths.head.flip.edges.toSet)
         )
@@ -239,7 +239,7 @@ object NormalPath {
     else {
       removeFlipAndCyclicPerRec(
         Set(paths.head),
-        paths.filter(
+        paths.tail.filter(
           p =>
             (p.edges.toSet != paths.head.edges.toSet) && (p.edges.toSet != paths.head.flip.edges.toSet)
         )
