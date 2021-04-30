@@ -118,7 +118,11 @@ object NormalPath {
             } -
               (path.terminalFace -> path.terminalIndex)
             i2 <- face.indices
-            if (i2 != i1)&&(!SkewPantsHexagon.adjacentSkewCurveEdges(face, i1, i2))
+            if (i2 != i1) && (!SkewPantsHexagon.adjacentSkewCurveEdges(
+              face,
+              i1,
+              i2
+            ))
             arc = NormalArc(i1, i2, face)
           } yield path :+ arc
         ).filter(path => !(endsGoAround(complex, path))).filter(p)
