@@ -57,7 +57,7 @@ case class NormalPath[P <: Polygon](edges: Vector[NormalArc[P]]) {
 
   def :+(arc: NormalArc[P]) = NormalPath(edges :+ arc)
 
-  def :+(newpath: NormalPath[P]) = NormalPath(edges ++ newpath.edges)
+  def ++(newpath: NormalPath[P]) = NormalPath(edges ++ newpath.edges)
   //
   //  def appendOpt(arc: NormalArc): Option[NormalPath] =
   //    if (arc.initial == terminalEdge && arc != edges.last.flip) Some(this :+ arc)
