@@ -56,6 +56,8 @@ case class NormalPath[P <: Polygon](edges: Vector[NormalArc[P]]) {
   def +:(arc: NormalArc[P]) = NormalPath(arc +: edges)
 
   def :+(arc: NormalArc[P]) = NormalPath(edges :+ arc)
+
+  def :+(newpath: NormalPath[P]) = NormalPath(edges ++ newpath.edges)
   //
   //  def appendOpt(arc: NormalArc): Option[NormalPath] =
   //    if (arc.initial == terminalEdge && arc != edges.last.flip) Some(this :+ arc)
@@ -116,15 +118,15 @@ object NormalPath {
             } -
               (path.terminalFace -> path.terminalIndex)
             i2 <- face.indices
-            if i2 != i1
+            if (i2 != i1)&&(!SkewPantsHexagon.adjacentSkewCurveEdges(face, i1, i2))
             arc = NormalArc(i1, i2, face)
           } yield path :+ arc
-        ).filter(p)
+        ).filter(path => !(endsGoAround(complex, path))).filter(p)
       enumerateRec(
         complex,
         maxAppendLength.map(_ - 1),
         p,
-        newPaths.filter(path => !(endsGoAround(complex, path))),
+        newPaths,
         accum union newPaths
       )
     }

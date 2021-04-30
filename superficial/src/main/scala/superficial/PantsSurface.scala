@@ -727,6 +727,19 @@ object SkewPantsHexagon{
   def getSeamLength(sph: SkewPantsHexagon, ps: PantsSeam): BigDecimal = {
     BigDecimal(sph.seamAndLength.filter(x => x._1 == ps)(0)._2)
   }
+
+  def adjacentSkewCurveEdges(face: Polygon, i1: Index, i2: Index): Boolean = {
+    require(face.isInstanceOf[SkewPantsHexagon])
+    if (math.abs(i1-i2)!= 1) false else {
+      face.boundary(i1) match {
+        case s: SkewCurveEdge => face.boundary(i2) match {
+          case s: SkewCurveEdge => true
+          case _ => false
+        }
+        case _ => false
+      }
+    }
+  }
 }
 
 case class SkewPantsSurface(numPants: Index, cs: Set[SkewCurve])
