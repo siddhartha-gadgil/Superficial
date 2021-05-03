@@ -558,4 +558,9 @@ object PLPath {
     )
     Vector(newarc1, NormalArc(newarc2faceandinit._2, arc3.terminal, arc3.face))
   }
+
+  def isotopicNearby(complex: TwoComplex[SkewPantsHexagon], baseplpath: PLPath, paths: Set[PLPath]): Set[PLPath] = {
+    val nearbyarcs = NormalPath.pathNeighbouringArcs(complex, baseplpath.base)
+    paths.filter(p => p.base.edges.toSet.subsetOf(nearbyarcs))
+  }
 }

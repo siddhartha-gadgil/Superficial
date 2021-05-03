@@ -27,6 +27,7 @@ case class NormalArc[P <: Polygon](initial: Index, terminal: Index, face: P) {
   def crosses(that: NormalArc[P]) =
     (that.initial - initial) * (that.terminal - terminal) * (that.initial - terminal) * (that.terminal - initial) < 0
 
+  def isEdgeParallel: Boolean = math.abs((terminal - initial)%face.sides) == 2
 }
 
 object NormalArc {
@@ -37,6 +38,29 @@ object NormalArc {
       terminal <- face.indices
       if terminal != initial
     } yield NormalArc(initial, terminal, face)
+
+  def adjacentPolygonArcs[P <: Polygon](complex: TwoComplex[P], arc: NormalArc[P]): Set[NormalArc[P]] = (arc.terminal - arc.initial)%arc.face.sides match {
+        case 2 => val newvalues = (complex.edgeIndices(arc.face.boundary((arc.terminal-1)%arc.face.sides)).map {
+              case (f, i, _) => (f, i)
+            } -
+              (arc.face -> (arc.terminal-1)%arc.face.sides)).head
+              val newarc1 = NormalArc((newvalues._2 - 1)%newvalues._1.sides, (newvalues._2 + 1)%newvalues._1.sides, newvalues._1)
+              Set(newarc1, newarc1.flip)
+        case -2 => val newvalues = (complex.edgeIndices(arc.face.boundary((arc.terminal+1)%arc.face.sides)).map {
+              case (f, i, _) => (f, i)
+            } -
+              (arc.face -> (arc.terminal+1)%arc.face.sides)).head
+              val newarc1 = NormalArc((newvalues._2 - 1)%newvalues._1.sides, (newvalues._2 + 1)%newvalues._1.sides, newvalues._1)
+              Set(newarc1, newarc1.flip)
+        case _ => Set()
+      }  
+    
+  def neighbouringArcs[P <: Polygon](complex: TwoComplex[P], arc: NormalArc[P]): Set[NormalArc[P]] = {
+    (for {
+      i1 <- Set((arc.initial-1)%arc.face.sides,arc.initial, (arc.initial+1)%arc.face.sides)
+      i2 <- Set((arc.terminal-1)%arc.face.sides,arc.terminal, (arc.terminal+1)%arc.face.sides)
+    } yield NormalArc(i1, i2, arc.face)).union(adjacentPolygonArcs(complex, arc))
+  }
 }
 
 case class NormalPath[P <: Polygon](edges: Vector[NormalArc[P]]) {
@@ -251,5 +275,12 @@ object NormalPath {
         )
       )
     }
+  }
+
+  def pathNeighbouringArcs[P <: Polygon](complex: TwoComplex[P], path: NormalPath[P]): Set[NormalArc[P]] = {
+    (for {
+      arc <- path.edges
+      nbarc <- NormalArc.neighbouringArcs(complex, arc)
+    } yield nbarc).toSet
   }
 }
