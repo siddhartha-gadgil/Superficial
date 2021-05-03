@@ -193,7 +193,7 @@ object Hexagon {
         initShift: Double,
         lastShift: Double
     ): Double =
-      if (i==j) abs(lastShift-initShift)
+      if (i == j) abs(lastShift - initShift)
       else if (i > j) arcLength(j, i, lastShift, initShift)
       else if (j - i < 4) getArcLength(i, j, initShift, lastShift)
       else getArcLength(j, i + 6, lastShift, initShift)
@@ -218,10 +218,16 @@ case class PantsSeam(
 }
 
 object PantsSeam {
-  def compareSeamPoints(ps1: PantsSeam, pos1: BigDecimal, ps2: PantsSeam, pos2: BigDecimal, len: BigDecimal): Boolean = {
-    require((ps1 == ps2)||(ps1 == ps2.flip))
+  def compareSeamPoints(
+      ps1: PantsSeam,
+      pos1: BigDecimal,
+      ps2: PantsSeam,
+      pos2: BigDecimal,
+      len: BigDecimal
+  ): Boolean = {
+    require((ps1 == ps2) || (ps1 == ps2.flip))
     if (ps1 == ps2) (pos1 == pos2)
-    else (pos1+pos2 == len)
+    else (pos1 + pos2 == len)
   }
 }
 
@@ -418,8 +424,6 @@ case class SkewCurve(
         )
       )
 
-  
-
   /**
     * position of the first vertex on the given pants boundary in the curve after gluing with a twist
     *
@@ -427,11 +431,12 @@ case class SkewCurve(
     * @param top whether we consider the top edge
     * @return position
     */
-  def initPos(left: Boolean, top: Boolean) = if(left){
-    if(top) BigDecimal(0) else  BigDecimal(0.5)
-  } else {
-    if(top) mod1(BigDecimal(0.5) +twist) else twist
-  }
+  def initPos(left: Boolean, top: Boolean) =
+    if (left) {
+      if (top) BigDecimal(0) else BigDecimal(0.5)
+    } else {
+      if (top) mod1(BigDecimal(0.5) + twist) else twist
+    }
 
   /**
     * the edges in the twisted pants complex on an edge in a pants boundary adjacent to the given curve;
@@ -441,7 +446,8 @@ case class SkewCurve(
     * @param top whether we consider the top edge
     * @return edges in the twisted pants complex
     */
-  def edgesOn(left: Boolean, top: Boolean): Vector[Edge] = edgesToOppositeVertex(initPos(left, top), left)
+  def edgesOn(left: Boolean, top: Boolean): Vector[Edge] =
+    edgesToOppositeVertex(initPos(left, top), left)
 
   /**
     * the vertices in the twisted pants complex on an edge in a pants boundary adjacent to the given curve;
@@ -459,8 +465,8 @@ case class SkewCurve(
 
 object SkewCurve {
   @annotation.tailrec
-  def mod1(x: BigDecimal): BigDecimal = 
-    if (x >= 1) (mod1(x -1))
+  def mod1(x: BigDecimal): BigDecimal =
+    if (x >= 1)(mod1(x - 1))
     else if (x >= 0) x
     else (mod1(x + 1))
 
@@ -530,7 +536,8 @@ case class CurveVertex(curve: Curve, first: Boolean) extends Vertex
   * @param curve the curve
   * @param position position on the curve in [0, 1)
   */
-case class SkewCurveVertex(curve: SkewCurve, position: BigDecimal) extends Vertex
+case class SkewCurveVertex(curve: SkewCurve, position: BigDecimal)
+    extends Vertex
 
 /**
   * An edge on a curve
@@ -589,9 +596,15 @@ case class SkewCurveEdge(
 }
 
 object SkewCurveEdge {
-  def getPos(edge: SkewCurveEdge, pos: BigDecimal): BigDecimal = {
-    if (edge.positivelyOriented) mod1(edge.initialPosition+pos) 
-    else mod1(edge.initialPosition - pos)
+  def comparePoints(
+      edge1: SkewCurveEdge,
+      disp1: BigDecimal,
+      edge2: SkewCurveEdge,
+      disp2: BigDecimal
+  ): Boolean = {
+    require((edge1 == edge2) || (edge1 == edge2.flip))
+    if (edge1 == edge2) (disp1 == disp2)
+    else (disp1 + disp2 == edge1.length)
   }
 }
 
@@ -644,44 +657,44 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
   private lazy val segments: Vector[Vector[Edge]] = {
     if (top) {
       Z3.enum.map { direction: Z3 =>
-      skewEdges(
-        PantsBoundary(pants, direction),
-        top,
-        positivelyOriented = top,
-        cs
-      )
+        skewEdges(
+          PantsBoundary(pants, direction),
+          top,
+          positivelyOriented = top,
+          cs
+        )
       }
     } else {
       Z3.flipEnum.map { direction: Z3 =>
-      skewEdges(
-        PantsBoundary(pants, direction),
-        top,
-        positivelyOriented = top,
-        cs
-      )
+        skewEdges(
+          PantsBoundary(pants, direction),
+          top,
+          positivelyOriented = top,
+          cs
+        )
       }
     }
-  } 
+  }
 
   lazy val boundary = fillSeams(pants, segments, top)
   lazy val sides = boundary.size
 
   def edgeLengths: Vector[Option[Double]] = {
-    if(top) {
+    if (top) {
       Z3.enum.map { direction: Z3 =>
-      getSkewCurve(PantsBoundary(pants, direction), cs)
-        .map {
-          case (curve, left) => Some((curve.length.toDouble)/2)
-        }
-        .getOrElse(None)
+        getSkewCurve(PantsBoundary(pants, direction), cs)
+          .map {
+            case (curve, left) => Some((curve.length.toDouble) / 2)
+          }
+          .getOrElse(None)
       }
     } else {
       Z3.flipEnum.map { direction: Z3 =>
-      getSkewCurve(PantsBoundary(pants, direction), cs)
-        .map {
-          case (curve, left) => Some((curve.length.toDouble)/2)
-        }
-        .getOrElse(None)
+        getSkewCurve(PantsBoundary(pants, direction), cs)
+          .map {
+            case (curve, left) => Some((curve.length.toDouble) / 2)
+          }
+          .getOrElse(None)
       }
     }
   }
@@ -689,43 +702,89 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
   def seamAndLength: Vector[(PantsSeam, Double)] = {
     require(edgeLengths.forall(x => x.isDefined))
     if (top) {
-      for (i <- Vector(0,1,2)) yield {
-        (PantsSeam(pants, skewEdges(PantsBoundary(pants, Z3(i)), top, top, cs).last.terminal, skewEdges(PantsBoundary(pants, Z3((i+1)%3)), top, top, cs).head.initial, top), Hexagon.side(edgeLengths(i).getOrElse(0), edgeLengths((i+1)%3).getOrElse(0), edgeLengths((i+2)%3).getOrElse(0)))
+      for (i <- Vector(0, 1, 2)) yield {
+        (
+          PantsSeam(
+            pants,
+            skewEdges(PantsBoundary(pants, Z3(i)), top, top, cs).last.terminal,
+            skewEdges(PantsBoundary(pants, Z3((i + 1) % 3)), top, top, cs).head.initial,
+            top
+          ),
+          Hexagon.side(
+            edgeLengths(i).getOrElse(0),
+            edgeLengths((i + 1) % 3).getOrElse(0),
+            edgeLengths((i + 2) % 3).getOrElse(0)
+          )
+        )
       }
     } else {
-      for (i <- Vector(0,2,1)) yield {
-        (PantsSeam(pants, skewEdges(PantsBoundary(pants, Z3(i)), top, top, cs).last.terminal, skewEdges(PantsBoundary(pants, Z3((i+2)%3)), top, top, cs).head.initial, top), Hexagon.side(edgeLengths(i).getOrElse(0), edgeLengths((i+2)%3).getOrElse(0), edgeLengths((i+1)%3).getOrElse(0)))
+      for (i <- Vector(0, 2, 1)) yield {
+        (
+          PantsSeam(
+            pants,
+            skewEdges(PantsBoundary(pants, Z3(i)), top, top, cs).last.terminal,
+            skewEdges(PantsBoundary(pants, Z3((i + 2) % 3)), top, top, cs).head.initial,
+            top
+          ),
+          Hexagon.side(
+            edgeLengths(i).getOrElse(0),
+            edgeLengths((i + 2) % 3).getOrElse(0),
+            edgeLengths((i + 1) % 3).getOrElse(0)
+          )
+        )
       }
     }
   }
 }
 
-object SkewPantsHexagon{
-  def DisplacementFromPBVertex(sph: SkewPantsHexagon, edge: SkewCurveEdge, initialDisplacement: Double): Double = sph.boundary.indexOf(edge) match {
+object SkewPantsHexagon {
+  def DisplacementFromPBVertex(
+      sph: SkewPantsHexagon,
+      edge: SkewCurveEdge,
+      initialDisplacement: Double
+  ): Double = sph.boundary.indexOf(edge) match {
     case 0 => initialDisplacement
-    case _ => sph.boundary(sph.boundary.indexOf(edge)-1) match {
-      case b: BoundaryEdge => initialDisplacement
-      case s: SkewCurveEdge => (initialDisplacement+s.length.doubleValue)
-      case p: PantsSeam => initialDisplacement
-    }
+    case _ =>
+      sph.boundary(sph.boundary.indexOf(edge) - 1) match {
+        case b: BoundaryEdge  => initialDisplacement
+        case s: SkewCurveEdge => (initialDisplacement + s.length.doubleValue)
+        case p: PantsSeam     => initialDisplacement
+      }
   }
   def SkewIndexToHexagonIndex(sph: SkewPantsHexagon, n: Index): Index = {
     require(n < sph.sides)
     n match {
       case 0 => 0
-      case _ => sph.boundary(n) match {
-        case b: BoundaryEdge => (SkewIndexToHexagonIndex(sph, n-1)+1)
-        case p: PantsSeam => (SkewIndexToHexagonIndex(sph, n-1)+1)
-        case s: SkewCurveEdge => sph.boundary(n-1) match {
-          case b: BoundaryEdge => (SkewIndexToHexagonIndex(sph, n-1)+1)
-          case p: PantsSeam => (SkewIndexToHexagonIndex(sph, n-1)+1)
-          case s: SkewCurveEdge => SkewIndexToHexagonIndex(sph, n-1)
+      case _ =>
+        sph.boundary(n) match {
+          case b: BoundaryEdge => (SkewIndexToHexagonIndex(sph, n - 1) + 1)
+          case p: PantsSeam    => (SkewIndexToHexagonIndex(sph, n - 1) + 1)
+          case s: SkewCurveEdge =>
+            sph.boundary(n - 1) match {
+              case b: BoundaryEdge  => (SkewIndexToHexagonIndex(sph, n - 1) + 1)
+              case p: PantsSeam     => (SkewIndexToHexagonIndex(sph, n - 1) + 1)
+              case s: SkewCurveEdge => SkewIndexToHexagonIndex(sph, n - 1)
+            }
         }
-      }
     }
   }
   def getSeamLength(sph: SkewPantsHexagon, ps: PantsSeam): BigDecimal = {
     BigDecimal(sph.seamAndLength.filter(x => x._1 == ps)(0)._2)
+  }
+
+  def adjacentSkewCurveEdges(face: Polygon, i1: Index, i2: Index): Boolean = {
+    require(face.isInstanceOf[SkewPantsHexagon])
+    if (math.abs(i1 - i2) != 1) false
+    else {
+      face.boundary(i1) match {
+        case s: SkewCurveEdge =>
+          face.boundary(i2) match {
+            case s: SkewCurveEdge => true
+            case _                => false
+          }
+        case _ => false
+      }
+    }
   }
 }
 
@@ -1280,7 +1339,8 @@ object PantsSurface {
     segments match {
       case Vector() => gapLess
       case ys :+ x =>
-        val newSeam = PantsSeam(pants, x.last.terminal, gapLess.head.initial, top)
+        val newSeam =
+          PantsSeam(pants, x.last.terminal, gapLess.head.initial, top)
         fillSeamsRec(pants, top, ys, x ++ (newSeam +: gapLess))
     }
 
@@ -1291,7 +1351,7 @@ object PantsSurface {
     * @param segments the collections of sequences of edges
     * @param top whether the hexagon is the top face
     * @return sequence of edges with gaps filled in by seams
-    */  
+    */
   def fillSeams(pants: Index, segments: Vector[Vector[Edge]], top: Boolean) =
     fillSeamsRec(
       pants,

@@ -83,45 +83,35 @@ object PLArc {
       case e1: SkewCurveEdge =>
         arc.terminalEdge match {
           case e2: SkewCurveEdge =>
-            for (d1: BigDecimal <- Range.BigDecimal(0, e1.length, sep);
-                 d2: BigDecimal <- Range.BigDecimal(0, e2.length, sep))
+            for (d1: BigDecimal <- BigDecimal(0) to e1.length by sep;
+                 d2: BigDecimal <- BigDecimal(0) to e2.length by sep)
               yield PLArc(arc, d1, d2)
           case s2: PantsSeam =>
-            for (d1: BigDecimal <- Range.BigDecimal(0, e1.length, sep);
-                 d2: BigDecimal <- Range
-                   .BigDecimal(
-                     0,
-                     SkewPantsHexagon.getSeamLength(arc.face, s2),
-                     sep
-                   )
-                   ) yield PLArc(arc, d1, d2)
+            for (d1: BigDecimal <- BigDecimal(0) to e1.length by sep;
+                 d2: BigDecimal <- BigDecimal(0) to SkewPantsHexagon
+                   .getSeamLength(arc.face, s2) by sep)
+              yield PLArc(arc, d1, d2)
         }
       case s1: PantsSeam =>
         arc.terminalEdge match {
           case e2: SkewCurveEdge =>
             for {
-              d1: BigDecimal <- Range
-                .BigDecimal(
-                  0,
-                  SkewPantsHexagon.getSeamLength(arc.face, s1),
-                  sep
-                )
-              d2: BigDecimal <- Range.BigDecimal(0, e2.length, sep)
+              d1: BigDecimal <- BigDecimal(0) to SkewPantsHexagon.getSeamLength(
+                arc.face,
+                s1
+              ) by sep
+              d2: BigDecimal <- BigDecimal(0) to e2.length by sep
             } yield PLArc(arc, d1, d2)
           case s2: PantsSeam =>
             for {
-              d1: BigDecimal <- Range
-                .BigDecimal(
-                  0,
-                  SkewPantsHexagon.getSeamLength(arc.face, s1),
-                  sep
-                )
-              d2: BigDecimal <- Range
-                .BigDecimal(
-                  0,
-                  SkewPantsHexagon.getSeamLength(arc.face, s2),
-                  sep
-                )
+              d1: BigDecimal <- BigDecimal(0) to SkewPantsHexagon.getSeamLength(
+                arc.face,
+                s1
+              ) by sep
+              d2: BigDecimal <- BigDecimal(0) to SkewPantsHexagon.getSeamLength(
+                arc.face,
+                s2
+              ) by sep
             } yield PLArc(arc, d1, d2)
         }
     }
@@ -139,8 +129,8 @@ object PLArc {
         arc.terminalEdge match {
           case e2: SkewCurveEdge =>
             for {
-              d1: BigDecimal <- Range.BigDecimal(0, e1.length, sep)
-              d2: BigDecimal <- Range.BigDecimal(0, e2.length, sep)
+              d1: BigDecimal <- BigDecimal(0) to e1.length by sep
+              d2: BigDecimal <- BigDecimal(0) to e2.length by sep
             } yield
               PLPath(
                 NormalPath[SkewPantsHexagon](Vector(arc)),
@@ -149,14 +139,11 @@ object PLArc {
               )
           case s2: PantsSeam =>
             for {
-              d1: BigDecimal <- Range.BigDecimal(0, e1.length, sep);
-              d2: BigDecimal <- Range
-                .BigDecimal(
-                  0,
-                  SkewPantsHexagon.getSeamLength(arc.face, s2),
-                  sep
-                )
-
+              d1: BigDecimal <- BigDecimal(0) to e1.length by sep;
+              d2: BigDecimal <- BigDecimal(0) to SkewPantsHexagon.getSeamLength(
+                arc.face,
+                s2
+              ) by sep
             } yield
               PLPath(
                 NormalPath[SkewPantsHexagon](Vector(arc)),
@@ -168,13 +155,11 @@ object PLArc {
         arc.terminalEdge match {
           case e2: SkewCurveEdge =>
             for {
-              d1: BigDecimal <- Range
-                .BigDecimal(
-                  0,
-                  SkewPantsHexagon.getSeamLength(arc.face, s1),
-                  sep
-                )
-              d2: BigDecimal <- Range.BigDecimal(0, e2.length, sep)
+              d1: BigDecimal <- BigDecimal(0) to SkewPantsHexagon.getSeamLength(
+                arc.face,
+                s1
+              ) by sep
+              d2: BigDecimal <- BigDecimal(0) to e2.length by sep
             } yield
               PLPath(
                 NormalPath[SkewPantsHexagon](Vector(arc)),
@@ -183,18 +168,14 @@ object PLArc {
               )
           case s2: PantsSeam =>
             for {
-              d1: BigDecimal <- Range
-                .BigDecimal(
-                  0,
-                  SkewPantsHexagon.getSeamLength(arc.face, s1),
-                  sep
-                )
-              d2: BigDecimal <- Range
-                .BigDecimal(
-                  0,
-                  SkewPantsHexagon.getSeamLength(arc.face, s2),
-                  sep
-                )
+              d1: BigDecimal <- BigDecimal(0) to SkewPantsHexagon.getSeamLength(
+                arc.face,
+                s1
+              ) by sep
+              d2: BigDecimal <- BigDecimal(0) to SkewPantsHexagon.getSeamLength(
+                arc.face,
+                s2
+              ) by sep
             } yield
               PLPath(
                 NormalPath[SkewPantsHexagon](Vector(arc)),
@@ -216,13 +197,14 @@ object PLArc {
     )
     arc.terminalEdge match {
       case e2: SkewCurveEdge =>
-        for (d2: BigDecimal <- Range.BigDecimal(0, e2.length, sep))
+        for (d2: BigDecimal <- BigDecimal(0) to e2.length by sep)
           yield PLArc(arc, initialDisplacement, d2)
       case s2: PantsSeam =>
         for {
-          d2: BigDecimal <- Range
-            .BigDecimal(0, SkewPantsHexagon.getSeamLength(arc.face, s2), sep)
-            
+          d2: BigDecimal <- BigDecimal(0) to SkewPantsHexagon.getSeamLength(
+            arc.face,
+            s2
+          ) by sep
         } yield PLArc(arc, initialDisplacement, d2)
     }
   }.to(ParSet)
@@ -241,7 +223,7 @@ case class PLPath(
       .isInstanceOf[BoundaryEdge] || base.edges.last.terminalEdge
       .isInstanceOf[BoundaryEdge])
   )
-  val PLArcs: Vector[PLArc] = for (i <- (0 to base.edges.size - 1).toVector)
+  val PLArcs: Vector[PLArc] = for (i <- (0 to (base.edges.size - 1)).toVector)
     yield PLArc(base.edges(i), initialDisplacements(i), finalDisplacements(i))
   require(
     PLArcs.zip(PLArcs.tail).forall {
@@ -250,9 +232,12 @@ case class PLPath(
           case s1: SkewCurveEdge =>
             arc2.base.initialEdge match {
               case s2: SkewCurveEdge =>
-                SkewCurveEdge
-                  .getPos(s1, arc1.finalDisplacement) == SkewCurveEdge
-                  .getPos(s2, arc2.initialDisplacement)
+                SkewCurveEdge.comparePoints(
+                  s1,
+                  arc1.finalDisplacement,
+                  s2,
+                  arc2.initialDisplacement
+                )
               case p2: PantsSeam => false
             }
           case p1: PantsSeam =>
@@ -329,7 +314,7 @@ object PLPath {
         case e2: SkewCurveEdge =>
           for {
             path <- accum
-            d2: BigDecimal <- Range.BigDecimal(0, e2.length, sep)
+            d2: BigDecimal <- (BigDecimal(0) to e2.length by sep)
           } yield
             PLPath(
               path.base.:+(baseedges(numdone)),
@@ -343,12 +328,10 @@ object PLPath {
         case s2: PantsSeam =>
           for {
             path <- accum
-            d2: BigDecimal <- Range
-              .BigDecimal(
-                0,
-                SkewPantsHexagon.getSeamLength(baseedges(numdone).face, s2),
-                sep
-              )
+            d2: BigDecimal <- BigDecimal(0) to SkewPantsHexagon.getSeamLength(
+              baseedges(numdone).face,
+              s2
+            ) by sep
           } yield
             PLPath(
               path.base.:+(baseedges(numdone)),
@@ -363,13 +346,14 @@ object PLPath {
     }.to(ParSet)
   }
 
-  def pickMinimal(paths: ParSet[PLPath]): ParSet[PLPath] = {
+  def pickMinimal(paths: ParSet[PLPath], bound: Double): ParSet[PLPath] = {
     paths
       .groupBy(p => (p.initialDisplacements.head, p.finalDisplacements.last))
       .map {
         case (_, s) => s.minBy(_.length)
       }
       .to(ParSet)
+      .filter(path => (path.length <= bound))
   }
 
   @annotation.tailrec
@@ -377,27 +361,206 @@ object PLPath {
       accum: ParSet[PLPath],
       baseedges: Vector[NormalArc[SkewPantsHexagon]],
       numdone: Index,
-      sep: BigDecimal
+      sep: BigDecimal,
+      bound: Double
   ): ParSet[PLPath] = {
     if (numdone == baseedges.size) accum
     else
       enumMinimalRec(
-        pickMinimal(addPLArc(accum, baseedges, numdone, sep)),
+        pickMinimal(addPLArc(accum, baseedges, numdone, sep), bound),
         baseedges,
         numdone + 1,
-        sep
+        sep,
+        bound
       )
   }
 
   def enumMinimal(
       base: NormalPath[SkewPantsHexagon],
-      sep: BigDecimal
+      sep: BigDecimal,
+      bound: Double
   ): ParSet[PLPath] = {
     enumMinimalRec(
-      PLArc.freeEnumeratePath(base.edges.head, sep),
+      PLArc
+        .freeEnumeratePath(base.edges.head, sep)
+        .filter(path => (path.length <= bound)),
       base.edges,
       1,
-      sep
+      sep,
+      bound
     )
+  }
+
+  def enumMinimalClosed(
+      base: NormalPath[SkewPantsHexagon],
+      sep: BigDecimal,
+      bound: Double
+  ): Option[PLPath] = {
+    enumMinimal(base, sep, bound).seq.minByOption(
+      p =>
+        math.abs(
+          p.initialDisplacements.head.toDouble - findInitDisplacement(
+            p.base.edges.last,
+            p.finalDisplacements.last,
+            p.base.edges.head
+          ).toDouble
+        )
+    ) match {
+      case None => None
+      case Some(p) =>
+        if (math.abs(
+              p.initialDisplacements.head.toDouble - findInitDisplacement(
+                p.base.edges.last,
+                p.finalDisplacements.last,
+                p.base.edges.head
+              ).toDouble
+            ) <= (2 * sep)) Some(p)
+        else None
+    }
+  }
+
+  def setEnumMinimalClosedRec(
+      accum: Set[Option[PLPath]],
+      paths: Set[NormalPath[SkewPantsHexagon]],
+      sep: BigDecimal,
+      bound: Double,
+      tol: Double
+  ): Set[Option[PLPath]] = {
+    if (paths.isEmpty) accum
+    else {
+      val newplpath = enumMinimalClosed(paths.head, sep, bound)
+      setEnumMinimalClosedRec(
+        accum + newplpath,
+        paths.tail,
+        sep,
+        newplpath.map(p => (p.length + tol)).getOrElse(bound).min(bound),
+        tol
+      )
+    }
+  }
+
+  def setEnumMinimalClosed(
+      paths: Set[NormalPath[SkewPantsHexagon]],
+      sep: BigDecimal,
+      bound: Double,
+      tol: Double
+  ): Set[PLPath] = {
+    val newplpath = enumMinimalClosed(paths.head, sep, bound)
+    val plpaths = setEnumMinimalClosedRec(
+      Set(newplpath),
+      paths.tail,
+      sep,
+      newplpath.map(p => (p.length + tol)).getOrElse(bound).min(bound),
+      tol
+    ).filter(_.isDefined).map(_.get)
+    if (plpaths.isEmpty) plpaths
+    else {
+      val globalmin = plpaths.map(_.length).min
+      plpaths.filter(_.length < globalmin + tol)
+    }
+  }
+
+  def shortArcVertexCross(
+      complex: TwoComplex[SkewPantsHexagon],
+      path: PLPath,
+      sep: BigDecimal
+  ): NormalPath[SkewPantsHexagon] = {
+    //require(path.PLArcs.map(_.length).min < sep)
+    val shortestedgeindex = path.PLArcs.indexOf(path.PLArcs.minBy(_.length))
+    path.base.edges(shortestedgeindex).initialEdge match {
+      case s: SkewCurveEdge =>
+        path.base
+          .edges((shortestedgeindex - 1) % path.base.length)
+          .face
+          .boundary(
+            (path.base
+              .edges(shortestedgeindex - 1)
+              .terminal + 1) % path.base.edges(shortestedgeindex - 1).face.sides
+          ) match {
+          case s: SkewCurveEdge =>
+            surgery(complex, path.base, shortestedgeindex, 1)
+          case _ => surgery(complex, path.base, shortestedgeindex, -1)
+        }
+      case _ =>
+        path.base
+          .edges((shortestedgeindex + 1) % path.base.length)
+          .face
+          .boundary(
+            (path.base
+              .edges(shortestedgeindex + 1)
+              .initial + 1) % path.base.edges(shortestedgeindex + 1).face.sides
+          ) match {
+          case s: SkewCurveEdge =>
+            surgery(complex, path.base, shortestedgeindex, 1)
+          case _ => surgery(complex, path.base, shortestedgeindex, -1)
+        }
+    }
+  }
+
+  def surgery(
+      complex: TwoComplex[SkewPantsHexagon],
+      path: NormalPath[SkewPantsHexagon],
+      shortestedgeindex: Index,
+      arc1edgeshift: Int
+  ): NormalPath[SkewPantsHexagon] = {
+    require(math.abs(arc1edgeshift) == 1, "newarcedgeshift must be 1 or -1")
+    if (shortestedgeindex == 0) {
+      NormalPath(
+        replacingarcs(
+          complex,
+          path.edges.last,
+          path.edges(0),
+          path.edges(1),
+          arc1edgeshift
+        ) ++ path.edges.drop(2).dropRight(1)
+      )
+    } else if (shortestedgeindex == (path.length - 1)) {
+      NormalPath(
+        path.edges.slice(0, shortestedgeindex - 1).drop(1) ++ replacingarcs(
+          complex,
+          path.edges(shortestedgeindex - 1),
+          path.edges(shortestedgeindex),
+          path.edges(0),
+          arc1edgeshift
+        )
+      )
+    } else {
+      NormalPath(
+        path.edges.slice(0, shortestedgeindex - 1) ++ replacingarcs(
+          complex,
+          path.edges(shortestedgeindex - 1),
+          path.edges(shortestedgeindex),
+          path.edges(shortestedgeindex + 1),
+          arc1edgeshift
+        ) ++ path.edges.drop(shortestedgeindex + 1)
+      )
+    }
+  }
+
+  def replacingarcs(
+      complex: TwoComplex[SkewPantsHexagon],
+      arc1: NormalArc[SkewPantsHexagon],
+      arc2: NormalArc[SkewPantsHexagon],
+      arc3: NormalArc[SkewPantsHexagon],
+      arc1edgeshift: Int
+  ): Vector[NormalArc[SkewPantsHexagon]] = {
+    val newarc1 = NormalArc(
+      arc1.initial,
+      (arc1.terminal + arc1edgeshift) % arc1.face.sides,
+      arc1.face
+    )
+    val newarc2faceandinit = (complex
+      .edgeIndices(newarc1.terminalEdge)
+      .map(p => (p._1, p._2)) - (newarc1.face -> newarc1.terminal)).head
+    require(
+      newarc2faceandinit._1 == arc3.face,
+      "Suggested arc cannot be defined"
+    )
+    Vector(newarc1, NormalArc(newarc2faceandinit._2, arc3.terminal, arc3.face))
+  }
+
+  def isotopicNearby(complex: TwoComplex[SkewPantsHexagon], baseplpath: PLPath, paths: Set[PLPath]): Set[PLPath] = {
+    val nearbyarcs = NormalPath.pathNeighbouringArcs(complex, baseplpath.base)
+    paths.filter(p => p.base.edges.toSet.subsetOf(nearbyarcs))
   }
 }

@@ -13,11 +13,21 @@ case class NormalArc[P <: Polygon](initial: Index, terminal: Index, face: P) {
 
   val initialEdge = face.boundary(initial)
 
-  def vertexLinking = math.abs(terminal - initial) == 1
+  lazy val flip = NormalArc[P](terminal, initial, face)
+
+  def vertexLinking = math.abs((terminal - initial) % (face.sides)) == 1
+
+  def whichVertexLinking: Option[Vertex] =
+    (terminal - initial) % face.sides match {
+      case 1  => Some(face.boundary(initial).terminal)
+      case -1 => Some(face.boundary(terminal).terminal)
+      case _  => None
+    }
 
   def crosses(that: NormalArc[P]) =
     (that.initial - initial) * (that.terminal - terminal) * (that.initial - terminal) * (that.terminal - initial) < 0
 
+  def isEdgeParallel: Boolean = math.abs((terminal - initial)%face.sides) == 2
 }
 
 object NormalArc {
@@ -28,9 +38,30 @@ object NormalArc {
       terminal <- face.indices
       if terminal != initial
     } yield NormalArc(initial, terminal, face)
+
+  def adjacentPolygonArcs[P <: Polygon](complex: TwoComplex[P], arc: NormalArc[P]): Set[NormalArc[P]] = (arc.terminal - arc.initial)%arc.face.sides match {
+        case 2 => val newvalues = (complex.edgeIndices(arc.face.boundary((arc.terminal-1)%arc.face.sides)).map {
+              case (f, i, _) => (f, i)
+            } -
+              (arc.face -> (arc.terminal-1)%arc.face.sides)).head
+              val newarc1 = NormalArc((newvalues._2 - 1)%newvalues._1.sides, (newvalues._2 + 1)%newvalues._1.sides, newvalues._1)
+              Set(newarc1, newarc1.flip)
+        case -2 => val newvalues = (complex.edgeIndices(arc.face.boundary((arc.terminal+1)%arc.face.sides)).map {
+              case (f, i, _) => (f, i)
+            } -
+              (arc.face -> (arc.terminal+1)%arc.face.sides)).head
+              val newarc1 = NormalArc((newvalues._2 - 1)%newvalues._1.sides, (newvalues._2 + 1)%newvalues._1.sides, newvalues._1)
+              Set(newarc1, newarc1.flip)
+        case _ => Set()
+      }  
+    
+  def neighbouringArcs[P <: Polygon](complex: TwoComplex[P], arc: NormalArc[P]): Set[NormalArc[P]] = {
+    (for {
+      i1 <- Set((arc.initial-1)%arc.face.sides,arc.initial, (arc.initial+1)%arc.face.sides)
+      i2 <- Set((arc.terminal-1)%arc.face.sides,arc.terminal, (arc.terminal+1)%arc.face.sides)
+    } yield NormalArc(i1, i2, arc.face)).union(adjacentPolygonArcs(complex, arc))
+  }
 }
-
-
 
 case class NormalPath[P <: Polygon](edges: Vector[NormalArc[P]]) {
   edges.zip(edges.tail).foreach {
@@ -44,15 +75,20 @@ case class NormalPath[P <: Polygon](edges: Vector[NormalArc[P]]) {
 
   val length = edges.size
 
+  lazy val flip = NormalPath[P](edges.reverse.map(_.flip))
+
   def +:(arc: NormalArc[P]) = NormalPath(arc +: edges)
 
   def :+(arc: NormalArc[P]) = NormalPath(edges :+ arc)
+
+  def ++(newpath: NormalPath[P]) = NormalPath(edges ++ newpath.edges)
   //
   //  def appendOpt(arc: NormalArc): Option[NormalPath] =
   //    if (arc.initial == terminalEdge && arc != edges.last.flip) Some(this :+ arc)
   //    else None
 
-  val isClosed: Boolean = (edges.last.terminalEdge == edges.head.initialEdge)||(edges.last.terminalEdge == edges.head.initialEdge.flip)
+  val isClosed
+      : Boolean = (edges.last.terminalEdge == edges.head.initialEdge.flip)
 
   //  val initEdge: Edge = edges.head.initial
   //
@@ -106,10 +142,14 @@ object NormalPath {
             } -
               (path.terminalFace -> path.terminalIndex)
             i2 <- face.indices
-            if i2 != i1
+            if (i2 != i1) && (!SkewPantsHexagon.adjacentSkewCurveEdges(
+              face,
+              i1,
+              i2
+            ))
             arc = NormalArc(i1, i2, face)
           } yield path :+ arc
-        ).filter(p)
+        ).filter(path => !(endsGoAround(complex, path))).filter(p)
       enumerateRec(
         complex,
         maxAppendLength.map(_ - 1),
@@ -143,5 +183,104 @@ object NormalPath {
           .filter(p)
       enumerateRec(complex, maxLength.map(_ - 1), p, lengthOne, lengthOne)
     }
-}
 
+  def startEndSameFace[P <: Polygon](
+      complex: TwoComplex[P],
+      path: NormalPath[P]
+  ): Boolean =
+    complex
+      .edgeIndices(path.edges.head.initialEdge)
+      .filter {
+        case (f, i, _) =>
+          !((f == path.edges.head.face) && (i == path.edges.head.initial))
+      }
+      .map {
+        case (f, _, _) => f
+      }
+      .head == complex
+      .edgeIndices(path.edges.last.terminalEdge)
+      .filter {
+        case (f, i, _) =>
+          !((f == path.edges.last.face) && (i == path.edges.last.terminal))
+      }
+      .map {
+        case (f, _, _) => f
+      }
+      .head
+
+  def endsGoAround[P <: Polygon](
+      complex: TwoComplex[P],
+      path: NormalPath[P]
+  ): Boolean =
+    endsGoAroundrec(
+      complex,
+      path.edges.init,
+      path.edges.last.whichVertexLinking,
+      NormalPath[P](Vector(path.edges.last))
+    )
+
+  def endsGoAroundrec[P <: Polygon](
+      complex: TwoComplex[P],
+      initedges: Vector[NormalArc[P]],
+      optvertex: Option[Vertex],
+      accum: NormalPath[P]
+  ): Boolean = optvertex match {
+    case None => false
+    case Some(v) =>
+      initedges.isEmpty match {
+        case true => startEndSameFace(complex, accum)
+        case false =>
+          initedges.last.whichVertexLinking match {
+            case Some(newv) =>
+              if (newv == v)
+                endsGoAroundrec(
+                  complex,
+                  initedges.init,
+                  optvertex,
+                  NormalPath[P](initedges.last +: accum.edges)
+                )
+              else startEndSameFace(complex, accum)
+            case None => startEndSameFace(complex, accum)
+          }
+      }
+  }
+
+  def removeFlipAndCyclicPerRec[P <: Polygon](
+      accum: Set[NormalPath[P]],
+      paths: Set[NormalPath[P]]
+  ): Set[NormalPath[P]] = {
+    if (paths.isEmpty) accum
+    else {
+      removeFlipAndCyclicPerRec(
+        accum + paths.head,
+        paths.tail.filter(
+          p =>
+            (p.edges.toSet != paths.head.edges.toSet) && (p.edges.toSet != paths.head.flip.edges.toSet)
+        )
+      )
+    }
+  }
+
+  def removeFlipAndCyclicPer[P <: Polygon](
+      paths: Set[NormalPath[P]]
+  ): Set[NormalPath[P]] = {
+    require(paths.forall(_.isClosed))
+    if (paths.isEmpty) paths
+    else {
+      removeFlipAndCyclicPerRec(
+        Set(paths.head),
+        paths.tail.filter(
+          p =>
+            (p.edges.toSet != paths.head.edges.toSet) && (p.edges.toSet != paths.head.flip.edges.toSet)
+        )
+      )
+    }
+  }
+
+  def pathNeighbouringArcs[P <: Polygon](complex: TwoComplex[P], path: NormalPath[P]): Set[NormalArc[P]] = {
+    (for {
+      arc <- path.edges
+      nbarc <- NormalArc.neighbouringArcs(complex, arc)
+    } yield nbarc).toSet
+  }
+}
