@@ -223,7 +223,7 @@ case class PLPath(
       .isInstanceOf[BoundaryEdge] || base.edges.last.terminalEdge
       .isInstanceOf[BoundaryEdge])
   )
-  val PLArcs: Vector[PLArc] = for (i <- (0 to base.edges.size - 1).toVector)
+  val PLArcs: Vector[PLArc] = for (i <- (0 to (base.edges.size - 1)).toVector)
     yield PLArc(base.edges(i), initialDisplacements(i), finalDisplacements(i))
   require(
     PLArcs.zip(PLArcs.tail).forall {
@@ -232,9 +232,12 @@ case class PLPath(
           case s1: SkewCurveEdge =>
             arc2.base.initialEdge match {
               case s2: SkewCurveEdge =>
-                SkewCurveEdge
-                  .getPos(s1, arc1.finalDisplacement) == SkewCurveEdge
-                  .getPos(s2, arc2.initialDisplacement)
+                SkewCurveEdge.comparePoints(
+                  s1,
+                  arc1.finalDisplacement,
+                  s2,
+                  arc2.initialDisplacement
+                )
               case p2: PantsSeam => false
             }
           case p1: PantsSeam =>

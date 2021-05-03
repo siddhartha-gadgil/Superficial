@@ -596,9 +596,15 @@ case class SkewCurveEdge(
 }
 
 object SkewCurveEdge {
-  def getPos(edge: SkewCurveEdge, pos: BigDecimal): BigDecimal = {
-    if (edge.positivelyOriented) mod1(edge.initialPosition + pos)
-    else mod1(edge.initialPosition - pos)
+  def comparePoints(
+      edge1: SkewCurveEdge,
+      disp1: BigDecimal,
+      edge2: SkewCurveEdge,
+      disp2: BigDecimal
+  ): Boolean = {
+    require((edge1 == edge2) || (edge1 == edge2.flip))
+    if (edge1 == edge2) (disp1 == disp2)
+    else (disp1 + disp2 == edge1.length)
   }
 }
 
