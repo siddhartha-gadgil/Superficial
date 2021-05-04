@@ -795,11 +795,13 @@ case class SkewPantsSurface(numPants: Index, cs: Set[SkewCurve])
     extends PureTwoComplex[SkewPantsHexagon] {
   lazy val indices: Vector[Index] = (0 until numPants).toVector
 
-  lazy val faces: Set[SkewPantsHexagon] =
+  lazy val faceVector: Vector[SkewPantsHexagon] =
     for {
-      pants: Index <- indices.toSet
-      top <- Set(true, false)
+      pants: Index <- indices
+      top <- Vector(true, false)
     } yield SkewPantsHexagon(pants, top, cs)
+
+  lazy val faces = faceVector.toSet
 
   lazy val fundamentalClass = {
     val cv = faces.toVector.collect {

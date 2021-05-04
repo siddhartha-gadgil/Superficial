@@ -26,7 +26,8 @@ object superficial extends CommonModule with SbtModule{
   def ivyDeps = Agg(
     ivy"org.scala-lang.modules::scala-xml:1.3.0",
     ivy"com.lihaoyi::fastparse:2.3.0",
-    ivy"org.scala-lang.modules::scala-parallel-collections:1.0.0"
+    ivy"org.scala-lang.modules::scala-parallel-collections:1.0.0",
+    ivy"org.creativescala::doodle:0.9.21"
   )
 
   def bin() : define.Command[PathRef] = T.command {
