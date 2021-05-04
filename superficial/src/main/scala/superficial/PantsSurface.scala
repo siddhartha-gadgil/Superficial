@@ -679,22 +679,25 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
   lazy val boundary = fillSeams(pants, segments, top)
   lazy val sides = boundary.size
 
+  /**
+    * Optional lengths of edges, None if a boundary edge
+    *
+    * @return
+    */
   def edgeLengths: Vector[Option[Double]] = {
     if (top) {
       Z3.enum.map { direction: Z3 =>
         getSkewCurve(PantsBoundary(pants, direction), cs)
           .map {
-            case (curve, left) => Some((curve.length.toDouble) / 2)
-          }
-          .getOrElse(None)
+            case (curve, left) => (curve.length.toDouble) / 2
+          }          
       }
     } else {
       Z3.flipEnum.map { direction: Z3 =>
         getSkewCurve(PantsBoundary(pants, direction), cs)
           .map {
-            case (curve, left) => Some((curve.length.toDouble) / 2)
+            case (curve, left) => curve.length.toDouble / 2
           }
-          .getOrElse(None)
       }
     }
   }
@@ -738,7 +741,7 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
 }
 
 object SkewPantsHexagon {
-  def DisplacementFromPBVertex(
+  def displacementFromPBVertex(
       sph: SkewPantsHexagon,
       edge: SkewCurveEdge,
       initialDisplacement: Double
@@ -751,19 +754,19 @@ object SkewPantsHexagon {
         case p: PantsSeam     => initialDisplacement
       }
   }
-  def SkewIndexToHexagonIndex(sph: SkewPantsHexagon, n: Index): Index = {
+  def skewIndexToHexagonIndex(sph: SkewPantsHexagon, n: Index): Index = {
     require(n < sph.sides)
     n match {
       case 0 => 0
       case _ =>
         sph.boundary(n) match {
-          case b: BoundaryEdge => (SkewIndexToHexagonIndex(sph, n - 1) + 1)
-          case p: PantsSeam    => (SkewIndexToHexagonIndex(sph, n - 1) + 1)
+          case b: BoundaryEdge => (skewIndexToHexagonIndex(sph, n - 1) + 1)
+          case p: PantsSeam    => (skewIndexToHexagonIndex(sph, n - 1) + 1)
           case s: SkewCurveEdge =>
             sph.boundary(n - 1) match {
-              case b: BoundaryEdge  => (SkewIndexToHexagonIndex(sph, n - 1) + 1)
-              case p: PantsSeam     => (SkewIndexToHexagonIndex(sph, n - 1) + 1)
-              case s: SkewCurveEdge => SkewIndexToHexagonIndex(sph, n - 1)
+              case b: BoundaryEdge  => (skewIndexToHexagonIndex(sph, n - 1) + 1)
+              case p: PantsSeam     => (skewIndexToHexagonIndex(sph, n - 1) + 1)
+              case s: SkewCurveEdge => skewIndexToHexagonIndex(sph, n - 1)
             }
         }
     }

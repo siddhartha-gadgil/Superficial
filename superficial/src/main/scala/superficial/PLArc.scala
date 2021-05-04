@@ -14,7 +14,7 @@ case class PLArc(
       case b: BoundaryEdge => None
       case s: SkewCurveEdge =>
         Some(
-          SkewPantsHexagon.DisplacementFromPBVertex(
+          SkewPantsHexagon.displacementFromPBVertex(
             base.face,
             s,
             initialDisplacement.doubleValue
@@ -27,7 +27,7 @@ case class PLArc(
       case b: BoundaryEdge => None
       case s: SkewCurveEdge =>
         Some(
-          SkewPantsHexagon.DisplacementFromPBVertex(
+          SkewPantsHexagon.displacementFromPBVertex(
             base.face,
             s,
             finalDisplacement.doubleValue
@@ -48,8 +48,8 @@ case class PLArc(
           base.face.edgeLengths(2).get
         )
         .arcLength(
-          SkewPantsHexagon.SkewIndexToHexagonIndex(base.face, base.initial),
-          SkewPantsHexagon.SkewIndexToHexagonIndex(base.face, base.terminal),
+          SkewPantsHexagon.skewIndexToHexagonIndex(base.face, base.initial),
+          SkewPantsHexagon.skewIndexToHexagonIndex(base.face, base.terminal),
           hexagonInitialDisplacement.get,
           hexagonFinalDisplacement.get
         )
@@ -61,8 +61,8 @@ case class PLArc(
           base.face.edgeLengths(1).get
         )
         .arcLength(
-          SkewPantsHexagon.SkewIndexToHexagonIndex(base.face, base.initial),
-          SkewPantsHexagon.SkewIndexToHexagonIndex(base.face, base.terminal),
+          SkewPantsHexagon.skewIndexToHexagonIndex(base.face, base.initial),
+          SkewPantsHexagon.skewIndexToHexagonIndex(base.face, base.terminal),
           hexagonInitialDisplacement.get,
           hexagonFinalDisplacement.get
         )
