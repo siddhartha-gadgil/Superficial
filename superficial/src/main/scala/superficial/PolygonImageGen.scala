@@ -16,10 +16,10 @@ class PolygonImageGen(sides: Int, radius: Double = 100) {
     .map(index => Point.polar(radius, centerAngle * index.toDouble))
     .toVector
 
-  val edgePaths =
+  val edgePaths: Vector[Image] =
     vertices.zip(vertices.tail :+ vertices.head).toVector.map {
       case (init, term) =>
-        OpenPath(List(moveTo(init), lineTo(term))).strokeWidth(2)
+        OpenPath(List(moveTo(init), lineTo(term)))
     }
 
   def onEdge(initial: Index, alpha: Double): Point =
