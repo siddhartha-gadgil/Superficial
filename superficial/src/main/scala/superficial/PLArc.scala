@@ -223,10 +223,10 @@ case class PLPath(
       .isInstanceOf[BoundaryEdge] || base.edges.last.terminalEdge
       .isInstanceOf[BoundaryEdge])
   )
-  val PLArcs: Vector[PLArc] = for (i <- (0 to (base.edges.size - 1)).toVector)
+  val plArcs: Vector[PLArc] = for (i <- (0 to (base.edges.size - 1)).toVector)
     yield PLArc(base.edges(i), initialDisplacements(i), finalDisplacements(i))
   require(
-    PLArcs.zip(PLArcs.tail).forall {
+    plArcs.zip(plArcs.tail).forall {
       case (arc1, arc2) =>
         arc1.base.terminalEdge match {
           case s1: SkewCurveEdge =>
@@ -255,7 +255,7 @@ case class PLPath(
         }
     }
   )
-  lazy val length: Double = PLArcs.map(arc => arc.length).sum
+  lazy val length: Double = plArcs.map(arc => arc.length).sum
   def isClosed(tol: Double): Boolean = base.isClosed match {
     case false => false
     case true =>
@@ -466,7 +466,7 @@ object PLPath {
       sep: BigDecimal
   ): NormalPath[SkewPantsHexagon] = {
     //require(path.PLArcs.map(_.length).min < sep)
-    val shortestedgeindex = path.PLArcs.indexOf(path.PLArcs.minBy(_.length))
+    val shortestedgeindex = path.plArcs.indexOf(path.plArcs.minBy(_.length))
     path.base.edges(shortestedgeindex).initialEdge match {
       case s: SkewCurveEdge =>
         path.base

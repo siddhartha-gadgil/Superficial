@@ -1,24 +1,25 @@
 package superficial
 
-import doodle.core._
-import doodle.image.Image
+import doodle.core.{OpenPath => _, _}
+import doodle.image.Image, Image.Elements._
 import doodle.syntax._
 import doodle.image.syntax._
 import PathElement._
 import cats.syntax._
-import PolygonImage._
+import PolygonImageGen._
 import Polygon.Index
 
-class PolygonImage(sides: Int, radius: Double = 100) {
+class PolygonImageGen(sides: Int, radius: Double = 100) {
   val centerAngle: Angle = 360.degrees / sides.toDouble
 
   val vertices: Vector[Point] = (0 until sides)
     .map(index => Point.polar(radius, centerAngle * index.toDouble))
     .toVector
 
-  val edgePaths: Vector[OpenPath] =
+  val edgePaths =
     vertices.zip(vertices.tail :+ vertices.head).toVector.map {
-      case (init, term) => OpenPath(List(moveTo(init), lineTo(term)))
+      case (init, term) =>
+        OpenPath(List(moveTo(init), lineTo(term))).strokeWidth(2)
     }
 
   def onEdge(initial: Index, alpha: Double): Point =
@@ -29,15 +30,15 @@ class PolygonImage(sides: Int, radius: Double = 100) {
       initialDisplacement: Double,
       terminalIndex: Int,
       finalDisplacement: Double
-  ): OpenPath =
+  ): Image =
     OpenPath(
       List(
         moveTo(onEdge(initialIndex, initialDisplacement)),
         lineTo(onEdge(terminalIndex, finalDisplacement))
       )
-    )
+    ).strokeWidth(2)
 
-  def plArc(arc: PLArc): OpenPath = {
+  def plArc(arc: PLArc): Image = {
     val (initDisp, termDisp) = relativeDisplacements(arc)
     normalArc(
       arc.base.initial,
@@ -45,11 +46,17 @@ class PolygonImage(sides: Int, radius: Double = 100) {
       arc.base.terminal,
       termDisp.doubleValue
     )
+
   }
+
+  def plArcs(arcs: Seq[(PLArc, Color)]) =
+    arcs.map {
+      case (arc, colour) => plArc(arc).strokeColor(colour)
+    }.foldLeft(Image.empty)(_ on _)
 
 }
 
-object PolygonImage {
+object PolygonImageGen {
   def convex(initial: Point, terminal: Point, alpha: Double) =
     ((initial.toVec * (1.0 - alpha)) + (terminal.toVec * alpha)).toPoint
 
