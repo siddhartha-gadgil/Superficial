@@ -741,7 +741,7 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
 }
 
 object SkewPantsHexagon {
-  def displacementFromPBVertex(
+  def displacementFromPantsBoundaryVertex(
       sph: SkewPantsHexagon,
       edge: SkewCurveEdge,
       initialDisplacement: Double

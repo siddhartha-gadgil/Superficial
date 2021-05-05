@@ -32,6 +32,7 @@ lazy val superficial = project.settings(
   libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "1.3.0",
   libraryDependencies += "com.lihaoyi" %% "fastparse" % "2.3.0",
   libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.7" % "test",
+  libraryDependencies += "org.creativescala" %% "doodle" % "0.9.21",
   testFrameworks += new TestFramework("utest.runner.Framework")
 )
 
