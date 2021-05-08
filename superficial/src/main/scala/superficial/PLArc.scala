@@ -411,16 +411,16 @@ object PLPath {
       sep: BigDecimal,
       bound: Double
   ): Option[PLPath] = {
-    enumMinimal(base, sep, bound).seq.minByOption(
-      p =>
+    enumMinimal(base, sep, bound).groupBy(_.initialDisplacements.head).map {
+      case (_, s) => s.minBy(p =>
         math.abs(
           p.initialDisplacements.head.toDouble - findInitDisplacement(
             p.base.edges.last,
             p.finalDisplacements.last,
             p.base.edges.head
           ).toDouble
-        )
-    ) filter { p =>
+        ))
+    }.filter { p =>
       math.abs(
         p.initialDisplacements.head.toDouble - findInitDisplacement(
           p.base.edges.last,
@@ -428,49 +428,10 @@ object PLPath {
           p.base.edges.head
         ).toDouble
       ) <= (2 * sep)
-    }
+    }.seq.minByOption(_.length)
   }
 
-  def setEnumMinimalClosedRec(
-      accum: Set[Option[PLPath]],
-      paths: Set[NormalPath[SkewPantsHexagon]],
-      sep: BigDecimal,
-      bound: Double,
-      tol: Double
-  ): Set[Option[PLPath]] = {
-    if (paths.isEmpty) accum
-    else {
-      val newplpath = enumMinimalClosed(paths.head, sep, bound)
-      setEnumMinimalClosedRec(
-        accum + newplpath,
-        paths.tail,
-        sep,
-        bound,
-        tol
-      )
-    }
-  }
 
-  def setEnumMinimalClosed(
-      paths: Set[NormalPath[SkewPantsHexagon]],
-      sep: BigDecimal,
-      bound: Double,
-      tol: Double
-  ): Set[PLPath] = {
-    val newplpath = enumMinimalClosed(paths.head, sep, bound)
-    val plpaths = setEnumMinimalClosedRec(
-      Set(newplpath),
-      paths.tail,
-      sep,
-      bound,
-      tol
-    ).filter(_.isDefined).map(_.get)
-    if (plpaths.isEmpty) plpaths
-    else {
-      val globalmin = plpaths.map(_.length).min
-      plpaths.filter(_.length < globalmin + tol)
-    }
-  }
 
   /**
     * shorten a pl-path by crossing a vertex replacing three arcs with the middle arc short by two arcs
