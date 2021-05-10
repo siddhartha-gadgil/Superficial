@@ -315,4 +315,41 @@ object NormalPath {
       nbarc <- NormalArc.neighbouringArcs(complex, arc)
     } yield nbarc).toSet
   }
+
+  def makeClosedPathsTaut[P <: Polygon](
+      edges: Vector[NormalArc[P]]
+  ): Option[NormalPath[P]] = {
+    require(
+      ((edges.last.terminalEdge == edges.head.initialEdge.flip) || (edges.last.terminalEdge == edges.head.initialEdge)),
+      "Path given by edges is not closed"
+    )
+    val newedges = edges.filter(e => (e.initial != e.terminal))
+    if (newedges.isEmpty) None
+    else {
+      val samefaceedgepair = newedges
+        .zip(newedges.tail :+ newedges.head)
+        .find(p => (p._1.face == p._2.face))
+      if (samefaceedgepair.isEmpty) Some(NormalPath(newedges))
+      else {
+        val indextoremove = newedges.indexOf(samefaceedgepair.get._1)
+        if (indextoremove != (newedges.length - 1))
+          makeClosedPathsTaut(
+            (edges.slice(0, indextoremove) :+ NormalArc(
+              edges(indextoremove).initial,
+              edges(indextoremove + 1).terminal,
+              edges(indextoremove).face
+            )) ++ edges.drop(indextoremove + 2)
+          )
+        else {
+          makeClosedPathsTaut(
+            NormalArc(
+              edges.last.initial,
+              edges.head.terminal,
+              edges.head.face
+            ) +: edges.drop(1).dropRight(1)
+          )
+        }
+      }
+    }
+  }
 }
