@@ -26,8 +26,6 @@ case class NormalArc[P <: Polygon](initial: Index, terminal: Index, face: P) {
 
   def crosses(that: NormalArc[P]) =
     (that.initial - initial) * (that.terminal - terminal) * (that.initial - terminal) * (that.terminal - initial) < 0
-
-  def isEdgeParallel: Boolean = math.abs((terminal - initial) % face.sides) == 2
 }
 
 object NormalArc {
@@ -42,34 +40,70 @@ object NormalArc {
   def adjacentPolygonArcs[P <: Polygon](
       complex: TwoComplex[P],
       arc: NormalArc[P]
+  ): Set[NormalArc[P]] = arc.initialEdge match {
+    case s1: SkewCurveEdge =>
+      arc.terminalEdge match {
+        case s2: SkewCurveEdge =>
+          if (math.abs((arc.terminal - arc.initial) % arc.face.sides) == 2)
+            getAdjacentPolygonArcs(complex, arc)
+          else Set()
+        case p2: PantsSeam => Set()
+      }
+    case p1: PantsSeam =>
+      arc.terminalEdge match {
+        case s2: SkewCurveEdge => Set()
+        case p2: PantsSeam     => getAdjacentPolygonArcs(complex, arc)
+      }
+  }
+
+  def getAdjacentPolygonArcs[P <: Polygon](
+      complex: TwoComplex[P],
+      arc: NormalArc[P]
   ): Set[NormalArc[P]] = (arc.terminal - arc.initial) % arc.face.sides match {
     case 2 =>
       val newvalues = (complex
-        .edgeIndices(arc.face.boundary((arc.terminal - 1) % arc.face.sides))
+        .edgeIndices(
+          arc.face.boundary((arc.terminal - 1) % arc.face.sides)
+        )
+        .map {
+          case (f, i, _) => (f, i)
+        } -
+        (arc.face -> (arc.terminal - 1) % arc.face.sides)).head
+      val newarc = NormalArc(
+        (newvalues._2 - 1) % newvalues._1.sides,
+        (newvalues._2 + 1) % newvalues._1.sides,
+        newvalues._1
+      )
+      Set(newarc, newarc.flip)
+    case 3 =>
+      val newvalues1 = (complex
+        .edgeIndices(
+          arc.face.boundary((arc.terminal - 1) % arc.face.sides)
+        )
         .map {
           case (f, i, _) => (f, i)
         } -
         (arc.face -> (arc.terminal - 1) % arc.face.sides)).head
       val newarc1 = NormalArc(
-        (newvalues._2 - 1) % newvalues._1.sides,
-        (newvalues._2 + 1) % newvalues._1.sides,
-        newvalues._1
+        (newvalues1._2 - 2) % newvalues1._1.sides,
+        (newvalues1._2 + 1) % newvalues1._1.sides,
+        newvalues1._1
       )
-      Set(newarc1, newarc1.flip)
-    case -2 =>
-      val newvalues = (complex
-        .edgeIndices(arc.face.boundary((arc.terminal + 1) % arc.face.sides))
+      val newvalues2 = (complex
+        .edgeIndices(
+          arc.face.boundary((arc.terminal - 2) % arc.face.sides)
+        )
         .map {
           case (f, i, _) => (f, i)
         } -
-        (arc.face -> (arc.terminal + 1) % arc.face.sides)).head
-      val newarc1 = NormalArc(
-        (newvalues._2 - 1) % newvalues._1.sides,
-        (newvalues._2 + 1) % newvalues._1.sides,
-        newvalues._1
+        (arc.face -> (arc.terminal - 2) % arc.face.sides)).head
+      val newarc2 = NormalArc(
+        (newvalues2._2 - 1) % newvalues2._1.sides,
+        (newvalues2._2 + 2) % newvalues2._1.sides,
+        newvalues2._1
       )
-      Set(newarc1, newarc1.flip)
-    case _ => Set()
+      Set(newarc1, newarc1.flip, newarc2, newarc2.flip)
+    case _ => getAdjacentPolygonArcs(complex, arc.flip)
   }
 
   def neighbouringArcs[P <: Polygon](
