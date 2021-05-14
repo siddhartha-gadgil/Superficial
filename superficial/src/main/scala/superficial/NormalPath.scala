@@ -15,14 +15,20 @@ case class NormalArc[P <: Polygon](initial: Index, terminal: Index, face: P) {
 
   lazy val flip = NormalArc[P](terminal, initial, face)
 
-  def vertexLinking = math.abs((terminal - initial) % (face.sides)) == 1
+  def vertexLinking =
+    (math.abs((((terminal - initial) % face.sides) + face.sides) % face.sides) == 1) || (math
+      .abs(
+        (((terminal - initial) % face.sides) + face.sides) % face.sides
+      ) == (face.sides - 1))
 
   def whichVertexLinking: Option[Vertex] =
-    (terminal - initial) % face.sides match {
-      case 1  => Some(face.boundary(initial).terminal)
-      case -1 => Some(face.boundary(terminal).terminal)
-      case _  => None
-    }
+    if (math.abs(
+          (((terminal - initial) % face.sides) + face.sides) % face.sides
+        ) == 1) Some(face.boundary(initial).terminal)
+    else if (math.abs(
+               (((terminal - initial) % face.sides) + face.sides) % face.sides
+             ) == (face.sides - 1)) Some(face.boundary(terminal).terminal)
+    else None
 
   def crosses(that: NormalArc[P]) =
     (that.initial - initial) * (that.terminal - terminal) * (that.initial - terminal) * (that.terminal - initial) < 0
@@ -153,6 +159,12 @@ case class NormalPath[P <: Polygon](edges: Vector[NormalArc[P]]) {
   val isClosed
       : Boolean = (edges.last.terminalEdge == edges.head.initialEdge.flip)
 
+  val isVertexLinking: Boolean = {
+    val vertexlinkingdata = edges.map(_.whichVertexLinking)
+    vertexlinkingdata.forall(_.isDefined) && vertexlinkingdata.forall(
+      _ == vertexlinkingdata.head
+    )
+  }
   //  val initEdge: Edge = edges.head.initial
   //
   val (terminalFace, terminalIndex) = edges.last.face -> edges.last.terminal
@@ -242,6 +254,14 @@ object NormalPath {
       val lengthOne =
         NormalArc
           .enumerate(complex)
+          .filter(
+            a =>
+              !SkewPantsHexagon.adjacentSkewCurveEdges(
+                a.face,
+                a.initial,
+                a.terminal
+              )
+          )
           .map((arc) => NormalPath(Vector(arc)))
           .filter(p)
       enumerateRec(complex, maxLength.map(_ - 1), p, lengthOne, lengthOne)
@@ -318,7 +338,7 @@ object NormalPath {
         accum + paths.head,
         paths.tail.filter(
           p =>
-            (p.edges.toSet != paths.head.edges.toSet) && (p.edges.toSet != paths.head.flip.edges.toSet)
+            (p.edges.size != paths.head.edges.size) || ((p.edges.toSet != paths.head.edges.toSet) && (p.edges.toSet != paths.head.flip.edges.toSet))
         )
       )
     }
@@ -334,7 +354,7 @@ object NormalPath {
         Set(paths.head),
         paths.tail.filter(
           p =>
-            (p.edges.toSet != paths.head.edges.toSet) && (p.edges.toSet != paths.head.flip.edges.toSet)
+            (p.edges.size != paths.head.edges.size) || ((p.edges.toSet != paths.head.edges.toSet) && (p.edges.toSet != paths.head.flip.edges.toSet))
         )
       )
     }
@@ -351,8 +371,9 @@ object NormalPath {
   }
 
   def makeClosedPathsTaut[P <: Polygon](
-      edges: Vector[NormalArc[P]]
+      path: NormalPath[P]
   ): Option[NormalPath[P]] = {
+    import path.edges
     require(
       ((edges.last.terminalEdge == edges.head.initialEdge.flip) || (edges.last.terminalEdge == edges.head.initialEdge)),
       "Path given by edges is not closed"
@@ -368,19 +389,23 @@ object NormalPath {
         val indextoremove = newedges.indexOf(samefaceedgepair.get._1)
         if (indextoremove != (newedges.length - 1))
           makeClosedPathsTaut(
-            (edges.slice(0, indextoremove) :+ NormalArc(
-              edges(indextoremove).initial,
-              edges(indextoremove + 1).terminal,
-              edges(indextoremove).face
-            )) ++ edges.drop(indextoremove + 2)
+            NormalPath(
+              (edges.slice(0, indextoremove) :+ NormalArc(
+                edges(indextoremove).initial,
+                edges(indextoremove + 1).terminal,
+                edges(indextoremove).face
+              )) ++ edges.drop(indextoremove + 2)
+            )
           )
         else {
           makeClosedPathsTaut(
-            NormalArc(
-              edges.last.initial,
-              edges.head.terminal,
-              edges.head.face
-            ) +: edges.drop(1).dropRight(1)
+            NormalPath(
+              NormalArc(
+                edges.last.initial,
+                edges.head.terminal,
+                edges.head.face
+              ) +: edges.drop(1).dropRight(1)
+            )
           )
         }
       }

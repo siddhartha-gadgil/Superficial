@@ -411,27 +411,33 @@ object PLPath {
       sep: BigDecimal,
       bound: Double
   ): Option[PLPath] = {
-    enumMinimal(base, sep, bound).groupBy(_.initialDisplacements.head).map {
-      case (_, s) => s.minBy(p =>
+    enumMinimal(base, sep, bound)
+      .groupBy(_.initialDisplacements.head)
+      .map {
+        case (_, s) =>
+          s.minBy(
+            p =>
+              math.abs(
+                p.initialDisplacements.head.toDouble - findInitDisplacement(
+                  p.base.edges.last,
+                  p.finalDisplacements.last,
+                  p.base.edges.head
+                ).toDouble
+              )
+          )
+      }
+      .filter { p =>
         math.abs(
           p.initialDisplacements.head.toDouble - findInitDisplacement(
             p.base.edges.last,
             p.finalDisplacements.last,
             p.base.edges.head
           ).toDouble
-        ))
-    }.filter { p =>
-      math.abs(
-        p.initialDisplacements.head.toDouble - findInitDisplacement(
-          p.base.edges.last,
-          p.finalDisplacements.last,
-          p.base.edges.head
-        ).toDouble
-      ) <= (2 * sep)
-    }.seq.minByOption(_.length)
+        ) <= (2 * sep)
+      }
+      .seq
+      .minByOption(_.length)
   }
-
-
 
   /**
     * shorten a pl-path by crossing a vertex replacing three arcs with the middle arc short by two arcs
@@ -439,15 +445,13 @@ object PLPath {
     * @param complex the surface
     * @param path the original path
     * @param sep separation
-    * @return shortened pl-arc
+    * @return shortened normal path
     */
   def shortenPathCrossingVertex(
       complex: TwoComplex[SkewPantsHexagon],
       path: PLPath,
-      sep: BigDecimal
+      shortestedgeindex: Index
   ): NormalPath[SkewPantsHexagon] = {
-    require(path.plArcs.map(_.length).min < sep * 3)
-    val shortestedgeindex = path.plArcs.indexOf(path.plArcs.minBy(_.length))
     val shortestedge = path.base.edges(shortestedgeindex)
     if (shortestedge.whichVertexLinking.get == shortestedge.initialEdge.terminal)
       surgery(complex, path.base, shortestedgeindex, -1)
@@ -490,7 +494,7 @@ object PLPath {
           path.edges(shortestedgeindex),
           path.edges(shortestedgeindex + 1),
           arc1edgeshift
-        ) ++ path.edges.drop(shortestedgeindex + 1)
+        ) ++ path.edges.drop(shortestedgeindex + 2)
       )
     }
   }
@@ -505,7 +509,7 @@ object PLPath {
   ): Vector[NormalArc[SkewPantsHexagon]] = {
     val newarc1 = NormalArc(
       arc1.initial,
-      (arc1.terminal + arc1edgeshift) % arc1.face.sides,
+      (((arc1.terminal + arc1edgeshift) % arc1.face.sides) + arc1.face.sides) % arc1.face.sides,
       arc1.face
     )
     val newarc2faceandinit = (complex
@@ -516,6 +520,30 @@ object PLPath {
       "Suggested arc cannot be defined"
     )
     Vector(newarc1, NormalArc(newarc2faceandinit._2, arc3.terminal, arc3.face))
+  }
+
+  def shorten(
+      complex: TwoComplex[SkewPantsHexagon],
+      path: PLPath,
+      sep: BigDecimal,
+      bound: Double
+  ): Option[PLPath] = {
+    require(path.base.isClosed, "Path is not closed")
+    val shortestedgeindex = path.plArcs.indexOf(path.plArcs.minBy(_.length))
+    val shortestedge = path.base.edges(shortestedgeindex)
+    if (path.plArcs(shortestedgeindex).length > (2 * sep)) Some(path)
+    else if (path.base.isVertexLinking) None
+    else
+      NormalPath.makeClosedPathsTaut(
+        shortenPathCrossingVertex(complex, path, shortestedgeindex)
+      ) match {
+        case None          => None
+        case Some(newpath) => if (newpath.isVertexLinking) None else enumMinimalClosed(newpath, sep, bound) match {
+          case Some(newplpath) => shorten(complex, newplpath, sep, bound)
+          case None => Some(path)
+        }
+      }
+
   }
 
   def skewlessShortenPathCrossingVertex(
@@ -582,7 +610,7 @@ object PLPath {
   ): Vector[NormalArc[SkewPantsHexagon]] = {
     val newarc1 = NormalArc(
       arc1.initial,
-      (arc1.terminal + arc1edgeshift) % arc1.face.sides,
+      (((arc1.terminal + arc1edgeshift) % arc1.face.sides) + arc1.face.sides) % arc1.face.sides,
       arc1.face
     )
     val newarc2faceandinit = (complex
