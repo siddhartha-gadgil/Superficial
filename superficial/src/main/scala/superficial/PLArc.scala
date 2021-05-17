@@ -440,88 +440,14 @@ object PLPath {
   }
 
   /**
-    * shorten a pl-path by crossing a vertex replacing three arcs with the middle arc short by two arcs
+    * Shorten a PL-path by repeatedly removing removing short arcs and arcs between adjacent skewcurveedges
     *
     * @param complex the surface
-    * @param path the original path
-    * @param sep separation
-    * @return shortened normal path
+    * @param path the path
+    * @param sep sep for enumerating length of shortened path
+    * @param bound bound for enumerating length of shortened path
+    * @return the shortened path
     */
-  def shortenPathCrossingVertex(
-      complex: TwoComplex[SkewPantsHexagon],
-      path: PLPath,
-      shortestedgeindex: Index
-  ): NormalPath[SkewPantsHexagon] = {
-    val shortestedge = path.base.edges(shortestedgeindex)
-    if (shortestedge.whichVertexLinking.get == shortestedge.initialEdge.terminal)
-      surgery(complex, path.base, shortestedgeindex, -1)
-    else surgery(complex, path.base, shortestedgeindex, 1)
-  }
-
-  // Helper for shortening path by crossing a vertex
-  def surgery(
-      complex: TwoComplex[SkewPantsHexagon],
-      path: NormalPath[SkewPantsHexagon],
-      shortestedgeindex: Index,
-      arc1edgeshift: Int
-  ): NormalPath[SkewPantsHexagon] = {
-    require(math.abs(arc1edgeshift) == 1, "newarcedgeshift must be 1 or -1")
-    if (shortestedgeindex == 0) {
-      NormalPath(
-        replacingArcs(
-          complex,
-          path.edges.last,
-          path.edges(0),
-          path.edges(1),
-          arc1edgeshift
-        ) ++ path.edges.drop(2).dropRight(1)
-      )
-    } else if (shortestedgeindex == (path.length - 1)) {
-      NormalPath(
-        path.edges.slice(0, shortestedgeindex - 1).drop(1) ++ replacingArcs(
-          complex,
-          path.edges(shortestedgeindex - 1),
-          path.edges(shortestedgeindex),
-          path.edges(0),
-          arc1edgeshift
-        )
-      )
-    } else {
-      NormalPath(
-        path.edges.slice(0, shortestedgeindex - 1) ++ replacingArcs(
-          complex,
-          path.edges(shortestedgeindex - 1),
-          path.edges(shortestedgeindex),
-          path.edges(shortestedgeindex + 1),
-          arc1edgeshift
-        ) ++ path.edges.drop(shortestedgeindex + 2)
-      )
-    }
-  }
-
-  // helper for surgery
-  def replacingArcs(
-      complex: TwoComplex[SkewPantsHexagon],
-      arc1: NormalArc[SkewPantsHexagon],
-      arc2: NormalArc[SkewPantsHexagon],
-      arc3: NormalArc[SkewPantsHexagon],
-      arc1edgeshift: Int
-  ): Vector[NormalArc[SkewPantsHexagon]] = {
-    val newarc1 = NormalArc(
-      arc1.initial,
-      (((arc1.terminal + arc1edgeshift) % arc1.face.sides) + arc1.face.sides) % arc1.face.sides,
-      arc1.face
-    )
-    val newarc2faceandinit = (complex
-      .edgeIndices(newarc1.terminalEdge)
-      .map(p => (p._1, p._2)) - (newarc1.face -> newarc1.terminal)).head
-    require(
-      newarc2faceandinit._1 == arc3.face,
-      "Suggested arc cannot be defined"
-    )
-    Vector(newarc1, NormalArc(newarc2faceandinit._2, arc3.terminal, arc3.face))
-  }
-
   def shorten(
       complex: TwoComplex[SkewPantsHexagon],
       path: PLPath,
@@ -531,19 +457,36 @@ object PLPath {
     require(path.base.isClosed, "Path is not closed")
     val shortestedgeindex = path.plArcs.indexOf(path.plArcs.minBy(_.length))
     val shortestedge = path.base.edges(shortestedgeindex)
-    if (path.plArcs(shortestedgeindex).length > (2 * sep)) Some(path)
-    else if (path.base.isVertexLinking) None
-    else
+    if (path.base.isVertexLinking) None
+    else if (path.plArcs(shortestedgeindex).length < (2 * sep))
       NormalPath.makeClosedPathsTaut(
-        shortenPathCrossingVertex(complex, path, shortestedgeindex)
+        NormalPath
+          .shortenPathCrossingVertex(complex, path.base, shortestedgeindex)
       ) match {
-        case None          => None
-        case Some(newpath) => if (newpath.isVertexLinking) None else enumMinimalClosed(newpath, sep, bound) match {
-          case Some(newplpath) => shorten(complex, newplpath, sep, bound)
-          case None => Some(path)
-        }
-      }
-
+        case None => None
+        case Some(newpath) =>
+          enumMinimalClosed(newpath, sep, bound) match {
+            case Some(newplpath) => shorten(complex, newplpath, sep, bound)
+            case None            => Some(path)
+          }
+      } else if (path.base.edges.exists(
+                   arc =>
+                     SkewPantsHexagon.adjacentSkewCurveEdges(
+                       arc.face,
+                       arc.initial,
+                       arc.terminal
+                     )
+                 ))
+      NormalPath.makeClosedPathsTaut(
+        NormalPath.removeArcBetweenAdjacentSkewCurveEdges(complex, path.base)
+      ) match {
+        case Some(newpath) =>
+          enumMinimalClosed(newpath, sep, bound) match {
+            case Some(newplpath) => shorten(complex, newplpath, sep, bound)
+            case None            => Some(path)
+          }
+        case None => None
+      } else Some(path)
   }
 
   def skewlessShortenPathCrossingVertex(

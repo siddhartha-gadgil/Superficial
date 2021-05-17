@@ -383,7 +383,7 @@ object NormalPath {
     else {
       val samefaceedgepair = newedges
         .zip(newedges.tail :+ newedges.head)
-        .find(p => (p._1.face == p._2.face))
+        .find(p => (p._1.face == p._2.face) && (p._1.terminal == p._2.initial))
       if (samefaceedgepair.isEmpty) Some(NormalPath(newedges))
       else {
         val indextoremove = newedges.indexOf(samefaceedgepair.get._1)
@@ -409,6 +409,108 @@ object NormalPath {
           )
         }
       }
+    }
+  }
+
+  /**
+    * shorten a normal-path which crosses a vertex by replacing three arcs with two arcs
+    *
+    * @param complex the surface
+    * @param path the path
+    * @param shortestedgeindex the index of the middle arc out of the three arcs
+    * @return shortened path
+    */
+  def shortenPathCrossingVertex(
+      complex: TwoComplex[SkewPantsHexagon],
+      path: NormalPath[SkewPantsHexagon],
+      shortestedgeindex: Index
+  ): NormalPath[SkewPantsHexagon] = {
+    val shortestedge = path.edges(shortestedgeindex)
+    if (shortestedge.whichVertexLinking.get == shortestedge.initialEdge.terminal)
+      surgery(complex, path, shortestedgeindex, -1)
+    else surgery(complex, path, shortestedgeindex, 1)
+  }
+
+  // Helper for shortening path by crossing a vertex
+  def surgery(
+      complex: TwoComplex[SkewPantsHexagon],
+      path: NormalPath[SkewPantsHexagon],
+      shortestedgeindex: Index,
+      arc1edgeshift: Int
+  ): NormalPath[SkewPantsHexagon] = {
+    require(math.abs(arc1edgeshift) == 1, "newarcedgeshift must be 1 or -1")
+    if (shortestedgeindex == 0) {
+      NormalPath(
+        replacingArcs(
+          complex,
+          path.edges.last,
+          path.edges(0),
+          path.edges(1),
+          arc1edgeshift
+        ) ++ path.edges.drop(2).dropRight(1)
+      )
+    } else if (shortestedgeindex == (path.length - 1)) {
+      NormalPath(
+        path.edges.slice(0, shortestedgeindex - 1).drop(1) ++ replacingArcs(
+          complex,
+          path.edges(shortestedgeindex - 1),
+          path.edges(shortestedgeindex),
+          path.edges(0),
+          arc1edgeshift
+        )
+      )
+    } else {
+      NormalPath(
+        path.edges.slice(0, shortestedgeindex - 1) ++ replacingArcs(
+          complex,
+          path.edges(shortestedgeindex - 1),
+          path.edges(shortestedgeindex),
+          path.edges(shortestedgeindex + 1),
+          arc1edgeshift
+        ) ++ path.edges.drop(shortestedgeindex + 2)
+      )
+    }
+  }
+
+  // helper for surgery
+  def replacingArcs(
+      complex: TwoComplex[SkewPantsHexagon],
+      arc1: NormalArc[SkewPantsHexagon],
+      arc2: NormalArc[SkewPantsHexagon],
+      arc3: NormalArc[SkewPantsHexagon],
+      arc1edgeshift: Int
+  ): Vector[NormalArc[SkewPantsHexagon]] = {
+    val newarc1 = NormalArc(
+      arc1.initial,
+      (((arc1.terminal + arc1edgeshift) % arc1.face.sides) + arc1.face.sides) % arc1.face.sides,
+      arc1.face
+    )
+    val newarc2faceandinit = (complex
+      .edgeIndices(newarc1.terminalEdge)
+      .map(p => (p._1, p._2)) - (newarc1.face -> newarc1.terminal)).head
+    require(
+      newarc2faceandinit._1 == arc3.face,
+      "Suggested arc cannot be defined"
+    )
+    Vector(newarc1, NormalArc(newarc2faceandinit._2, arc3.terminal, arc3.face))
+  }
+
+  def removeArcBetweenAdjacentSkewCurveEdges(
+      complex: TwoComplex[SkewPantsHexagon],
+      path: NormalPath[SkewPantsHexagon]
+  ): NormalPath[SkewPantsHexagon] = {
+    require(path.isClosed, s"$path is not closed")
+    path.edges.find(
+      arc =>
+        SkewPantsHexagon
+          .adjacentSkewCurveEdges(arc.face, arc.initial, arc.terminal)
+    ) match {
+      case None => path
+      case Some(arc) =>
+        removeArcBetweenAdjacentSkewCurveEdges(
+          complex,
+          shortenPathCrossingVertex(complex, path, path.edges.indexOf(arc))
+        )
     }
   }
 }
