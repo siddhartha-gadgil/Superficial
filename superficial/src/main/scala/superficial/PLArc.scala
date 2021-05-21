@@ -8,7 +8,7 @@ case class PLArc(
     initialDisplacement: BigDecimal,
     finalDisplacement: BigDecimal
 ) {
-  // require(!( base.face.boundary(base.initial).isInstanceOf[BoundaryEdge] || base.face.boundary(base.terminal).isInstanceOf[BoundaryEdge] ))
+  require(!( base.face.boundary(base.initial).isInstanceOf[BoundaryEdge] || base.face.boundary(base.terminal).isInstanceOf[BoundaryEdge] ))
   val hexagonInitialDisplacement: Option[Double] =
     base.face.boundary(base.initial) match {
       case b: BoundaryEdge => None
@@ -68,6 +68,8 @@ case class PLArc(
         )
     }
   }
+   
+  val initialDistanceFromVertex = math.min(initialDisplacement.toDouble, math.abs(base.face.sideLength(base.initialEdge) - initialDisplacement.toDouble))
 }
 
 object PLArc {
@@ -455,37 +457,42 @@ object PLPath {
       bound: Double
   ): Option[PLPath] = {
     require(path.base.isClosed, "Path is not closed")
-    val shortestedgeindex = path.plArcs.indexOf(path.plArcs.minBy(_.length))
-    val shortestedge = path.base.edges(shortestedgeindex)
+    val indexofarcclosetovertex = path.plArcs.map(a => (a.initialDistanceFromVertex < (1.5*sep))&&(a.base.vertexLinking)).indexOf(true)
     if (path.base.isVertexLinking) None
-    else if (path.plArcs(shortestedgeindex).length < (2 * sep))
-      NormalPath.makeClosedPathsTaut(
-        NormalPath
-          .shortenPathCrossingVertex(complex, path.base, shortestedgeindex)
-      ) match {
-        case None => None
-        case Some(newpath) =>
-          enumMinimalClosed(newpath, sep, bound) match {
-            case Some(newplpath) => shorten(complex, newplpath, sep, bound)
-            case None            => Some(path)
-          }
-      } else if (path.base.edges.exists(
-                   arc =>
-                     SkewPantsHexagon.adjacentSkewCurveEdges(
-                       arc.face,
-                       arc.initial,
-                       arc.terminal
-                     )
-                 ))
+    else if (path.base.edges.exists(
+               arc =>
+                 SkewPantsHexagon.adjacentSkewCurveEdges(
+                   arc.face,
+                   arc.initial,
+                   arc.terminal
+                 )
+             ))
       NormalPath.makeClosedPathsTaut(
         NormalPath.removeArcBetweenAdjacentSkewCurveEdges(complex, path.base)
       ) match {
         case Some(newpath) =>
           enumMinimalClosed(newpath, sep, bound) match {
-            case Some(newplpath) => shorten(complex, newplpath, sep, bound)
-            case None            => Some(path)
+            case Some(newplpath) =>
+              if (newplpath.length < path.length)
+                shorten(complex, newplpath, sep, bound)
+              else Some(path)
+            case None => Some(path)
           }
         case None => None
+      } else if (indexofarcclosetovertex != -1)
+      NormalPath.makeClosedPathsTaut(
+        NormalPath
+          .shortenPathCrossingVertex(complex, path.base, indexofarcclosetovertex)
+      ) match {
+        case None => None
+        case Some(newpath) =>
+          enumMinimalClosed(newpath, sep, bound) match {
+            case Some(newplpath) =>
+              if (newplpath.length < path.length)
+                shorten(complex, newplpath, sep, bound)
+              else Some(path)
+            case None => Some(path)
+          }
       } else Some(path)
   }
 
