@@ -15,19 +15,23 @@ case class NormalArc[P <: Polygon](initial: Index, terminal: Index, face: P) {
 
   lazy val flip = NormalArc[P](terminal, initial, face)
 
-  def vertexLinking = math.abs((terminal - initial) % (face.sides)) == 1
+  def vertexLinking =
+    (math.abs((((terminal - initial) % face.sides) + face.sides) % face.sides) == 1) || (math
+      .abs(
+        (((terminal - initial) % face.sides) + face.sides) % face.sides
+      ) == (face.sides - 1))
 
   def whichVertexLinking: Option[Vertex] =
-    (terminal - initial) % face.sides match {
-      case 1  => Some(face.boundary(initial).terminal)
-      case -1 => Some(face.boundary(terminal).terminal)
-      case _  => None
-    }
+    if (math.abs(
+          (((terminal - initial) % face.sides) + face.sides) % face.sides
+        ) == 1) Some(face.boundary(initial).terminal)
+    else if (math.abs(
+               (((terminal - initial) % face.sides) + face.sides) % face.sides
+             ) == (face.sides - 1)) Some(face.boundary(terminal).terminal)
+    else None
 
   def crosses(that: NormalArc[P]) =
     (that.initial - initial) * (that.terminal - terminal) * (that.initial - terminal) * (that.terminal - initial) < 0
-
-  def isEdgeParallel: Boolean = math.abs((terminal - initial) % face.sides) == 2
 }
 
 object NormalArc {
@@ -42,34 +46,70 @@ object NormalArc {
   def adjacentPolygonArcs[P <: Polygon](
       complex: TwoComplex[P],
       arc: NormalArc[P]
+  ): Set[NormalArc[P]] = arc.initialEdge match {
+    case s1: SkewCurveEdge =>
+      arc.terminalEdge match {
+        case s2: SkewCurveEdge =>
+          if (math.abs((arc.terminal - arc.initial) % arc.face.sides) == 2)
+            getAdjacentPolygonArcs(complex, arc)
+          else Set()
+        case p2: PantsSeam => Set()
+      }
+    case p1: PantsSeam =>
+      arc.terminalEdge match {
+        case s2: SkewCurveEdge => Set()
+        case p2: PantsSeam     => getAdjacentPolygonArcs(complex, arc)
+      }
+  }
+
+  def getAdjacentPolygonArcs[P <: Polygon](
+      complex: TwoComplex[P],
+      arc: NormalArc[P]
   ): Set[NormalArc[P]] = (arc.terminal - arc.initial) % arc.face.sides match {
     case 2 =>
       val newvalues = (complex
-        .edgeIndices(arc.face.boundary((arc.terminal - 1) % arc.face.sides))
+        .edgeIndices(
+          arc.face.boundary((arc.terminal - 1) % arc.face.sides)
+        )
+        .map {
+          case (f, i, _) => (f, i)
+        } -
+        (arc.face -> (arc.terminal - 1) % arc.face.sides)).head
+      val newarc = NormalArc(
+        (newvalues._2 - 1) % newvalues._1.sides,
+        (newvalues._2 + 1) % newvalues._1.sides,
+        newvalues._1
+      )
+      Set(newarc, newarc.flip)
+    case 3 =>
+      val newvalues1 = (complex
+        .edgeIndices(
+          arc.face.boundary((arc.terminal - 1) % arc.face.sides)
+        )
         .map {
           case (f, i, _) => (f, i)
         } -
         (arc.face -> (arc.terminal - 1) % arc.face.sides)).head
       val newarc1 = NormalArc(
-        (newvalues._2 - 1) % newvalues._1.sides,
-        (newvalues._2 + 1) % newvalues._1.sides,
-        newvalues._1
+        (newvalues1._2 - 2) % newvalues1._1.sides,
+        (newvalues1._2 + 1) % newvalues1._1.sides,
+        newvalues1._1
       )
-      Set(newarc1, newarc1.flip)
-    case -2 =>
-      val newvalues = (complex
-        .edgeIndices(arc.face.boundary((arc.terminal + 1) % arc.face.sides))
+      val newvalues2 = (complex
+        .edgeIndices(
+          arc.face.boundary((arc.terminal - 2) % arc.face.sides)
+        )
         .map {
           case (f, i, _) => (f, i)
         } -
-        (arc.face -> (arc.terminal + 1) % arc.face.sides)).head
-      val newarc1 = NormalArc(
-        (newvalues._2 - 1) % newvalues._1.sides,
-        (newvalues._2 + 1) % newvalues._1.sides,
-        newvalues._1
+        (arc.face -> (arc.terminal - 2) % arc.face.sides)).head
+      val newarc2 = NormalArc(
+        (newvalues2._2 - 1) % newvalues2._1.sides,
+        (newvalues2._2 + 2) % newvalues2._1.sides,
+        newvalues2._1
       )
-      Set(newarc1, newarc1.flip)
-    case _ => Set()
+      Set(newarc1, newarc1.flip, newarc2, newarc2.flip)
+    case _ => getAdjacentPolygonArcs(complex, arc.flip)
   }
 
   def neighbouringArcs[P <: Polygon](
@@ -119,6 +159,12 @@ case class NormalPath[P <: Polygon](edges: Vector[NormalArc[P]]) {
   val isClosed
       : Boolean = (edges.last.terminalEdge == edges.head.initialEdge.flip)
 
+  val isVertexLinking: Boolean = {
+    val vertexlinkingdata = edges.map(_.whichVertexLinking)
+    vertexlinkingdata.forall(_.isDefined) && vertexlinkingdata.forall(
+      _ == vertexlinkingdata.head
+    )
+  }
   //  val initEdge: Edge = edges.head.initial
   //
   val (terminalFace, terminalIndex) = edges.last.face -> edges.last.terminal
@@ -208,6 +254,14 @@ object NormalPath {
       val lengthOne =
         NormalArc
           .enumerate(complex)
+          .filter(
+            a =>
+              !SkewPantsHexagon.adjacentSkewCurveEdges(
+                a.face,
+                a.initial,
+                a.terminal
+              )
+          )
           .map((arc) => NormalPath(Vector(arc)))
           .filter(p)
       enumerateRec(complex, maxLength.map(_ - 1), p, lengthOne, lengthOne)
@@ -284,7 +338,7 @@ object NormalPath {
         accum + paths.head,
         paths.tail.filter(
           p =>
-            (p.edges.toSet != paths.head.edges.toSet) && (p.edges.toSet != paths.head.flip.edges.toSet)
+            (p.edges.size != paths.head.edges.size) || ((p.edges.toSet != paths.head.edges.toSet) && (p.edges.toSet != paths.head.flip.edges.toSet))
         )
       )
     }
@@ -300,7 +354,7 @@ object NormalPath {
         Set(paths.head),
         paths.tail.filter(
           p =>
-            (p.edges.toSet != paths.head.edges.toSet) && (p.edges.toSet != paths.head.flip.edges.toSet)
+            (p.edges.size != paths.head.edges.size) || ((p.edges.toSet != paths.head.edges.toSet) && (p.edges.toSet != paths.head.flip.edges.toSet))
         )
       )
     }
@@ -314,5 +368,149 @@ object NormalPath {
       arc <- path.edges
       nbarc <- NormalArc.neighbouringArcs(complex, arc)
     } yield nbarc).toSet
+  }
+
+  def makeClosedPathsTaut[P <: Polygon](
+      path: NormalPath[P]
+  ): Option[NormalPath[P]] = {
+    import path.edges
+    require(
+      ((edges.last.terminalEdge == edges.head.initialEdge.flip) || (edges.last.terminalEdge == edges.head.initialEdge)),
+      "Path given by edges is not closed"
+    )
+    val newedges = edges.filter(e => (e.initial != e.terminal))
+    if (newedges.isEmpty) None
+    else {
+      val samefaceedgepair = newedges
+        .zip(newedges.tail :+ newedges.head)
+        .find(p => (p._1.face == p._2.face) && (p._1.terminal == p._2.initial))
+      if (samefaceedgepair.isEmpty) Some(NormalPath(newedges))
+      else {
+        val indextoremove = newedges.indexOf(samefaceedgepair.get._1)
+        if (indextoremove != (newedges.length - 1))
+          makeClosedPathsTaut(
+            NormalPath(
+              (edges.slice(0, indextoremove) :+ NormalArc(
+                edges(indextoremove).initial,
+                edges(indextoremove + 1).terminal,
+                edges(indextoremove).face
+              )) ++ edges.drop(indextoremove + 2)
+            )
+          )
+        else {
+          makeClosedPathsTaut(
+            NormalPath(
+              NormalArc(
+                edges.last.initial,
+                edges.head.terminal,
+                edges.head.face
+              ) +: edges.drop(1).dropRight(1)
+            )
+          )
+        }
+      }
+    }
+  }
+
+  /**
+    * shorten a normal-path which crosses a vertex by replacing three arcs with two arcs
+    *
+    * @param complex the surface
+    * @param path the path
+    * @param shortestedgeindex the index of the middle arc out of the three arcs
+    * @return shortened path
+    */
+  def shortenPathCrossingVertex(
+      complex: TwoComplex[SkewPantsHexagon],
+      path: NormalPath[SkewPantsHexagon],
+      shortestedgeindex: Index
+  ): NormalPath[SkewPantsHexagon] = {
+    val shortestedge = path.edges(shortestedgeindex)
+    if (shortestedge.whichVertexLinking.get == shortestedge.initialEdge.terminal)
+      surgery(complex, path, shortestedgeindex, -1)
+    else surgery(complex, path, shortestedgeindex, 1)
+  }
+
+  // Helper for shortening path by crossing a vertex
+  def surgery(
+      complex: TwoComplex[SkewPantsHexagon],
+      path: NormalPath[SkewPantsHexagon],
+      shortestedgeindex: Index,
+      arc1edgeshift: Int
+  ): NormalPath[SkewPantsHexagon] = {
+    require(math.abs(arc1edgeshift) == 1, "newarcedgeshift must be 1 or -1")
+    if (shortestedgeindex == 0) {
+      NormalPath(
+        replacingArcs(
+          complex,
+          path.edges.last,
+          path.edges(0),
+          path.edges(1),
+          arc1edgeshift
+        ) ++ path.edges.drop(2).dropRight(1)
+      )
+    } else if (shortestedgeindex == (path.length - 1)) {
+      NormalPath(
+        path.edges.slice(0, shortestedgeindex - 1).drop(1) ++ replacingArcs(
+          complex,
+          path.edges(shortestedgeindex - 1),
+          path.edges(shortestedgeindex),
+          path.edges(0),
+          arc1edgeshift
+        )
+      )
+    } else {
+      NormalPath(
+        path.edges.slice(0, shortestedgeindex - 1) ++ replacingArcs(
+          complex,
+          path.edges(shortestedgeindex - 1),
+          path.edges(shortestedgeindex),
+          path.edges(shortestedgeindex + 1),
+          arc1edgeshift
+        ) ++ path.edges.drop(shortestedgeindex + 2)
+      )
+    }
+  }
+
+  // helper for surgery
+  def replacingArcs(
+      complex: TwoComplex[SkewPantsHexagon],
+      arc1: NormalArc[SkewPantsHexagon],
+      arc2: NormalArc[SkewPantsHexagon],
+      arc3: NormalArc[SkewPantsHexagon],
+      arc1edgeshift: Int
+  ): Vector[NormalArc[SkewPantsHexagon]] = {
+    val newarc1 = NormalArc(
+      arc1.initial,
+      (((arc1.terminal + arc1edgeshift) % arc1.face.sides) + arc1.face.sides) % arc1.face.sides,
+      arc1.face
+    )
+    val newarc2faceandinit = (complex
+      .edgeIndices(newarc1.terminalEdge)
+      .map(p => (p._1, p._2)) - (newarc1.face -> newarc1.terminal)).head
+    require(
+      newarc2faceandinit._1 == arc3.face,
+      "Suggested arc cannot be defined"
+    )
+    Vector(newarc1, NormalArc(newarc2faceandinit._2, arc3.terminal, arc3.face))
+  }
+
+  def removeArcBetweenAdjacentSkewCurveEdges(
+      complex: TwoComplex[SkewPantsHexagon],
+      path: NormalPath[SkewPantsHexagon]
+  ): NormalPath[SkewPantsHexagon] = {
+    require(path.isClosed, s"$path is not closed")
+    path.edges.find(
+      arc =>
+        SkewPantsHexagon
+          .adjacentSkewCurveEdges(arc.face, arc.initial, arc.terminal)
+    ) match {
+      case None => path
+      case Some(arc) =>
+        removeArcBetweenAdjacentSkewCurveEdges(
+          complex,
+          shortenPathCrossingVertex(complex, path, path.edges.indexOf(arc))
+        )
+    }
   }
 }

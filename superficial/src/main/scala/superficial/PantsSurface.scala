@@ -702,6 +702,15 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
     }
   }
 
+  def sideLength(edge: Edge): Double = {
+    require(boundary.forall(e => !e.isInstanceOf[BoundaryEdge]), "Cannot assign lengths to all sides if one is a boundaryedge")
+    edge match {
+      case s: SkewCurveEdge => s.length.toDouble
+      case p: PantsSeam => SkewPantsHexagon.getSeamLength(this, p).toDouble
+      case _ => 0
+    }
+  }
+
   def seamAndLength: Vector[(PantsSeam, Double)] = {
     require(edgeLengths.forall(x => x.isDefined))
     if (top) {

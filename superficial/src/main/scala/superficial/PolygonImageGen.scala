@@ -62,8 +62,8 @@ object PolygonImageGen {
 
   def relativeDisplacements(arc: PLArc) = {
     (
-      arc.initialDisplacement / arc.base.face.edgeLengths(arc.base.initial).get,
-      arc.finalDisplacement / arc.base.face.edgeLengths(arc.base.terminal).get
+      arc.initialDisplacement / arc.base.face.sideLength(arc.base.initialEdge),
+      arc.finalDisplacement / arc.base.face.sideLength(arc.base.terminalEdge)
     )
   }
 }
