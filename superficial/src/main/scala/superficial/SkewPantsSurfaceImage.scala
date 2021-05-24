@@ -22,7 +22,7 @@ final case class SkewPantsSurfaceImage(skp: SkewPantsSurface, radius: Double) {
     case (edge, j) => (edge, 1 + (2 * j) % 6)
   }
 
-  val thicknessMap : Map[Edge, Int] = (edgeThickness ++ (edgeThickness.map {
+  val thicknessMap: Map[Edge, Int] = (edgeThickness ++ (edgeThickness.map {
     case (edge, j) => (edge.flip, j)
   })).toMap
 
@@ -31,7 +31,8 @@ final case class SkewPantsSurfaceImage(skp: SkewPantsSurface, radius: Double) {
       .map(_.flip)
       .zip(edgeColours)).toMap
 
-  val faceImageGen = skp.faceVector.map(SkewHexImageGen(_, colourMap, thicknessMap, radius))
+  val faceImageGen =
+    skp.faceVector.map(SkewHexImageGen(_, colourMap, thicknessMap, radius))
 
   val faceToImageGen =
     faceImageGen.map(gon => gon.hex -> gon).toMap
@@ -42,12 +43,13 @@ final case class SkewPantsSurfaceImage(skp: SkewPantsSurface, radius: Double) {
 
   def facesWithPLPath(
       curve: PLPath,
-      colour: Color = Color.azure
+      colour: Color = Color.red
   ): Map[SkewPantsHexagon, Image] = {
     val groupedArcs = curve.plArcs.groupBy(_.base.face)
-    groupedArcs.map {
+    faceToImage ++ groupedArcs.map {
       case (hex, plArcs) =>
-        hex -> faceToImageGen(hex).plArcs(plArcs.map(arc => arc -> colour))
+        val gen = faceToImageGen(hex)
+        hex -> gen.plArcs(plArcs.map(arc => arc -> colour)).on(gen.polygon)
     }
   }
 
@@ -59,8 +61,10 @@ final case class SkewPantsSurfaceImage(skp: SkewPantsSurface, radius: Double) {
         case (path, colour) => path.plArcs.map(_ -> colour)
       }
     val groupedArcs = arcColours.groupBy(_._1.base.face)
-    groupedArcs.map {
-      case (hex, arcCols) => hex -> faceToImageGen(hex).plArcs(arcCols)
+    faceToImage ++ groupedArcs.map {
+      case (hex, arcCols) =>
+        val gen = faceToImageGen(hex)
+        hex -> gen.plArcs(arcCols).on(gen.polygon)
     }
   }
 
@@ -86,7 +90,10 @@ case class SkewHexImageGen(
 ) extends PolygonImageGen(hex.boundary.size, radius) {
   val edgeImages: Vector[Image] =
     hex.boundary.zipWithIndex.map {
-      case (edge, j) => edgePaths(j).strokeWidth(thicknessMap(edge)).strokeColor(colourMap(edge))
+      case (edge, j) =>
+        edgePaths(j)
+          .strokeWidth(thicknessMap(edge))
+          .strokeColor(colourMap(edge))
     }
 
   val polygon: Image = edgeImages.foldLeft(Image.empty)(_ on _)
