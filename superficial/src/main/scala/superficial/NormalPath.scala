@@ -42,7 +42,13 @@ object NormalArc {
       terminal <- face.indices
       if terminal != initial
     } yield NormalArc(initial, terminal, face)
-
+  /**
+    * For arcs that are parallel to an edge in a SkewPantsHexagon, get the arc in the adjacent polygon
+    *
+    * @param complex the complex, practically a SkewPantsSurface
+    * @param arc the NormalArc
+    * @return the arc in the adjacent polygon
+    */
   def adjacentPolygonArcs[P <: Polygon](
       complex: TwoComplex[P],
       arc: NormalArc[P]
@@ -62,6 +68,7 @@ object NormalArc {
       }
   }
 
+  // Helper for adjacentPolygonArcs
   def getAdjacentPolygonArcs[P <: Polygon](
       complex: TwoComplex[P],
       arc: NormalArc[P]
@@ -112,6 +119,13 @@ object NormalArc {
     case _ => getAdjacentPolygonArcs(complex, arc.flip)
   }
 
+  /**
+    * Get arcs close to a given NormalArc in a SkewPantsSurface
+    *
+    * @param complex the complex, practically a SkewPantsSurface
+    * @param arc the NormalArc
+    * @return the neighbouring arcs
+    */
   def neighbouringArcs[P <: Polygon](
       complex: TwoComplex[P],
       arc: NormalArc[P]
@@ -267,6 +281,14 @@ object NormalPath {
       enumerateRec(complex, maxLength.map(_ - 1), p, lengthOne, lengthOne)
     }
 
+  /**
+    * In a NormalPath, checks if the face adjacent to the face of the first NormalArc via the initialedge of the first NormalArc is the same as 
+    * the face adjacent to the face of the last NormalArc via the terminaledge of the last NormalArc
+    *
+    * @param complex the complex, practically a SkewPantsSurface
+    * @param path the NormalPath
+    * @return 
+    */
   def startEndSameFace[P <: Polygon](
       complex: TwoComplex[P],
       path: NormalPath[P]
@@ -290,7 +312,13 @@ object NormalPath {
         case (f, _, _) => f
       }
       .head
-
+  /**
+    * Checks if there is a chain of NormalArcs at the end of a NormalPath that just go around a vertex to come back to the same face
+    *
+    * @param complex the complex, practically a SkewPantsSurface
+    * @param path the NormalPath
+    * @return
+    */
   def endsGoAround[P <: Polygon](
       complex: TwoComplex[P],
       path: NormalPath[P]
@@ -302,6 +330,7 @@ object NormalPath {
       NormalPath[P](Vector(path.edges.last))
     )
 
+  // Helper for endsGoAround
   def endsGoAroundrec[P <: Polygon](
       complex: TwoComplex[P],
       initedges: Vector[NormalArc[P]],
@@ -328,6 +357,13 @@ object NormalPath {
       }
   }
 
+  /**
+    * Recursively remove flips and cyclic permutations from a set of NormalPaths 
+    *
+    * @param accum Set of paths that does not contain duplicates upto flip and cyclic permutations 
+    * @param paths Set of paths from which duplicates have to filtered out
+    * @return Set of paths that does not contain duplicates upto flip and cyclic permutations
+    */
   def removeFlipAndCyclicPerRec[P <: Polygon](
       accum: Set[NormalPath[P]],
       paths: Set[NormalPath[P]]
@@ -344,6 +380,12 @@ object NormalPath {
     }
   }
 
+  /**
+    * Remove flips and cyclic permutations from a set of NormalPaths
+    *
+    * @param paths Set of paths
+    * @return Set of paths from which flip and cyclic permutation duplicates have been removed
+    */
   def removeFlipAndCyclicPer[P <: Polygon](
       paths: Set[NormalPath[P]]
   ): Set[NormalPath[P]] = {
@@ -360,6 +402,13 @@ object NormalPath {
     }
   }
 
+  /**
+    * Set of NormalArcs neighbouring a given NormalPath
+    *
+    * @param complex the complex, practically a SkewPantsSurface
+    * @param path the NormalPath
+    * @return Set of NormalArcs
+    */
   def pathNeighbouringArcs[P <: Polygon](
       complex: TwoComplex[P],
       path: NormalPath[P]
@@ -370,6 +419,13 @@ object NormalPath {
     } yield nbarc).toSet
   }
 
+  /**
+    * From a given closed NormalPath, recursively remove NormalArcs that go from an edge to itself and
+    * replace a subsequence of NormalArcs in a single face by a single NormalArc
+    *
+    * @param path the NormalPath
+    * @return
+    */
   def makeClosedPathsTaut[P <: Polygon](
       path: NormalPath[P]
   ): Option[NormalPath[P]] = {
@@ -495,6 +551,13 @@ object NormalPath {
     Vector(newarc1, NormalArc(newarc2faceandinit._2, arc3.terminal, arc3.face))
   }
 
+  /**
+    * Shortens a NormalPath by removing NormalArcs which go between adjacent SkewCurveEdges
+    *
+    * @param complex the complex, practically a SkewPantsSurface
+    * @param path the NormalPath
+    * @return the shortened path
+    */
   def removeArcBetweenAdjacentSkewCurveEdges(
       complex: TwoComplex[SkewPantsHexagon],
       path: NormalPath[SkewPantsHexagon]

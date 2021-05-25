@@ -319,6 +319,15 @@ object PLPath {
     }
   }
 
+  /**
+    * Append a PLArc to a PLPath
+    *
+    * @param accum PLPath to which a PLArc has to be appended from an underlying normalpath
+    * @param baseEdges Edges of a NormalPath part of which has been enumerated into a PLPath
+    * @param numdone Number of edges of the NormalPath that have been enumerated into accum
+    * @param sep Separation of endpoints of the appended PLArc
+    * @return Set of PLPaths extending accum by one PLArcs with the endpoints of PLPaths separated by sep
+    */
   def appendPLArc(
       accum: ParSet[PLPath],
       baseEdges: Vector[NormalArc[SkewPantsHexagon]],
@@ -363,6 +372,14 @@ object PLPath {
     }.to(ParSet)
   }
 
+  /**
+    * From a set of PLPaths with the same base, return a set of PLPaths that contains only the shortest path for each choice of start and end point
+    * and only if the shortest path has length less than a specified bound
+    *
+    * @param paths set of paths
+    * @param bound length bound
+    * @return
+    */
   def pickMinimal(paths: ParSet[PLPath], bound: Double): ParSet[PLPath] = {
     paths
       .filter(path => (path.length <= bound))
@@ -392,6 +409,14 @@ object PLPath {
       )
   }
 
+  /**
+    * For a given NormalPath, enumerate minimal PLPaths with endpoints separated by sep and length less than bound
+    *
+    * @param base NormalPath to be enumerated
+    * @param sep separation between endpoints
+    * @param bound length bound
+    * @return Set of PLPaths
+    */
   def enumMinimal(
       base: NormalPath[SkewPantsHexagon],
       sep: BigDecimal,
@@ -408,6 +433,14 @@ object PLPath {
     )
   }
 
+  /**
+    * Given a closed NormalPath, optionally return the minimal PLPath corresponding to it if its length is less than a given bound
+    *
+    * @param base the NormalPath
+    * @param sep separation between endpoints while enumerating PLPaths
+    * @param bound length bound
+    * @return 
+    */
   def enumMinimalClosed(
       base: NormalPath[SkewPantsHexagon],
       sep: BigDecimal,
@@ -585,6 +618,7 @@ object PLPath {
     )
   }
 
+  //Unsure of the mathematics behind this, pending
   def isotopicNearby(
       complex: TwoComplex[SkewPantsHexagon],
       baseplpath: PLPath,
