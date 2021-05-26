@@ -24,6 +24,12 @@ class PolygonImageGen(sides: Int, radius: Double = 100) {
         OpenPath(List(moveTo(init), lineTo(term))).path
     }
 
+  val edgePathsMid: Vector[(Picture[Unit], Point)] =
+    vertices.zip(vertices.tail :+ vertices.head).toVector.map {
+      case (init, term) =>
+        (OpenPath(List(moveTo(init), lineTo(term))).path, convex(init, term, 0.5))
+    }
+
   def onEdge(initial: Index, alpha: Double): Point =
     convex(vertices(initial), vertices((initial + 1) % sides), alpha)
 

@@ -20,8 +20,9 @@ final case class SkewPantsSurfaceImage(skp: SkewPantsSurface, radius: Double) {
       }
       .init
 
-  val edgeThickness = skp.positiveEdges.zipWithIndex.map {
-    case (edge, j) => (edge, 1 + (2 * j) % 6)
+  val edgeThickness = skp.positiveEdges.map {
+    case edge: SkewCurveEdge => (edge, 1)
+    case edge => (edge, 3)
   }
 
   val thicknessMap: Map[Edge, Int] = (edgeThickness ++ (edgeThickness.map {
@@ -33,8 +34,14 @@ final case class SkewPantsSurfaceImage(skp: SkewPantsSurface, radius: Double) {
       .map(_.flip)
       .zip(edgeColours)).toMap
 
+  val labelMap: Map[Edge, Int] = skp.positiveEdges.zipWithIndex.flatMap {
+    case (e, j) => Vector(e -> (j + 1), e.flip -> (j + 1))
+  }.toMap
+
   val faceImageGen =
-    skp.faceVector.map(SkewHexImageGen(_, colourMap, thicknessMap, radius))
+    skp.faceVector.map(
+      SkewHexImageGen(_, colourMap, thicknessMap, labelMap, radius)
+    )
 
   val faceToImageGen =
     faceImageGen.map(gon => gon.hex -> gon).toMap
@@ -88,14 +95,18 @@ case class SkewHexImageGen(
     hex: SkewPantsHexagon,
     colourMap: Map[Edge, Color],
     thicknessMap: Map[Edge, Int],
+    labelMap: Map[Edge, Int],
     radius: Double = 100
 ) extends PolygonImageGen(hex.boundary.size, radius) {
   val edgeImages: Vector[Picture[Unit]] =
     hex.boundary.zipWithIndex.map {
       case (edge, j) =>
-        edgePaths(j)
+        val (ep, mid) = edgePathsMid(j)
+        val path = ep
           .strokeWidth(thicknessMap(edge))
           .strokeColor(colourMap(edge))
+        val label = text[Algebra, Drawing](labelMap(edge).toString()).at(mid)
+        label.on(path)
     }
 
   val polygon = edgeImages.reduce(_ on _)
