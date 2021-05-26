@@ -129,6 +129,6 @@ object SkewPantsSurfaceImage {
       arc2: PLPath,
       size: Int = 150
   ) =
-    arcsImage(surf, Seq(arc1 -> Color.red, arc2 -> Color.blue), size)
+    arcsImage(surf, Seq(arc1 -> Color.black, arc2 -> Color.grey), size)
 
 }
