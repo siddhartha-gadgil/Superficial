@@ -22,7 +22,7 @@ final case class SkewPantsSurfaceImage(skp: SkewPantsSurface, radius: Double) {
 
   val edgeThickness = skp.positiveEdges.map {
     case edge: SkewCurveEdge => (edge, 1)
-    case edge => (edge, 3)
+    case edge                => (edge, 3)
   }
 
   val thicknessMap: Map[Edge, Int] = (edgeThickness ++ (edgeThickness.map {
@@ -110,4 +110,25 @@ case class SkewHexImageGen(
     }
 
   val polygon = edgeImages.reduce(_ on _)
+}
+
+object SkewPantsSurfaceImage {
+  def arcsImage(
+      surf: SkewPantsSurface,
+      curveColours: Seq[(PLPath, Color)],
+      size: Int = 150
+  ): doodle.algebra.Picture[Algebra, Drawing, Unit] = {
+    val skim: SkewPantsSurfaceImage = SkewPantsSurfaceImage(surf, size)
+    val arcMap = skim.facesWithPLPaths(curveColours)
+    skim.imageGrid(arcMap)
+  }
+
+  def arcPairImage(
+      surf: SkewPantsSurface,
+      arc1: PLPath,
+      arc2: PLPath,
+      size: Int = 150
+  ) =
+    arcsImage(surf, Seq(arc1 -> Color.red, arc2 -> Color.blue), size)
+
 }
