@@ -1,13 +1,15 @@
 package superficial
 
-import doodle.core.{OpenPath => _, _}
-import doodle.image.Image, Image.Elements._
+import doodle.core._
+// import doodle.image.Image
 import doodle.syntax._
 import doodle.image.syntax._
 import PathElement._
 import cats.syntax._
 import PolygonImageGen._
 import Polygon.Index
+import doodle.java2d._
+import cats.implicits._
 
 class PolygonImageGen(sides: Int, radius: Double = 100) {
   val centerAngle: Angle = 360.degrees / sides.toDouble
@@ -16,10 +18,10 @@ class PolygonImageGen(sides: Int, radius: Double = 100) {
     .map(index => Point.polar(radius, centerAngle * index.toDouble))
     .toVector
 
-  val edgePaths: Vector[Image] =
+  val edgePaths: Vector[Picture[Unit]] =
     vertices.zip(vertices.tail :+ vertices.head).toVector.map {
       case (init, term) =>
-        OpenPath(List(moveTo(init), lineTo(term)))
+        OpenPath(List(moveTo(init), lineTo(term))).path
     }
 
   def onEdge(initial: Index, alpha: Double): Point =
@@ -30,15 +32,15 @@ class PolygonImageGen(sides: Int, radius: Double = 100) {
       initialDisplacement: Double,
       terminalIndex: Int,
       finalDisplacement: Double
-  ): Image =
+  ): Picture[Unit] =
     OpenPath(
       List(
         moveTo(onEdge(initialIndex, initialDisplacement)),
         lineTo(onEdge(terminalIndex, finalDisplacement))
       )
-    ).strokeWidth(2)
+    ).path.strokeWidth(2)
 
-  def plArc(arc: PLArc): Image = {
+  def plArc(arc: PLArc): Picture[Unit] = {
     val (initDisp, termDisp) = relativeDisplacements(arc)
     normalArc(
       arc.base.initial,
@@ -49,10 +51,10 @@ class PolygonImageGen(sides: Int, radius: Double = 100) {
 
   }
 
-  def plArcs(arcs: Seq[(PLArc, Color)]) =
+  def plArcs(arcs: Seq[(PLArc, Color)]): doodle.algebra.Picture[Algebra,Drawing,Unit] =
     arcs.map {
       case (arc, colour) => plArc(arc).strokeColor(colour)
-    }.foldLeft(Image.empty)(_ on _)
+    }.reduce(_ on _)
 
 }
 

@@ -1,12 +1,14 @@
 package superficial
 import doodle.core._
-import doodle.image.Image
+// import doodle.image.Image
 import doodle.syntax._
 import doodle.image.syntax._
 import PathElement._
 import cats.syntax._
 import PolygonImageGen._
 import Polygon.Index
+import doodle.java2d._
+import cats.implicits._
 
 final case class SkewPantsSurfaceImage(skp: SkewPantsSurface, radius: Double) {
   val edgeNum = skp.positiveEdges.size
@@ -37,14 +39,14 @@ final case class SkewPantsSurfaceImage(skp: SkewPantsSurface, radius: Double) {
   val faceToImageGen =
     faceImageGen.map(gon => gon.hex -> gon).toMap
 
-  val faceToImage: Map[SkewPantsHexagon, Image] = faceToImageGen.map {
+  val faceToImage: Map[SkewPantsHexagon, Picture[Unit]] = faceToImageGen.map {
     case (hex, gen) => (hex, gen.polygon)
   }
 
   def facesWithPLPath(
       curve: PLPath,
       colour: Color = Color.red
-  ): Map[SkewPantsHexagon, Image] = {
+  ): Map[SkewPantsHexagon, Picture[Unit]] = {
     val groupedArcs = curve.plArcs.groupBy(_.base.face)
     faceToImage ++ groupedArcs.map {
       case (hex, plArcs) =>
@@ -55,7 +57,7 @@ final case class SkewPantsSurfaceImage(skp: SkewPantsSurface, radius: Double) {
 
   def facesWithPLPaths(
       curveColours: Seq[(PLPath, Color)]
-  ): Map[SkewPantsHexagon, Image] = {
+  ): Map[SkewPantsHexagon, Picture[Unit]] = {
     val arcColours =
       curveColours.flatMap {
         case (path, colour) => path.plArcs.map(_ -> colour)
@@ -68,17 +70,17 @@ final case class SkewPantsSurfaceImage(skp: SkewPantsSurface, radius: Double) {
     }
   }
 
-  def imageGrid(images: Map[SkewPantsHexagon, Image] = faceToImage) = {
+  def imageGrid(images: Map[SkewPantsHexagon, Picture[Unit]] = faceToImage) = {
     skp.indices
       .map { pants =>
         (images(SkewPantsHexagon(pants, true, skp.cs))
-          .on(Image.square(radius * 2.2)))
+          .on(square[Algebra, Drawing](radius * 2.2)))
           .above(
             (images(SkewPantsHexagon(pants, false, skp.cs)))
-              .on(Image.square(radius * 2.2))
+              .on(square[Algebra, Drawing](radius * 2.2))
           )
       }
-      .foldLeft(Image.empty)(_ beside _)
+      .reduce(_ beside _)
   }
 }
 
@@ -88,7 +90,7 @@ case class SkewHexImageGen(
     thicknessMap: Map[Edge, Int],
     radius: Double = 100
 ) extends PolygonImageGen(hex.boundary.size, radius) {
-  val edgeImages: Vector[Image] =
+  val edgeImages: Vector[Picture[Unit]] =
     hex.boundary.zipWithIndex.map {
       case (edge, j) =>
         edgePaths(j)
@@ -96,5 +98,5 @@ case class SkewHexImageGen(
           .strokeColor(colourMap(edge))
     }
 
-  val polygon: Image = edgeImages.foldLeft(Image.empty)(_ on _)
+  val polygon = edgeImages.reduce(_ on _)
 }
