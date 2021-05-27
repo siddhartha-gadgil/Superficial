@@ -75,6 +75,23 @@ final case class SkewPantsSurfaceImage(skp: SkewPantsSurface, radius: Double) {
         val gen = faceToImageGen(hex)
         hex -> gen.plArcs(arcCols).on(gen.polygon)
     }
+
+  }
+
+  def facesWithThickPLPaths(
+      curveColours: Seq[(PLPath, Color, Int)]
+  ): Map[SkewPantsHexagon, Picture[Unit]] = {
+    val arcColours =
+      curveColours.flatMap {
+        case (path, colour, width) =>
+          path.plArcs.map(arc => (arc, colour, width))
+      }
+    val groupedArcs = arcColours.groupBy(_._1.base.face)
+    faceToImage ++ groupedArcs.map {
+      case (hex, arcCols) =>
+        val gen = faceToImageGen(hex)
+        hex -> gen.thickPlArcs(arcCols).on(gen.polygon)
+    }
   }
 
   def imageGrid(images: Map[SkewPantsHexagon, Picture[Unit]] = faceToImage) = {
@@ -128,7 +145,11 @@ object SkewPantsSurfaceImage {
       arc1: PLPath,
       arc2: PLPath,
       size: Int = 150
-  ) =
-    arcsImage(surf, Seq(arc1 -> Color.black, arc2 -> Color.grey), size)
-
+  ) = {
+    val skim: SkewPantsSurfaceImage = SkewPantsSurfaceImage(surf, size)
+    val arcMap = skim.facesWithThickPLPaths(
+      List((arc1, Color.black, 1), (arc2, Color.grey, 3))
+    )
+    skim.imageGrid(arcMap)
+  }
 }

@@ -37,22 +37,24 @@ class PolygonImageGen(sides: Int, radius: Double = 100) {
       initialIndex: Int,
       initialDisplacement: Double,
       terminalIndex: Int,
-      finalDisplacement: Double
+      finalDisplacement: Double,
+      width: Double = 2
   ): Picture[Unit] =
     OpenPath(
       List(
         moveTo(onEdge(initialIndex, initialDisplacement)),
         lineTo(onEdge(terminalIndex, finalDisplacement))
       )
-    ).path.strokeWidth(2)
+    ).path.strokeWidth(width)
 
-  def plArc(arc: PLArc): Picture[Unit] = {
+  def plArc(arc: PLArc, width: Double = 2): Picture[Unit] = {
     val (initDisp, termDisp) = relativeDisplacements(arc)
     normalArc(
       arc.base.initial,
       initDisp.doubleValue,
       arc.base.terminal,
-      termDisp.doubleValue
+      termDisp.doubleValue,
+      width
     )
 
   }
@@ -60,6 +62,11 @@ class PolygonImageGen(sides: Int, radius: Double = 100) {
   def plArcs(arcs: Seq[(PLArc, Color)]): doodle.algebra.Picture[Algebra,Drawing,Unit] =
     arcs.map {
       case (arc, colour) => plArc(arc).strokeColor(colour)
+    }.reduce(_ on _)
+
+  def thickPlArcs(arcs: Seq[(PLArc, Color, Int)]): doodle.algebra.Picture[Algebra,Drawing,Unit] =
+    arcs.map {
+      case (arc, colour, width) => plArc(arc, width).strokeColor(colour)
     }.reduce(_ on _)
 
 }
