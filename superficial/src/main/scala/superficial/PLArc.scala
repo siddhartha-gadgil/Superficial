@@ -8,7 +8,11 @@ case class PLArc(
     initialDisplacement: BigDecimal,
     finalDisplacement: BigDecimal
 ) {
-  require(!( base.face.boundary(base.initial).isInstanceOf[BoundaryEdge] || base.face.boundary(base.terminal).isInstanceOf[BoundaryEdge] ))
+  require(
+    !(base.face.boundary(base.initial).isInstanceOf[BoundaryEdge] || base.face
+      .boundary(base.terminal)
+      .isInstanceOf[BoundaryEdge])
+  )
   val hexagonInitialDisplacement: Option[Double] =
     base.face.boundary(base.initial) match {
       case b: BoundaryEdge => None
@@ -68,8 +72,23 @@ case class PLArc(
         )
     }
   }
-   
-  val initialDistanceFromVertex = math.min(initialDisplacement.toDouble, math.abs(base.face.sideLength(base.initialEdge) - initialDisplacement.toDouble))
+
+  /**
+    * Checks whether the final point of the PLArc is close to any vertex in its terminalEdge
+    * Optionally returns true if close to initialvertex of terminaledge and false if close to terminalalvertex of terminaledge
+    * Returns None if the final point is not close to any vertex
+    *
+    * @param threshold how close the final point should be to a vertex
+    * @return
+    */
+  def finalPointClosetoVertex(threshold: BigDecimal): Option[Boolean] = {
+    if (finalDisplacement < threshold) Some(true)
+    else if (math.abs(
+               base.face
+                 .sideLength(base.terminalEdge) - finalDisplacement.toDouble
+             ) < threshold) Some(false)
+    else None
+  }
 }
 
 object PLArc {
@@ -439,7 +458,7 @@ object PLPath {
     * @param base the NormalPath
     * @param sep separation between endpoints while enumerating PLPaths
     * @param bound length bound
-    * @return 
+    * @return
     */
   def enumMinimalClosed(
       base: NormalPath[SkewPantsHexagon],
@@ -490,7 +509,7 @@ object PLPath {
       bound: Double
   ): Option[PLPath] = {
     require(path.base.isClosed, "Path is not closed")
-    val indexofarcclosetovertex = path.plArcs.map(a => (a.initialDistanceFromVertex < (1.5*sep))&&(a.base.vertexLinking)).indexOf(true)
+    val indexofarcclosetovertex = path.plArcs.indexWhere(_.finalPointClosetoVertex(1.5 * sep).isDefined)
     if (path.base.isVertexLinking) None
     else if (path.base.edges.exists(
                arc =>
@@ -512,11 +531,10 @@ object PLPath {
             case None => Some(path)
           }
         case None => None
-      } else if (indexofarcclosetovertex != -1)
-      NormalPath.makeClosedPathsTaut(
-        NormalPath
-          .shortenPathCrossingVertex(complex, path.base, indexofarcclosetovertex)
-      ) match {
+      } else if (indexofarcclosetovertex != -1) {
+      val lefttoright = path.plArcs(indexofarcclosetovertex).finalPointClosetoVertex(1.5* sep).get
+      NormalPath.otherWayAroundVertex(complex, path.base, indexofarcclosetovertex, lefttoright)
+       match {
         case None => None
         case Some(newpath) =>
           enumMinimalClosed(newpath, sep, bound) match {
@@ -526,7 +544,8 @@ object PLPath {
               else Some(path)
             case None => Some(path)
           }
-      } else Some(path)
+      }
+    } else Some(path)
   }
 
   def skewlessShortenPathCrossingVertex(
