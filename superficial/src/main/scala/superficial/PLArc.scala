@@ -534,9 +534,12 @@ object PLPath {
         NormalPath.otherWayAroundVertex(complex, path.base, i._2, i._1.get))
       if (normalpaths.contains(None)) None
       else {
-        val plpaths = for { path <- normalpaths.flatten } yield
+        val plpaths = for { 
+          path <- normalpaths.flatten 
+          shortPath <- uniqrepuptoflipandcyclicper.get(path)
+        } yield
           enumdata.get(
-            uniqrepuptoflipandcyclicper.get(path).get
+            shortPath
             ).get
         val newminplpath = plpaths.flatten
           .zip(plpaths.flatten.map(_.length))
