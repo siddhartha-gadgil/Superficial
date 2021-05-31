@@ -234,11 +234,7 @@ object NormalPath {
             } -
               (path.terminalFace -> path.terminalIndex)
             i2 <- face.indices
-            if (i2 != i1) && (!SkewPantsHexagon.adjacentSkewCurveEdges(
-              face,
-              i1,
-              i2
-            ))
+            if (i2 != i1)
             arc = NormalArc(i1, i2, face)
           } yield path :+ arc
         ).filter(path => !(endsGoAround(complex, path))).filter(p)
@@ -271,14 +267,6 @@ object NormalPath {
       val lengthOne =
         NormalArc
           .enumerate(complex)
-          .filter(
-            a =>
-              !SkewPantsHexagon.adjacentSkewCurveEdges(
-                a.face,
-                a.initial,
-                a.terminal
-              )
-          )
           .map((arc) => NormalPath(Vector(arc)))
           .filter(p)
       enumerateRec(complex, maxLength.map(_ - 1), p, lengthOne, lengthOne)
@@ -405,6 +393,28 @@ object NormalPath {
         )
       )
     }
+  }
+
+  def uniqRepUptoFlipAndCyclicPer[P<: Polygon](paths: Set[NormalPath[P]]): Map[NormalPath[P], NormalPath[P]] = {
+    require(paths.forall(_.isClosed), "All paths are not closed")
+    if (paths.isEmpty) Map()
+    else {
+      val diffpaths = paths.tail.filter(
+          p =>
+            (p.edges.size != paths.head.edges.size) || ((p.edges.toSet != paths.head.edges.toSet) && (p.edges.toSet != paths.head.flip.edges.toSet))
+        )
+      val newmap = paths.diff(diffpaths).map(p => (p, paths.head)).toMap
+      uniqRepUptoFlipAndCyclicPerRec(newmap, diffpaths)
+    }
+  }
+
+  def uniqRepUptoFlipAndCyclicPerRec[P<:Polygon](accum: Map[NormalPath[P], NormalPath[P]], paths: Set[NormalPath[P]]): Map[NormalPath[P], NormalPath[P]] = if (paths.isEmpty) accum else {
+    val diffpaths = paths.tail.filter(
+          p =>
+            (p.edges.size != paths.head.edges.size) || ((p.edges.toSet != paths.head.edges.toSet) && (p.edges.toSet != paths.head.flip.edges.toSet))
+        )
+    val newmap = paths.diff(diffpaths).map(p => (p, paths.head)).toMap
+    uniqRepUptoFlipAndCyclicPerRec(accum++newmap, diffpaths)
   }
 
   /**
