@@ -535,7 +535,9 @@ object PLPath {
       if (normalpaths.contains(None)) None
       else {
         val plpaths = for { path <- normalpaths.flatten } yield
-          enumdata.get(uniqrepuptoflipandcyclicper.get(path).get).get
+          enumdata.get(
+            uniqrepuptoflipandcyclicper.get(path).get
+            ).get
         val newminplpath = plpaths.flatten
           .zip(plpaths.flatten.map(_.length))
           .minByOption(_._2)
