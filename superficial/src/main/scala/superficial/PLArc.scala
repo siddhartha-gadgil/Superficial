@@ -2,13 +2,19 @@ package superficial
 import scala.collection.parallel._, immutable.ParSet
 
 import Polygon.Index
+import scala.tools.nsc.doc.html.HtmlTags
+import doodle.syntax.path
 
 case class PLArc(
     base: NormalArc[SkewPantsHexagon],
     initialDisplacement: BigDecimal,
     finalDisplacement: BigDecimal
 ) {
-  require(!( base.face.boundary(base.initial).isInstanceOf[BoundaryEdge] || base.face.boundary(base.terminal).isInstanceOf[BoundaryEdge] ))
+  require(
+    !(base.face.boundary(base.initial).isInstanceOf[BoundaryEdge] || base.face
+      .boundary(base.terminal)
+      .isInstanceOf[BoundaryEdge])
+  )
   val hexagonInitialDisplacement: Option[Double] =
     base.face.boundary(base.initial) match {
       case b: BoundaryEdge => None
@@ -68,8 +74,23 @@ case class PLArc(
         )
     }
   }
-   
-  val initialDistanceFromVertex = math.min(initialDisplacement.toDouble, math.abs(base.face.sideLength(base.initialEdge) - initialDisplacement.toDouble))
+
+  /**
+    * Checks whether the final point of the PLArc is close to any vertex in its terminalEdge
+    * Optionally returns true if close to initialvertex of terminaledge and false if close to terminalalvertex of terminaledge
+    * Returns None if the final point is not close to any vertex
+    *
+    * @param threshold how close the final point should be to a vertex
+    * @return
+    */
+  def finalPointClosetoVertex(threshold: BigDecimal): Option[Boolean] = {
+    if (finalDisplacement < threshold) Some(true)
+    else if (math.abs(
+               base.face
+                 .sideLength(base.terminalEdge) - finalDisplacement.toDouble
+             ) < threshold) Some(false)
+    else None
+  }
 }
 
 object PLArc {
@@ -439,13 +460,14 @@ object PLPath {
     * @param base the NormalPath
     * @param sep separation between endpoints while enumerating PLPaths
     * @param bound length bound
-    * @return 
+    * @return
     */
   def enumMinimalClosed(
       base: NormalPath[SkewPantsHexagon],
       sep: BigDecimal,
       bound: Double
   ): Option[PLPath] = {
+    require(base.isClosed, s"$base is not closed")
     enumMinimal(base, sep, bound)
       .groupBy(_.initialDisplacements.head)
       .map {
@@ -474,6 +496,16 @@ object PLPath {
       .minByOption(_.length)
   }
 
+  def enumMinimalClosedFamily(
+      paths: Set[NormalPath[SkewPantsHexagon]],
+      sep: BigDecimal,
+      bound: Double
+  ): Map[NormalPath[SkewPantsHexagon], Option[PLPath]] = {
+    require(paths.forall(_.isClosed), "All paths are not closed")
+    val pathsvec = paths.toVector
+    pathsvec.zip(pathsvec.map(p => enumMinimalClosed(p, sep, bound))).toMap
+  }
+
   /**
     * Shorten a PL-path by repeatedly removing removing short arcs and arcs between adjacent skewcurveedges
     *
@@ -487,135 +519,33 @@ object PLPath {
       complex: TwoComplex[SkewPantsHexagon],
       path: PLPath,
       sep: BigDecimal,
-      bound: Double
+      bound: Double,
+      uniqrepuptoflipandcyclicper: Map[NormalPath[SkewPantsHexagon], NormalPath[SkewPantsHexagon]],
+      enumdata: Map[NormalPath[SkewPantsHexagon], Option[PLPath]]
   ): Option[PLPath] = {
     require(path.base.isClosed, "Path is not closed")
-    val indexofarcclosetovertex = path.plArcs.map(a => (a.initialDistanceFromVertex < (1.5*sep))&&(a.base.vertexLinking)).indexOf(true)
+    val arcsclosetovertex = path.plArcs
+      .map(_.finalPointClosetoVertex(1.5 * sep))
+      .zipWithIndex
+      .filter(_._1.isDefined)
     if (path.base.isVertexLinking) None
-    else if (path.base.edges.exists(
-               arc =>
-                 SkewPantsHexagon.adjacentSkewCurveEdges(
-                   arc.face,
-                   arc.initial,
-                   arc.terminal
-                 )
-             ))
-      NormalPath.makeClosedPathsTaut(
-        NormalPath.removeArcBetweenAdjacentSkewCurveEdges(complex, path.base)
-      ) match {
-        case Some(newpath) =>
-          enumMinimalClosed(newpath, sep, bound) match {
-            case Some(newplpath) =>
-              if (newplpath.length < path.length)
-                shorten(complex, newplpath, sep, bound)
-              else Some(path)
-            case None => Some(path)
-          }
-        case None => None
-      } else if (indexofarcclosetovertex != -1)
-      NormalPath.makeClosedPathsTaut(
-        NormalPath
-          .shortenPathCrossingVertex(complex, path.base, indexofarcclosetovertex)
-      ) match {
-        case None => None
-        case Some(newpath) =>
-          enumMinimalClosed(newpath, sep, bound) match {
-            case Some(newplpath) =>
-              if (newplpath.length < path.length)
-                shorten(complex, newplpath, sep, bound)
-              else Some(path)
-            case None => Some(path)
-          }
-      } else Some(path)
-  }
-
-  def skewlessShortenPathCrossingVertex(
-      complex: TwoComplex[SkewPantsHexagon],
-      path: PLPath,
-      sep: BigDecimal
-  ): NormalPath[SkewPantsHexagon] = {
-    require(path.plArcs.map(_.length).min < sep * 3)
-    val shortestedgeindex = path.plArcs.indexOf(path.plArcs.minBy(_.length))
-    val shortestedge = path.base.edges(shortestedgeindex)
-    if (shortestedge.whichVertexLinking.get == shortestedge.initialEdge.terminal)
-      skewlessSurgery(complex, path.base, shortestedgeindex, -1)
-    else skewlessSurgery(complex, path.base, shortestedgeindex, 1)
-  }
-
-  def skewlessSurgery(
-      complex: TwoComplex[SkewPantsHexagon],
-      path: NormalPath[SkewPantsHexagon],
-      shortestedgeindex: Index,
-      arc1edgeshift: Int
-  ): NormalPath[SkewPantsHexagon] = {
-    require(math.abs(arc1edgeshift) == 1, "newarcedgeshift must be 1 or -1")
-    if (shortestedgeindex == 0) {
-      NormalPath(
-        skewlessReplacingArcs(
-          complex,
-          path.edges.last,
-          path.edges(0),
-          path.edges(1),
-          arc1edgeshift
-        ) ++ path.edges.drop(2).dropRight(1)
-      )
-    } else if (shortestedgeindex == (path.length - 1)) {
-      NormalPath(
-        path.edges
-          .slice(0, shortestedgeindex - 1)
-          .drop(1) ++ skewlessReplacingArcs(
-          complex,
-          path.edges(shortestedgeindex - 1),
-          path.edges(shortestedgeindex),
-          path.edges(0),
-          arc1edgeshift
-        )
-      )
-    } else {
-      NormalPath(
-        path.edges.slice(0, shortestedgeindex - 1) ++ skewlessReplacingArcs(
-          complex,
-          path.edges(shortestedgeindex - 1),
-          path.edges(shortestedgeindex),
-          path.edges(shortestedgeindex + 1),
-          arc1edgeshift
-        ) ++ path.edges.drop(shortestedgeindex + 1)
-      )
-    }
-  }
-
-  def skewlessReplacingArcs(
-      complex: TwoComplex[SkewPantsHexagon],
-      arc1: NormalArc[SkewPantsHexagon],
-      arc2: NormalArc[SkewPantsHexagon],
-      arc3: NormalArc[SkewPantsHexagon],
-      arc1edgeshift: Int
-  ): Vector[NormalArc[SkewPantsHexagon]] = {
-    val newarc1 = NormalArc(
-      arc1.initial,
-      (((arc1.terminal + arc1edgeshift) % arc1.face.sides) + arc1.face.sides) % arc1.face.sides,
-      arc1.face
-    )
-    val newarc2faceandinit = (complex
-      .edgeIndices(newarc1.terminalEdge)
-      .map(p => (p._1, p._2)) - (newarc1.face -> newarc1.terminal)).head
-    val newarc2 = NormalArc(
-      newarc2faceandinit._2,
-      newarc2faceandinit._2 - arc1edgeshift,
-      newarc2faceandinit._1
-    )
-    val newarc3faceandinit = (complex
-      .edgeIndices(newarc2.terminalEdge)
-      .map(p => (p._1, p._2)) - (newarc2.face -> newarc2.terminal)).head
-    require(
-      newarc3faceandinit._1 == arc3.face,
-      "Suggested arc cannot be defined"
-    )
-    Vector(
-      newarc1,
-      newarc2,
-      NormalArc(newarc3faceandinit._2, arc3.terminal, arc3.face)
-    )
+    else if (arcsclosetovertex.nonEmpty) {
+      val normalpaths = (for { i <- arcsclosetovertex } yield
+        NormalPath.otherWayAroundVertex(complex, path.base, i._2, i._1.get))
+      if (normalpaths.contains(None)) None
+      else {
+        val plpaths = for { path <- normalpaths.flatten } yield
+          enumdata.get(uniqrepuptoflipandcyclicper.get(path).get).get
+        val newminplpath = plpaths.flatten
+          .zip(plpaths.flatten.map(_.length))
+          .minByOption(_._2)
+        if (newminplpath.isDefined) {
+          if (newminplpath.get._2 < path.length)
+            shorten(complex, newminplpath.get._1, sep, bound, uniqrepuptoflipandcyclicper, enumdata)
+          else Some(path)
+        } else Some(path)
+      }
+    } else Some(path)
   }
 
   //Unsure of the mathematics behind this, pending
