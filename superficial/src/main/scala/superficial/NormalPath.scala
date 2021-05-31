@@ -237,7 +237,7 @@ object NormalPath {
             if (i2 != i1)
             arc = NormalArc(i1, i2, face)
           } yield path :+ arc
-        ).filter(path => !(endsGoAround(complex, path))).filter(p)
+        ).filter(p)
       enumerateRec(
         complex,
         maxAppendLength.map(_ - 1),
