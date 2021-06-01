@@ -520,7 +520,9 @@ object PLPath {
       path: PLPath,
       sep: BigDecimal,
       bound: Double,
-      uniqrepuptoflipandcyclicper: Map[NormalPath[SkewPantsHexagon], NormalPath[SkewPantsHexagon]],
+      uniqrepuptoflipandcyclicper: Map[NormalPath[SkewPantsHexagon], NormalPath[
+        SkewPantsHexagon
+      ]],
       enumdata: Map[NormalPath[SkewPantsHexagon], Option[PLPath]]
   ): Option[PLPath] = {
     require(path.base.isClosed, "Path is not closed")
@@ -534,19 +536,28 @@ object PLPath {
         NormalPath.otherWayAroundVertex(complex, path.base, i._2, i._1.get))
       if (normalpaths.contains(None)) None
       else {
-        val plpaths = for { 
-          path <- normalpaths.flatten 
+        val plpaths = for {
+          path <- normalpaths.flatten
           shortPath <- uniqrepuptoflipandcyclicper.get(path)
         } yield
-          enumdata.get(
-            shortPath
-            ).get
+          enumdata
+            .get(
+              shortPath
+            )
+            .get
         val newminplpath = plpaths.flatten
           .zip(plpaths.flatten.map(_.length))
           .minByOption(_._2)
         if (newminplpath.isDefined) {
           if (newminplpath.get._2 < path.length)
-            shorten(complex, newminplpath.get._1, sep, bound, uniqrepuptoflipandcyclicper, enumdata)
+            shorten(
+              complex,
+              newminplpath.get._1,
+              sep,
+              bound,
+              uniqrepuptoflipandcyclicper,
+              enumdata
+            )
           else Some(path)
         } else Some(path)
       }

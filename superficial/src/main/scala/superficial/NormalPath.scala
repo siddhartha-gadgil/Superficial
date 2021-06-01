@@ -395,27 +395,47 @@ object NormalPath {
     }
   }
 
-  def uniqRepUptoFlipAndCyclicPer[P<: Polygon](paths: Set[NormalPath[P]]): Map[NormalPath[P], NormalPath[P]] = {
+  def uniqueUptoFlipAndCyclicPerm[P <: Polygon](
+      paths: Set[NormalPath[P]]
+  ): Map[NormalPath[P], NormalPath[P]] = {
+    require(paths.forall(_.isClosed), "All paths are not closed")
+    val groups = paths.groupBy(
+      path =>
+        (path.edges.size, Set(path.edges.toSet, path.edges.map(_.flip).toSet))
+    ).values.toSet
+    groups.flatMap{group =>
+      val chosen = group.head
+      group.map(x => x -> chosen)}.toMap
+  }
+
+  def uniqRepUptoFlipAndCyclicPer[P <: Polygon](
+      paths: Set[NormalPath[P]]
+  ): Map[NormalPath[P], NormalPath[P]] = {
     require(paths.forall(_.isClosed), "All paths are not closed")
     if (paths.isEmpty) Map()
     else {
       val diffpaths = paths.tail.filter(
-          p =>
-            (p.edges.size != paths.head.edges.size) || ((p.edges.toSet != paths.head.edges.toSet) && (p.edges.toSet != paths.head.flip.edges.toSet))
-        )
+        p =>
+          (p.edges.size != paths.head.edges.size) || ((p.edges.toSet != paths.head.edges.toSet) && (p.edges.toSet != paths.head.flip.edges.toSet))
+      )
       val newmap = paths.diff(diffpaths).map(p => (p, paths.head)).toMap
       uniqRepUptoFlipAndCyclicPerRec(newmap, diffpaths)
     }
   }
 
-  def uniqRepUptoFlipAndCyclicPerRec[P<:Polygon](accum: Map[NormalPath[P], NormalPath[P]], paths: Set[NormalPath[P]]): Map[NormalPath[P], NormalPath[P]] = if (paths.isEmpty) accum else {
-    val diffpaths = paths.tail.filter(
-          p =>
-            (p.edges.size != paths.head.edges.size) || ((p.edges.toSet != paths.head.edges.toSet) && (p.edges.toSet != paths.head.flip.edges.toSet))
-        )
-    val newmap = paths.diff(diffpaths).map(p => (p, paths.head)).toMap
-    uniqRepUptoFlipAndCyclicPerRec(accum++newmap, diffpaths)
-  }
+  def uniqRepUptoFlipAndCyclicPerRec[P <: Polygon](
+      accum: Map[NormalPath[P], NormalPath[P]],
+      paths: Set[NormalPath[P]]
+  ): Map[NormalPath[P], NormalPath[P]] =
+    if (paths.isEmpty) accum
+    else {
+      val diffpaths = paths.tail.filter(
+        p =>
+          (p.edges.size != paths.head.edges.size) || ((p.edges.toSet != paths.head.edges.toSet) && (p.edges.toSet != paths.head.flip.edges.toSet))
+      )
+      val newmap = paths.diff(diffpaths).map(p => (p, paths.head)).toMap
+      uniqRepUptoFlipAndCyclicPerRec(accum ++ newmap, diffpaths)
+    }
 
   /**
     * Set of NormalArcs neighbouring a given NormalPath
@@ -493,7 +513,13 @@ object NormalPath {
       vertexLinkingPathRec(
         complex,
         NormalPath(
-          Vector(NormalArc(startingindex, (startingindex - 1 + startingface.sides)%startingface.sides , startingface))
+          Vector(
+            NormalArc(
+              startingindex,
+              (startingindex - 1 + startingface.sides) % startingface.sides,
+              startingface
+            )
+          )
         ),
         -1
       )
@@ -501,7 +527,13 @@ object NormalPath {
       vertexLinkingPathRec(
         complex,
         NormalPath(
-          Vector(NormalArc(startingindex, (startingindex + 1)%startingface.sides, startingface))
+          Vector(
+            NormalArc(
+              startingindex,
+              (startingindex + 1) % startingface.sides,
+              startingface
+            )
+          )
         ),
         1
       )
@@ -523,7 +555,11 @@ object NormalPath {
       vertexLinkingPathRec(
         complex,
         accum.:+(
-          NormalArc(newarcinitial, (newarcinitial + arcedgeshift + newarcface.sides)%newarcface.sides , newarcface)
+          NormalArc(
+            newarcinitial,
+            (newarcinitial + arcedgeshift + newarcface.sides) % newarcface.sides,
+            newarcface
+          )
         ),
         arcedgeshift
       )
@@ -535,9 +571,21 @@ object NormalPath {
       indextomove: Index,
       lefttoright: Boolean
   ): Option[NormalPath[P]] = {
-    val vertexlinkingpath = vertexLinkingPath(complex, path.edges(indextomove).face, path.edges(indextomove).terminal, lefttoright)
-    if (indextomove != (path.edges.size - 1)) makeClosedPathsTaut(NormalPath(path.edges.slice(0, indextomove+1)++vertexlinkingpath.edges++path.edges.slice(indextomove+1, path.edges.size)))
-    else makeClosedPathsTaut(NormalPath(path.edges++vertexlinkingpath.edges))
+    val vertexlinkingpath = vertexLinkingPath(
+      complex,
+      path.edges(indextomove).face,
+      path.edges(indextomove).terminal,
+      lefttoright
+    )
+    if (indextomove != (path.edges.size - 1))
+      makeClosedPathsTaut(
+        NormalPath(
+          path.edges
+            .slice(0, indextomove + 1) ++ vertexlinkingpath.edges ++ path.edges
+            .slice(indextomove + 1, path.edges.size)
+        )
+      )
+    else makeClosedPathsTaut(NormalPath(path.edges ++ vertexlinkingpath.edges))
   }
 
   /**
