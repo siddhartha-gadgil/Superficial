@@ -564,6 +564,77 @@ object PLPath {
     } else Some(path)
   }
 
+  def postEnumIsotopyCheck(
+      complex: TwoComplex[SkewPantsHexagon],
+      paths: Set[PLPath],
+      sep: BigDecimal,
+      uniqrepuptoflipandcyclicper: Map[NormalPath[SkewPantsHexagon], NormalPath[
+        SkewPantsHexagon
+      ]],
+      enumdata: Map[NormalPath[SkewPantsHexagon], Option[PLPath]],
+      accum: Set[Set[PLPath]] = Set()
+  ): Set[Set[PLPath]] = {
+    require(paths.map(_.base).forall(_.isClosed), "All paths are not closed")
+    if (paths.isEmpty) accum else {
+      val eqclass = getPostEnumIsotopyClass(
+      complex,
+      paths,
+      paths.head,
+      sep,
+      uniqrepuptoflipandcyclicper,
+      enumdata
+    )
+    postEnumIsotopyCheck(
+      complex,
+      paths.diff(eqclass),
+      sep,
+      uniqrepuptoflipandcyclicper,
+      enumdata,
+      accum + eqclass
+    )
+    }
+  }
+
+  def getPostEnumIsotopyClass(
+      complex: TwoComplex[SkewPantsHexagon],
+      paths: Set[PLPath],
+      path: PLPath,
+      sep: BigDecimal,
+      uniqrepuptoflipandcyclicper: Map[NormalPath[SkewPantsHexagon], NormalPath[
+        SkewPantsHexagon
+      ]],
+      enumdata: Map[NormalPath[SkewPantsHexagon], Option[PLPath]],
+      accum: Set[PLPath] = Set()
+  ): Set[PLPath] = {
+    val arcsclosetovertex = path.plArcs
+      .map(_.finalPointClosetoVertex(1.5 * sep))
+      .zipWithIndex
+      .filter(_._1.isDefined)
+    if (arcsclosetovertex.nonEmpty) {
+      val normalpaths = (for { i <- arcsclosetovertex } yield
+        NormalPath.otherWayAroundVertex(complex, path.base, i._2, i._1.get))
+      val plpaths = (for {
+        path <- normalpaths.flatten
+        repPath <- uniqrepuptoflipandcyclicper.get(path)
+      } yield
+        enumdata
+          .get(
+            repPath
+          )
+          .get).flatten.filter(_.length < (path.length + 3 * sep)).toSet
+      (for { plpath <- plpaths.diff(accum) } yield
+        getPostEnumIsotopyClass(
+          complex,
+          paths,
+          plpath,
+          sep,
+          uniqrepuptoflipandcyclicper,
+          enumdata,
+          accum + path
+        )).foldLeft(accum + path)((a, b) => a.union(b))
+    } else Set(path)
+  }
+
   //Unsure of the mathematics behind this, pending
   def isotopicNearby(
       complex: TwoComplex[SkewPantsHexagon],
