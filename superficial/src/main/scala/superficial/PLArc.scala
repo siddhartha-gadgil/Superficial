@@ -564,6 +564,28 @@ object PLPath {
     } else Some(path)
   }
 
+  def removeFlipAndCyclicPer(
+    paths: Set[PLPath],
+    accum: Set[PLPath] = Set()
+  ): Set[PLPath] = {
+    if (paths.isEmpty) accum
+    else {
+      removeFlipAndCyclicPer(
+        paths.tail.filter(
+          p =>
+            (p.base.edges.size != paths.head.base.edges.size) || ((p.base.edges.toSet != paths.head.base.edges.toSet) && (p.base.edges.toSet != paths.head.base.flip.edges.toSet))
+        ),
+        accum+ paths.head
+      )
+    }
+  }
+
+  def removeGivenPaths(paths: Set[PLPath], toremove: Set[PLPath]): Set[PLPath] = {
+    val toremovevec = toremove.toVector
+    val removedata = toremovevec.map(_.base.length).zip(toremovevec.map(_.base.edges.toSet)) ++ toremovevec.map(_.base.length).zip(toremovevec.map(_.base.edges.map(_.flip).toSet))
+    paths.filter(p => !(removedata.contains((p.base.length, p.base.edges.toSet))) )
+  } 
+
   def postEnumIsotopyCheck(
       complex: TwoComplex[SkewPantsHexagon],
       paths: Set[PLPath],
@@ -578,7 +600,6 @@ object PLPath {
     if (paths.isEmpty) accum else {
       val eqclass = getPostEnumIsotopyClass(
       complex,
-      paths,
       paths.head,
       sep,
       uniqrepuptoflipandcyclicper,
@@ -586,7 +607,7 @@ object PLPath {
     )
     postEnumIsotopyCheck(
       complex,
-      paths.diff(eqclass),
+      removeGivenPaths(paths, eqclass),
       sep,
       uniqrepuptoflipandcyclicper,
       enumdata,
@@ -597,7 +618,6 @@ object PLPath {
 
   def getPostEnumIsotopyClass(
       complex: TwoComplex[SkewPantsHexagon],
-      paths: Set[PLPath],
       path: PLPath,
       sep: BigDecimal,
       uniqrepuptoflipandcyclicper: Map[NormalPath[SkewPantsHexagon], NormalPath[
@@ -625,7 +645,6 @@ object PLPath {
       (for { plpath <- plpaths.diff(accum) } yield
         getPostEnumIsotopyClass(
           complex,
-          paths,
           plpath,
           sep,
           uniqrepuptoflipandcyclicper,
