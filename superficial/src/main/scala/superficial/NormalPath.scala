@@ -395,6 +395,12 @@ object NormalPath {
     }
   }
 
+  /**
+    * A map that takes each closed normalpath to its representative upto flips and cyclic permutations that will be enumerated
+    *
+    * @param paths Set of closed paths which constitute the domain of the map
+    * @return
+    */
   def uniqueUptoFlipAndCyclicPerm[P <: Polygon](
       paths: Set[NormalPath[P]]
   ): Map[NormalPath[P], NormalPath[P]] = {
@@ -408,6 +414,7 @@ object NormalPath {
       group.map(x => x -> chosen)}.toMap
   }
 
+  // old version of uniqueUptoFlipAndCyclicPerm
   def uniqRepUptoFlipAndCyclicPer[P <: Polygon](
       paths: Set[NormalPath[P]]
   ): Map[NormalPath[P], NormalPath[P]] = {
@@ -422,7 +429,7 @@ object NormalPath {
       uniqRepUptoFlipAndCyclicPerRec(newmap, diffpaths)
     }
   }
-
+ // helper for uniqRepUptoFlipAndCyclicPer
   def uniqRepUptoFlipAndCyclicPerRec[P <: Polygon](
       accum: Map[NormalPath[P], NormalPath[P]],
       paths: Set[NormalPath[P]]
@@ -503,6 +510,15 @@ object NormalPath {
     }
   }
 
+  /**
+    * Outputs a vertex linking path
+    *
+    * @param complex the surface
+    * @param startingface face containing the first arc of the path
+    * @param startingindex initial index of the first arc of the path
+    * @param linkinitialvertex whether the path links the initial vertex of the initial edge of the first arc
+    * @return A vertex linking path
+    */
   def vertexLinkingPath[P <: Polygon](
       complex: TwoComplex[P],
       startingface: P,
@@ -539,6 +555,7 @@ object NormalPath {
       )
   }
 
+  //helper for vertex linking path
   def vertexLinkingPathRec[P <: Polygon](
       complex: TwoComplex[P],
       accum: NormalPath[P],
@@ -565,6 +582,16 @@ object NormalPath {
       )
     }
 
+  /**
+    * Moves a normalpath across to the other side of a vertex
+    * Return is Optional, None is returned if the new path is contractible
+    *
+    * @param complex the surface
+    * @param path the path
+    * @param indextomove index of the arc whose terminal edge contains the vertex the path has to be moved across
+    * @param lefttoright whether to move the path from the left side to the right side of a vertex
+    * @return 
+    */
   def otherWayAroundVertex[P <: Polygon](
       complex: TwoComplex[P],
       path: NormalPath[P],
