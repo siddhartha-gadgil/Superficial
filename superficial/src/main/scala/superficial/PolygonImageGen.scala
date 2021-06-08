@@ -27,7 +27,10 @@ class PolygonImageGen(sides: Int, radius: Double = 100) {
   val edgePathsMid: Vector[(Picture[Unit], Point)] =
     vertices.zip(vertices.tail :+ vertices.head).toVector.map {
       case (init, term) =>
-        (OpenPath(List(moveTo(init), lineTo(term))).path, convex(init, term, 0.5))
+        (
+          OpenPath(List(moveTo(init), lineTo(term))).path,
+          convex(init, term, 0.5)
+        )
     }
 
   def onEdge(initial: Index, alpha: Double): Point =
@@ -59,15 +62,23 @@ class PolygonImageGen(sides: Int, radius: Double = 100) {
 
   }
 
-  def plArcs(arcs: Seq[(PLArc, Color)]): doodle.algebra.Picture[Algebra,Drawing,Unit] =
-    arcs.map {
-      case (arc, colour) => plArc(arc).strokeColor(colour)
-    }.reduce(_ on _)
+  def plArcs(
+      arcs: Seq[(PLArc, Color)]
+  ): doodle.algebra.Picture[Algebra, Drawing, Unit] =
+    arcs
+      .map {
+        case (arc, colour) => plArc(arc).strokeColor(colour)
+      }
+      .reduce(_ on _)
 
-  def thickPlArcs(arcs: Seq[(PLArc, Color, Int)]): doodle.algebra.Picture[Algebra,Drawing,Unit] =
-    arcs.map {
-      case (arc, colour, width) => plArc(arc, width).strokeColor(colour)
-    }.reduce(_ on _)
+  def thickPlArcs(
+      arcs: Seq[(PLArc, Color, Int)]
+  ): doodle.algebra.Picture[Algebra, Drawing, Unit] =
+    arcs
+      .map {
+        case (arc, colour, width) => plArc(arc, width).strokeColor(colour)
+      }
+      .reduce(_ on _)
 
 }
 

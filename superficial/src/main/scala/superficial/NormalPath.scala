@@ -405,13 +405,17 @@ object NormalPath {
       paths: Set[NormalPath[P]]
   ): Map[NormalPath[P], NormalPath[P]] = {
     require(paths.forall(_.isClosed), "All paths are not closed")
-    val groups = paths.groupBy(
-      path =>
-        (path.edges.size, Set(path.edges.toSet, path.edges.map(_.flip).toSet))
-    ).values.toSet
-    groups.flatMap{group =>
+    val groups = paths
+      .groupBy(
+        path =>
+          (path.edges.size, Set(path.edges.toSet, path.edges.map(_.flip).toSet))
+      )
+      .values
+      .toSet
+    groups.flatMap { group =>
       val chosen = group.head
-      group.map(x => x -> chosen)}.toMap
+      group.map(x => x -> chosen)
+    }.toMap
   }
 
   // old version of uniqueUptoFlipAndCyclicPerm
@@ -429,7 +433,7 @@ object NormalPath {
       uniqRepUptoFlipAndCyclicPerRec(newmap, diffpaths)
     }
   }
- // helper for uniqRepUptoFlipAndCyclicPer
+  // helper for uniqRepUptoFlipAndCyclicPer
   def uniqRepUptoFlipAndCyclicPerRec[P <: Polygon](
       accum: Map[NormalPath[P], NormalPath[P]],
       paths: Set[NormalPath[P]]
@@ -479,34 +483,35 @@ object NormalPath {
     val newedges = edges.filter(e => (e.initial != e.terminal))
     if (newedges.isEmpty) None
     else {
-      val samefaceedgepair = newedges
+      val samefaceedgepairOpt = newedges
         .zip(newedges.tail :+ newedges.head)
         .find(p => (p._1.face == p._2.face) && (p._1.terminal == p._2.initial))
-      if (samefaceedgepair.isEmpty) Some(NormalPath(newedges))
-      else {
-        val indextoremove = newedges.indexOf(samefaceedgepair.get._1)
-        if (indextoremove != (newedges.length - 1))
-          makeClosedPathsTaut(
-            NormalPath(
-              (newedges.slice(0, indextoremove) :+ NormalArc(
-                newedges(indextoremove).initial,
-                newedges(indextoremove + 1).terminal,
-                newedges(indextoremove).face
-              )) ++ newedges.drop(indextoremove + 2)
+      samefaceedgepairOpt
+        .map({ samefaceedgepair =>
+          val indextoremove = newedges.indexOf(samefaceedgepair._1)
+          if (indextoremove != (newedges.length - 1))
+            makeClosedPathsTaut(
+              NormalPath(
+                (newedges.slice(0, indextoremove) :+ NormalArc(
+                  newedges(indextoremove).initial,
+                  newedges(indextoremove + 1).terminal,
+                  newedges(indextoremove).face
+                )) ++ newedges.drop(indextoremove + 2)
+              )
             )
-          )
-        else {
-          makeClosedPathsTaut(
-            NormalPath(
-              NormalArc(
-                newedges.last.initial,
-                newedges.head.terminal,
-                newedges.head.face
-              ) +: newedges.drop(1).dropRight(1)
+          else {
+            makeClosedPathsTaut(
+              NormalPath(
+                NormalArc(
+                  newedges.last.initial,
+                  newedges.head.terminal,
+                  newedges.head.face
+                ) +: newedges.drop(1).dropRight(1)
+              )
             )
-          )
-        }
-      }
+          }
+        })
+        .getOrElse(Some(NormalPath(newedges)))
     }
   }
 
@@ -516,7 +521,7 @@ object NormalPath {
     * @param complex the surface
     * @param startingface face containing the first arc of the path
     * @param startingindex initial index of the first arc of the path
-    * @param linkinitialvertex whether the path links the initial vertex of the initial edge of the first arc
+    * @param linkinitialvertex whether the path links the initial vertex of the initial edge of the first arc (otherwise final vertex is linked)
     * @return A vertex linking path
     */
   def vertexLinkingPath[P <: Polygon](
@@ -564,7 +569,7 @@ object NormalPath {
     if (accum.edges.last.terminalEdge.flip == accum.edges.head.initialEdge)
       accum
     else {
-      val newarcface = complex.faces
+      val newarcface: P = complex.faces
         .find(_.boundary.contains(accum.edges.last.terminalEdge.flip))
         .get
       val newarcinitial =
@@ -590,7 +595,7 @@ object NormalPath {
     * @param path the path
     * @param indextomove index of the arc whose terminal edge contains the vertex the path has to be moved across
     * @param lefttoright whether to move the path from the left side to the right side of a vertex
-    * @return 
+    * @return
     */
   def otherWayAroundVertex[P <: Polygon](
       complex: TwoComplex[P],
@@ -623,6 +628,7 @@ object NormalPath {
     * @param shortestedgeindex the index of the middle arc out of the three arcs
     * @return shortened path
     */
+    @deprecated("using otherWayAroundInstead")
   def shortenPathCrossingVertex(
       complex: TwoComplex[SkewPantsHexagon],
       path: NormalPath[SkewPantsHexagon],
@@ -705,6 +711,7 @@ object NormalPath {
     * @param path the NormalPath
     * @return the shortened path
     */
+  @deprecated("Use other way around vertex")
   def removeArcBetweenAdjacentSkewCurveEdges(
       complex: TwoComplex[SkewPantsHexagon],
       path: NormalPath[SkewPantsHexagon]

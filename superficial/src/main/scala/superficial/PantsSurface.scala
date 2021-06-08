@@ -690,7 +690,7 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
         getSkewCurve(PantsBoundary(pants, direction), cs)
           .map {
             case (curve, left) => (curve.length.toDouble) / 2
-          }          
+          }
       }
     } else {
       Z3.flipEnum.map { direction: Z3 =>
@@ -703,11 +703,14 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
   }
 
   def sideLength(edge: Edge): Double = {
-    require(boundary.forall(e => !e.isInstanceOf[BoundaryEdge]), "Cannot assign lengths to all sides if one is a boundaryedge")
+    require(
+      boundary.forall(e => !e.isInstanceOf[BoundaryEdge]),
+      "Cannot assign lengths to all sides if one is a boundaryedge"
+    )
     edge match {
       case s: SkewCurveEdge => s.length.toDouble
-      case p: PantsSeam => SkewPantsHexagon.getSeamLength(this, p).toDouble
-      case _ => 0
+      case p: PantsSeam     => SkewPantsHexagon.getSeamLength(this, p).toDouble
+      case _                => 0
     }
   }
 
