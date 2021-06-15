@@ -740,8 +740,8 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
           ),
           Hexagon.side(
             edgeLengths(i).getOrElse(0),
-            edgeLengths((i + 2) % 3).getOrElse(0),
-            edgeLengths((i + 1) % 3).getOrElse(0)
+            edgeLengths((i + 1) % 3).getOrElse(0),
+            edgeLengths((i + 2) % 3).getOrElse(0)
           )
         )
       }
