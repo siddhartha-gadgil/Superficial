@@ -548,7 +548,10 @@ object PLPath {
         val plpaths = for {
           path <- normalpaths.flatten
           shortPathOpt = uniqrepuptoflipandcyclicper.get(path)
-          _ = assert(shortPathOpt.nonEmpty, s"path $path not in uniqueUptoFlipAndCyclicPer")
+          _ = assert(
+            shortPathOpt.nonEmpty,
+            s"path $path not in uniqueUptoFlipAndCyclicPer"
+          )
           shortPath <- shortPathOpt
           spOpt = enumdata.get(shortPath)
           _ = assert(spOpt.nonEmpty, s"path $shortPath not in enumdata")
@@ -558,17 +561,19 @@ object PLPath {
         val newminplpathOpt = plpaths.flatten
           .zip(plpaths.flatten.map(_.length))
           .minByOption(_._2)
-        newminplpathOpt.map{newminplpath => 
-          if (newminplpath._2 < path.length)
-            shorten(
-              complex,
-              newminplpath._1,
-              sep,
-              uniqrepuptoflipandcyclicper,
-              enumdata
-            )
-          else Some(path)
-        }.getOrElse (Some(path))
+        newminplpathOpt
+          .map { newminplpath =>
+            if (newminplpath._2 < path.length)
+              shorten(
+                complex,
+                newminplpath._1,
+                sep,
+                uniqrepuptoflipandcyclicper,
+                enumdata
+              )
+            else Some(path)
+          }
+          .getOrElse(Some(path))
       }
     } else Some(path)
   }
@@ -729,12 +734,27 @@ object PLPath {
       tol: BigDecimal
   ): Set[PLPath] = {
     require(surf.isClosedSurface, "Surface is not closed")
-    val enumlenbound = ((surf.cs.map(_.length).min)*tol).toDouble
-    val uniqclpaths = NormalPath.uniqueUptoFlipAndCyclicPerm(NormalPath.enumerate[SkewPantsHexagon](surf, Some(sizebound)).filter(_.isClosed))
-    val plpaths = PLPath.enumMinimalClosedFamily(uniqclpaths.values.toVector, sep, enumlenbound)
-    val ndgplpaths = plpaths.values.flatten.toVector.filter(_.base.length<sizebound)
-    val shortPaths = PLPath.removeFlipAndCyclicPer(ndgplpaths.flatMap(path => PLPath.shorten(surf, path, sep, uniqclpaths, plpaths)).toSet)
-    postEnumIsotopyCheck(surf, shortPaths, sep, uniqclpaths, plpaths).map(_.minBy(_.length))
+    val enumlenbound = ((surf.cs.map(_.length).min) * tol).toDouble
+    val uniqclpaths = NormalPath.uniqueUptoFlipAndCyclicPerm(
+      NormalPath
+        .enumerate[SkewPantsHexagon](surf, Some(sizebound))
+        .filter(_.isClosed)
+    )
+    val plpaths = PLPath.enumMinimalClosedFamily(
+      uniqclpaths.values.toVector,
+      sep,
+      enumlenbound
+    )
+    val ndgplpaths =
+      plpaths.values.flatten.toVector.filter(_.base.length < sizebound)
+    val shortPaths = PLPath.removeFlipAndCyclicPer(
+      ndgplpaths
+        .flatMap(path => PLPath.shorten(surf, path, sep, uniqclpaths, plpaths))
+        .toSet
+    )
+    postEnumIsotopyCheck(surf, shortPaths, sep, uniqclpaths, plpaths).map(
+      _.minBy(_.length)
+    )
   }
 
   //Unsure of the mathematics behind this, pending
