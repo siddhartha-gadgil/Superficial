@@ -73,7 +73,7 @@ case class PantsBoundary(pants: Index, direction: Z3) {
     (pants < that.pants) || ((pants == that.pants) && (direction < that.direction))
 }
 
-object PantsBoundary{
+object PantsBoundary {
   implicit val rw: RW[PantsBoundary] = macroRW
 }
 
@@ -527,7 +527,7 @@ object SkewCurve {
           tcs <- polyEnumerate(ys, twists, lengths)
         } yield c +: tcs
     }
-  
+
   implicit val rw: RW[SkewCurve] = macroRW
 }
 
@@ -693,23 +693,13 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
     *
     * @return
     */
-  def edgeLengths: Vector[Option[Double]] = {
-    if (top) {
-      Z3.enum.map { direction: Z3 =>
-        getSkewCurve(PantsBoundary(pants, direction), cs)
-          .map {
-            case (curve, left) => (curve.length.toDouble) / 2
-          }
-      }
-    } else {
-      Z3.flipEnum.map { direction: Z3 =>
-        getSkewCurve(PantsBoundary(pants, direction), cs)
-          .map {
-            case (curve, left) => curve.length.toDouble / 2
-          }
-      }
+  def edgeLengths: Vector[Option[Double]] =
+    Z3.enum.map { direction: Z3 =>
+      getSkewCurve(PantsBoundary(pants, direction), cs)
+        .map {
+          case (curve, left) => (curve.length.toDouble) / 2
+        }
     }
-  }
 
   def sideLength(edge: Edge): Double = {
     require(
@@ -752,8 +742,8 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
           ),
           Hexagon.side(
             edgeLengths(i).getOrElse(0),
-            edgeLengths((i + 1) % 3).getOrElse(0),
-            edgeLengths((i + 2) % 3).getOrElse(0)
+            edgeLengths((i + 2) % 3).getOrElse(0),
+            edgeLengths((i + 1) % 3).getOrElse(0)
           )
         )
       }
