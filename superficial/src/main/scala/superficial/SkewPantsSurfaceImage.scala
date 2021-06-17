@@ -98,10 +98,10 @@ final case class SkewPantsSurfaceImage(skp: SkewPantsSurface, radius: Double) {
     skp.indices
       .map { pants =>
         (images(SkewPantsHexagon(pants, true, skp.cs))
-          .on(square[Algebra, Drawing](radius * 2.2).fillColor(Color.white)))
+          .on(square[Algebra, Drawing](radius * 2.2)))
           .above(
             (images(SkewPantsHexagon(pants, false, skp.cs)))
-              .on(square[Algebra, Drawing](radius * 2.2).fillColor(Color.white))
+              .on(square[Algebra, Drawing](radius * 2.2))
           )
       }
       .reduce(_ beside _)
