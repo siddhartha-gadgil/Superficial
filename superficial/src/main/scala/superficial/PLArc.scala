@@ -792,7 +792,7 @@ object PLPath {
       )
     val plpaths: Map[NormalPath[SkewPantsHexagon], Option[PLPath]] =
       PLPath.enumMinimalClosedFamily(
-        uniqclpaths.values.toVector,
+        uniqclpaths.values.toSet,
         sep,
         enumlenbound
       )
