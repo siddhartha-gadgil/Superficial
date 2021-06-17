@@ -1,5 +1,6 @@
 package superficial
 import scala.collection.parallel._, immutable.ParSet
+import upickle.default.{ReadWriter => RW, macroRW, _}
 
 import Polygon.Index
 import scala.tools.nsc.doc.html.HtmlTags
@@ -312,6 +313,7 @@ case class PLPath(
 }
 
 object PLPath {
+  implicit val rw: RW[PLPath] = macroRW
 
   /**
     * determine initial displacement of the second arc to glue with first arc
@@ -513,6 +515,25 @@ object PLPath {
     require(paths.forall(_.isClosed), "All paths are not closed")
     paths.zip(paths.map(p => enumMinimalClosed(p, sep, bound))).toMap
   }
+
+  /**
+    * Make enumerated PL paths into strings to save
+    *
+    * @param data the enumerated PL paths
+    * @return Json encoded data
+    */
+  def minimalClosedFamilyToJson(
+      data: Map[NormalPath[SkewPantsHexagon], Option[PLPath]]
+  ): String = write(data)
+
+  /**
+    * Read enumerated PL paths from string
+    *
+    * @param js string with json data
+    * @return enumerated shortest paths
+    */
+  def minimalClosedFamilyFromJson(js: String) =
+    read[Map[NormalPath[SkewPantsHexagon], Option[PLPath]]](js)
 
   /**
     * Shorten a PL-path by moving path across vertices and checking if length reduces
@@ -734,20 +755,23 @@ object PLPath {
       tol: BigDecimal
   ): Set[PLPath] = {
     require(surf.isClosedSurface, "Surface is not closed")
-    val enumlenbound = ((surf.cs.map(_.length).min) * tol).toDouble
-    val uniqclpaths = NormalPath.uniqueUptoFlipAndCyclicPerm(
-      NormalPath
-        .enumerate[SkewPantsHexagon](surf, Some(sizebound))
-        .filter(_.isClosed)
-    )
-    val plpaths = PLPath.enumMinimalClosedFamily(
-      uniqclpaths.values.toVector,
-      sep,
-      enumlenbound
-    )
-    val ndgplpaths =
+    val enumlenbound: Double = ((surf.cs.map(_.length).min) * tol).toDouble
+    val uniqclpaths
+        : Map[NormalPath[SkewPantsHexagon], NormalPath[SkewPantsHexagon]] =
+      NormalPath.uniqueUptoFlipAndCyclicPerm(
+        NormalPath
+          .enumerate[SkewPantsHexagon](surf, Some(sizebound))
+          .filter(_.isClosed)
+      )
+    val plpaths: Map[NormalPath[SkewPantsHexagon], Option[PLPath]] =
+      PLPath.enumMinimalClosedFamily(
+        uniqclpaths.values.toVector,
+        sep,
+        enumlenbound
+      )
+    val ndgplpaths: Vector[PLPath] =
       plpaths.values.flatten.toVector.filter(_.base.length < sizebound)
-    val shortPaths = PLPath.removeFlipAndCyclicPer(
+    val shortPaths: Set[PLPath] = PLPath.removeFlipAndCyclicPer(
       ndgplpaths
         .flatMap(path => PLPath.shorten(surf, path, sep, uniqclpaths, plpaths))
         .toSet
@@ -766,4 +790,61 @@ object PLPath {
     val nearbyarcs = NormalPath.pathNeighbouringArcs(complex, baseplpath.base)
     paths.filter(p => p.base.edges.toSet.subsetOf(nearbyarcs))
   }
+
+  def shortPathsData(
+      surf: SkewPantsSurface,
+      sizebound: Int,
+      sep: BigDecimal,
+      tol: BigDecimal
+  ) = {
+    require(surf.isClosedSurface, "Surface is not closed")
+    val enumlenbound: Double = ((surf.cs.map(_.length).min) * tol).toDouble
+    val clPaths = NormalPath
+      .enumerate[SkewPantsHexagon](surf, Some(sizebound))
+      .filter(_.isClosed)
+    val uniqclpaths
+        : Map[NormalPath[SkewPantsHexagon], NormalPath[SkewPantsHexagon]] =
+      NormalPath.uniqueUptoFlipAndCyclicPerm(
+        clPaths
+      )
+    val plpaths: Map[NormalPath[SkewPantsHexagon], Option[PLPath]] =
+      PLPath.enumMinimalClosedFamily(
+        uniqclpaths.values.toVector,
+        sep,
+        enumlenbound
+      )
+    val ndgplpaths: Vector[PLPath] =
+      plpaths.values.flatten.toVector.filter(_.base.length < sizebound)
+    val shortPaths: Set[PLPath] = PLPath.removeFlipAndCyclicPer(
+      ndgplpaths
+        .flatMap(path => PLPath.shorten(surf, path, sep, uniqclpaths, plpaths))
+        .toSet
+    )
+    postEnumIsotopyCheck(surf, shortPaths, sep, uniqclpaths, plpaths).map(
+      _.minBy(_.length)
+    )
+  }
+}
+
+case class ShortPathsData(
+    surf: SkewPantsSurface,
+    sizebound: Int,
+    sep: BigDecimal,
+    tol: BigDecimal,
+    enumLenBound: Double,
+    clPaths: Map[NormalPath[SkewPantsHexagon], NormalPath[SkewPantsHexagon]],
+    uniqueClPaths: Map[NormalPath[SkewPantsHexagon], NormalPath[
+      SkewPantsHexagon
+    ]],
+    plPaths: Map[NormalPath[SkewPantsHexagon], Option[PLPath]],
+    baseShortPaths: Set[PLPath],
+    shortPaths: Set[PLPath]
+) {
+  def toJson: String = write(this)
+}
+
+object ShortPathsData {
+  implicit val rw: RW[ShortPathsData] = macroRW
+
+  def fromJson(s: String) = read[ShortPathsData](s)
 }

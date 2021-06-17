@@ -1,8 +1,7 @@
 package superficial
 
 import Polygon.Index
-import scala.tools.nsc.doc.html.HtmlTags
-import monix.catnap.cancelables.AssignableCancelableF
+import upickle.default.{ReadWriter => RW, macroRW, _}
 
 /**
   * A normal arc in a face
@@ -147,6 +146,8 @@ object NormalArc {
     } yield
       NormalArc(i1, i2, arc.face)).union(adjacentPolygonArcs(complex, arc))
   }
+
+  implicit val rw: RW[NormalArc[SkewPantsHexagon]] = macroRW
 }
 
 case class NormalPath[P <: Polygon](edges: Vector[NormalArc[P]]) {
@@ -214,6 +215,7 @@ case class NormalPath[P <: Polygon](edges: Vector[NormalArc[P]]) {
 }
 
 object NormalPath {
+  implicit val rw: RW[NormalPath[SkewPantsHexagon]] = macroRW
 
   @annotation.tailrec
   def enumerateRec[P <: Polygon](

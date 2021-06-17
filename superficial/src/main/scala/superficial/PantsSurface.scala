@@ -2,6 +2,7 @@ package superficial
 
 import PantsSurface._, Polygon.Index
 import scala.math._
+import upickle.default.{ReadWriter => RW, macroRW, _}
 
 /**
   * One of 0, 1 and 2, indexing the boundaries of a pair of pants.
@@ -32,6 +33,8 @@ object Z3 {
     * flipped enumeration
     */
   val flipEnum = Vector(0, 2, 1).map(Z3(_))
+
+  implicit val rw: RW[Z3] = macroRW
 }
 
 /**
@@ -68,6 +71,10 @@ case class PantsBoundary(pants: Index, direction: Z3) {
     */
   def <(that: PantsBoundary): Boolean =
     (pants < that.pants) || ((pants == that.pants) && (direction < that.direction))
+}
+
+object PantsBoundary{
+  implicit val rw: RW[PantsBoundary] = macroRW
 }
 
 /**
@@ -520,6 +527,8 @@ object SkewCurve {
           tcs <- polyEnumerate(ys, twists, lengths)
         } yield c +: tcs
     }
+  
+  implicit val rw: RW[SkewCurve] = macroRW
 }
 
 /**
@@ -801,6 +810,8 @@ object SkewPantsHexagon {
       }
     }
   }
+
+  implicit val rw: RW[SkewPantsHexagon] = macroRW
 }
 
 case class SkewPantsSurface(numPants: Index, cs: Set[SkewCurve])
@@ -854,6 +865,8 @@ object SkewPantsSurface {
     SkewCurve.polyEnumerate(surf.cs.toVector, twists, lengths).map { tcs =>
       SkewPantsSurface(surf.numPants, tcs.toSet)
     }
+
+  implicit val rw: RW[SkewPantsSurface] = macroRW
 }
 
 /**
