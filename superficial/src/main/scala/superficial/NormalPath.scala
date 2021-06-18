@@ -2,6 +2,7 @@ package superficial
 
 import Polygon.Index
 import upickle.default.{ReadWriter => RW, macroRW, _}
+import scala.collection.immutable.VectorImpl
 
 /**
   * A normal arc in a face
@@ -239,7 +240,7 @@ object NormalPath {
             if (i2 != i1)
             arc = NormalArc(i1, i2, face)
           } yield path :+ arc
-        ).filter(p)
+        ).filter(endsGoAround(_).isEmpty).filter(p)
       enumerateRec(
         complex,
         maxAppendLength.map(_ - 1),
@@ -308,18 +309,16 @@ object NormalPath {
       .head
 
   /**
-    * Checks if there is a chain of NormalArcs at the end of a NormalPath that just go around a vertex to come back to the same face
+    * Checks if there is a chain of NormalArcs at the end of a NormalPath that is closed and vertex-linking
+    * If yes, returns the vector of arcs preceding the vertex-linking path at the end
     *
-    * @param complex the complex, practically a SkewPantsSurface
     * @param path the NormalPath
     * @return
     */
   def endsGoAround[P <: Polygon](
-      complex: TwoComplex[P],
       path: NormalPath[P]
-  ): Boolean =
+  ): Option[Vector[NormalArc[P]]] =
     endsGoAroundrec(
-      complex,
       path.edges.init,
       path.edges.last.whichVertexLinking,
       NormalPath[P](Vector(path.edges.last))
@@ -327,27 +326,33 @@ object NormalPath {
 
   // Helper for endsGoAround
   def endsGoAroundrec[P <: Polygon](
-      complex: TwoComplex[P],
       initedges: Vector[NormalArc[P]],
       optvertex: Option[Vertex],
       accum: NormalPath[P]
-  ): Boolean = optvertex match {
-    case None => false
+  ): Option[Vector[NormalArc[P]]] = optvertex match {
+    case None => None
     case Some(v) =>
       initedges.isEmpty match {
-        case true => startEndSameFace(complex, accum)
+        case true =>
+          if (accum.edges.head.initialEdge == accum.edges.last.terminalEdge.flip)
+            Some(initedges)
+          else None
         case false =>
           initedges.last.whichVertexLinking match {
             case Some(newv) =>
               if (newv == v)
                 endsGoAroundrec(
-                  complex,
                   initedges.init,
                   optvertex,
                   NormalPath[P](initedges.last +: accum.edges)
                 )
-              else startEndSameFace(complex, accum)
-            case None => startEndSameFace(complex, accum)
+              else if (accum.edges.head.initialEdge == accum.edges.last.terminalEdge.flip)
+                Some(initedges)
+              else None
+            case None =>
+              if (accum.edges.head.initialEdge == accum.edges.last.terminalEdge.flip)
+                Some(initedges)
+              else None
           }
       }
   }
@@ -468,6 +473,30 @@ object NormalPath {
   }
 
   /**
+    * Removes vertex linking closed subpaths from the edges of a normalpath
+    * Optionally returns the resulting normalpath, with None returned if the normalpath ends up being trivial
+    *
+    * @param edges the edges
+    * @param recedges parameter for recursion, should equal edges at the start
+    * @return
+    */
+  def removeVertexLinkingSubPaths[P <: Polygon](
+      edges: Vector[NormalArc[P]],
+      recedges: Vector[NormalArc[P]]
+  ): Option[NormalPath[P]] = recedges.isEmpty match {
+    case true => if (edges.isEmpty) None else Some(NormalPath(edges))
+    case false =>
+      endsGoAround(NormalPath(recedges)) match {
+        case None => removeVertexLinkingSubPaths(edges, recedges.init)
+        case Some(newedges) =>
+          removeVertexLinkingSubPaths(
+            newedges ++ edges.diff(recedges),
+            newedges
+          )
+      }
+  }
+
+  /**
     * From a given closed NormalPath, recursively remove NormalArcs that go from an edge to itself and
     * replace a subsequence of NormalArcs in a single face by a single NormalArc
     *
@@ -513,7 +542,7 @@ object NormalPath {
             )
           }
         })
-        .getOrElse(Some(NormalPath(newedges)))
+        .getOrElse(removeVertexLinkingSubPaths(newedges, newedges))
     }
   }
 
@@ -630,7 +659,7 @@ object NormalPath {
     * @param shortestedgeindex the index of the middle arc out of the three arcs
     * @return shortened path
     */
-    @deprecated("using otherWayAroundInstead")
+  @deprecated("using otherWayAroundInstead")
   def shortenPathCrossingVertex(
       complex: TwoComplex[SkewPantsHexagon],
       path: NormalPath[SkewPantsHexagon],
