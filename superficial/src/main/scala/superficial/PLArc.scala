@@ -261,36 +261,36 @@ case class PLPath(
   )
   val plArcs: Vector[PLArc] = for (i <- (0 to (base.edges.size - 1)).toVector)
     yield PLArc(base.edges(i), initialDisplacements(i), finalDisplacements(i))
-  // require(
-  //   plArcs.zip(plArcs.tail).forall {
-  //     case (arc1, arc2) =>
-  //       arc1.base.terminalEdge match {
-  //         case s1: SkewCurveEdge =>
-  //           arc2.base.initialEdge match {
-  //             case s2: SkewCurveEdge =>
-  //               SkewCurveEdge.comparePoints(
-  //                 s1,
-  //                 arc1.finalDisplacement,
-  //                 s2,
-  //                 arc2.initialDisplacement
-  //               )
-  //             case p2: PantsSeam => false
-  //           }
-  //         case p1: PantsSeam =>
-  //           arc2.base.initialEdge match {
-  //             case s2: SkewCurveEdge => false
-  //             case p2: PantsSeam =>
-  //               PantsSeam.compareSeamPoints(
-  //                 p1,
-  //                 arc1.finalDisplacement,
-  //                 p2,
-  //                 arc2.initialDisplacement,
-  //                 SkewPantsHexagon.getSeamLength(arc1.base.face, p1)
-  //               )
-  //           }
-  //       }
-  //   }
-  // )
+  require(
+    plArcs.zip(plArcs.tail).forall {
+      case (arc1, arc2) =>
+        arc1.base.terminalEdge match {
+          case s1: SkewCurveEdge =>
+            arc2.base.initialEdge match {
+              case s2: SkewCurveEdge =>
+                SkewCurveEdge.comparePoints(
+                  s1,
+                  arc1.finalDisplacement,
+                  s2,
+                  arc2.initialDisplacement
+                )
+              case p2: PantsSeam => false
+            }
+          case p1: PantsSeam =>
+            arc2.base.initialEdge match {
+              case s2: SkewCurveEdge => false
+              case p2: PantsSeam =>
+                PantsSeam.compareSeamPoints(
+                  p1,
+                  arc1.finalDisplacement,
+                  p2,
+                  arc2.initialDisplacement,
+                  SkewPantsHexagon.getSeamLength(arc1.base.face, p1)
+                )
+            }
+        }
+    }
+  )
   lazy val length: Double = plArcs.map(arc => arc.length).sum
   def isClosed(tol: Double): Boolean = base.isClosed && {
     (base.initialEdge == base.terminalEdge) match {
