@@ -16,7 +16,7 @@ case class PLArc(
       .boundary(base.terminal)
       .isInstanceOf[BoundaryEdge])
   )
-  val hexagonInitialDisplacement: Option[Double] =
+  lazy val hexagonInitialDisplacement: Option[Double] =
     base.face.boundary(base.initial) match {
       case b: BoundaryEdge => None
       case s: SkewCurveEdge =>
@@ -29,7 +29,7 @@ case class PLArc(
         )
       case p: PantsSeam => Some(initialDisplacement.doubleValue)
     }
-  val hexagonFinalDisplacement: Option[Double] =
+  lazy val hexagonFinalDisplacement: Option[Double] =
     base.face.boundary(base.terminal) match {
       case b: BoundaryEdge => None
       case s: SkewCurveEdge =>
@@ -42,7 +42,7 @@ case class PLArc(
         )
       case p: PantsSeam => Some(finalDisplacement.doubleValue)
     }
-  val length: Double = {
+  lazy val length: Double = {
     require(
       base.face.edgeLengths
         .forall(x => x.isDefined) && hexagonInitialDisplacement.isDefined && hexagonFinalDisplacement.isDefined
@@ -259,7 +259,7 @@ case class PLPath(
       .isInstanceOf[BoundaryEdge] || base.edges.last.terminalEdge
       .isInstanceOf[BoundaryEdge])
   )
-  val plArcs: Vector[PLArc] = for (i <- (0 to (base.edges.size - 1)).toVector)
+  lazy val plArcs: Vector[PLArc] = for (i <- (0 to (base.edges.size - 1)).toVector)
     yield PLArc(base.edges(i), initialDisplacements(i), finalDisplacements(i))
   require(
     plArcs.zip(plArcs.tail).forall {
