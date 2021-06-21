@@ -693,7 +693,7 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
     *
     * @return
     */
-  def edgeLengths: Vector[Option[Double]] =
+  lazy val edgeLengths: Vector[Option[Double]] =
     Z3.enum.map { direction: Z3 =>
       getSkewCurve(PantsBoundary(pants, direction), cs)
         .map {
@@ -713,7 +713,7 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
     }
   }
 
-  def seamAndLength: Vector[(PantsSeam, Double)] = {
+  lazy val seamAndLength: Vector[(PantsSeam, Double)] = {
     require(edgeLengths.forall(x => x.isDefined))
     if (top) {
       for (i <- Vector(0, 1, 2)) yield {
