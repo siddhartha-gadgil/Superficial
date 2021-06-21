@@ -749,6 +749,8 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
       }
     }
   }
+
+  lazy val seamLengthMap = seamAndLength.toMap
 }
 
 object SkewPantsHexagon {
@@ -783,7 +785,7 @@ object SkewPantsHexagon {
     }
   }
   def getSeamLength(sph: SkewPantsHexagon, ps: PantsSeam): BigDecimal = {
-    BigDecimal(sph.seamAndLength.filter(x => x._1 == ps)(0)._2)
+    BigDecimal(sph.seamLengthMap(ps))
   }
 
   def adjacentSkewCurveEdges(face: Polygon, i1: Index, i2: Index): Boolean = {
