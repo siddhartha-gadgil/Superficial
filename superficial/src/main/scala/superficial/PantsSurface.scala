@@ -782,8 +782,8 @@ object SkewPantsHexagon {
         }
     }
   }
-  def getSeamLength(sph: SkewPantsHexagon, ps: PantsSeam): BigDecimal = {
-    BigDecimal(sph.seamAndLength.filter(x => x._1 == ps)(0)._2)
+  def getSeamLength(sph: SkewPantsHexagon, ps: PantsSeam): Double = {
+    sph.seamAndLength.filter(x => x._1 == ps)(0)._2
   }
 
   def adjacentSkewCurveEdges(face: Polygon, i1: Index, i2: Index): Boolean = {
