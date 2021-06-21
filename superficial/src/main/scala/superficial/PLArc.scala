@@ -8,8 +8,8 @@ import doodle.syntax.path
 
 case class PLArc(
     base: NormalArc[SkewPantsHexagon],
-    initialDisplacement: BigDecimal,
-    finalDisplacement: BigDecimal
+    initialDisplacement: Double,
+    finalDisplacement: Double
 ) {
   require(
     !(base.face.boundary(base.initial).isInstanceOf[BoundaryEdge] || base.face
@@ -84,7 +84,7 @@ case class PLArc(
     * @param threshold how close the final point should be to a vertex
     * @return
     */
-  def finalPointClosetoVertex(threshold: BigDecimal): Option[Boolean] = {
+  def finalPointClosetoVertex(threshold: Double): Option[Boolean] = {
     if (finalDisplacement < threshold) Some(true)
     else if (math.abs(
                base.face
@@ -95,9 +95,13 @@ case class PLArc(
 }
 
 object PLArc {
+  def rng(init: Double) (term: Double) (sep : Double) = Vector.tabulate(((term- init)/sep).floor.toInt)(j => init + j * sep)
+
+  rng (3) (2) (1)
+
   def freeEnumerate(
       arc: NormalArc[SkewPantsHexagon],
-      sep: BigDecimal
+      sep: Double
   ): ParSet[PLArc] = {
     require(
       !(arc.terminalEdge.isInstanceOf[BoundaryEdge] || arc.initialEdge
@@ -107,35 +111,35 @@ object PLArc {
       case e1: SkewCurveEdge =>
         arc.terminalEdge match {
           case e2: SkewCurveEdge =>
-            for (d1: BigDecimal <- BigDecimal(0) to e1.length by sep;
-                 d2: BigDecimal <- BigDecimal(0) to e2.length by sep)
+            for (d1: Double <- rng (0) (e1.length.toDouble) (sep);
+                 d2: Double <- rng (0) (e2.length.toDouble) (sep))
               yield PLArc(arc, d1, d2)
           case s2: PantsSeam =>
-            for (d1: BigDecimal <- BigDecimal(0) to e1.length by sep;
-                 d2: BigDecimal <- BigDecimal(0) to SkewPantsHexagon
-                   .getSeamLength(arc.face, s2) by sep)
+            for (d1: Double <- rng (0) (e1.length.toDouble) (sep);
+                 d2: Double <- rng (0) (SkewPantsHexagon
+                   .getSeamLength(arc.face, s2).toDouble) (sep))
               yield PLArc(arc, d1, d2)
         }
       case s1: PantsSeam =>
         arc.terminalEdge match {
           case e2: SkewCurveEdge =>
             for {
-              d1: BigDecimal <- BigDecimal(0) to SkewPantsHexagon.getSeamLength(
+              d1: Double <- rng (0) (SkewPantsHexagon.getSeamLength(
                 arc.face,
                 s1
-              ) by sep
-              d2: BigDecimal <- BigDecimal(0) to e2.length by sep
+              ).toDouble) (sep)
+              d2: Double <- rng (0) (e2.length.toDouble) (sep)
             } yield PLArc(arc, d1, d2)
           case s2: PantsSeam =>
             for {
-              d1: BigDecimal <- BigDecimal(0) to SkewPantsHexagon.getSeamLength(
+              d1: Double <- rng (0) (SkewPantsHexagon.getSeamLength(
                 arc.face,
                 s1
-              ) by sep
-              d2: BigDecimal <- BigDecimal(0) to SkewPantsHexagon.getSeamLength(
+              ).toDouble) (sep)
+              d2: Double <- rng (0) (SkewPantsHexagon.getSeamLength(
                 arc.face,
                 s2
-              ) by sep
+              ).toDouble) (sep)
             } yield PLArc(arc, d1, d2)
         }
     }
@@ -150,7 +154,7 @@ object PLArc {
     */
   def freeEnumeratePath(
       arc: NormalArc[SkewPantsHexagon],
-      sep: BigDecimal
+      sep: Double
   ): ParSet[PLPath] = {
     require(
       !(arc.terminalEdge.isInstanceOf[BoundaryEdge] || arc.initialEdge
@@ -161,8 +165,8 @@ object PLArc {
         arc.terminalEdge match {
           case e2: SkewCurveEdge =>
             for {
-              d1: BigDecimal <- BigDecimal(0) to e1.length by sep
-              d2: BigDecimal <- BigDecimal(0) to e2.length by sep
+              d1: Double <- rng (0) (e1.length.toDouble) (sep)
+              d2: Double <- rng (0) (e2.length.toDouble) (sep)
             } yield
               PLPath(
                 NormalPath[SkewPantsHexagon](Vector(arc)),
@@ -171,11 +175,11 @@ object PLArc {
               )
           case s2: PantsSeam =>
             for {
-              d1: BigDecimal <- BigDecimal(0) to e1.length by sep
-              d2: BigDecimal <- BigDecimal(0) to SkewPantsHexagon.getSeamLength(
+              d1: Double <- rng (0) (e1.length.toDouble) (sep)
+              d2: Double <- rng (0) (SkewPantsHexagon.getSeamLength(
                 arc.face,
                 s2
-              ) by sep
+              ).toDouble) (sep)
             } yield
               PLPath(
                 NormalPath[SkewPantsHexagon](Vector(arc)),
@@ -187,11 +191,11 @@ object PLArc {
         arc.terminalEdge match {
           case e2: SkewCurveEdge =>
             for {
-              d1: BigDecimal <- BigDecimal(0) to SkewPantsHexagon.getSeamLength(
+              d1: Double <- rng (0) (SkewPantsHexagon.getSeamLength(
                 arc.face,
                 s1
-              ) by sep
-              d2: BigDecimal <- BigDecimal(0) to e2.length by sep
+              ).toDouble) (sep)
+              d2: Double <- rng (0) (e2.length.toDouble) (sep)
             } yield
               PLPath(
                 NormalPath[SkewPantsHexagon](Vector(arc)),
@@ -200,14 +204,14 @@ object PLArc {
               )
           case s2: PantsSeam =>
             for {
-              d1: BigDecimal <- BigDecimal(0) to SkewPantsHexagon.getSeamLength(
+              d1: Double <- rng (0) (SkewPantsHexagon.getSeamLength(
                 arc.face,
                 s1
-              ) by sep
-              d2: BigDecimal <- BigDecimal(0) to SkewPantsHexagon.getSeamLength(
+              ).toDouble) (sep)
+              d2: Double <- rng (0) (SkewPantsHexagon.getSeamLength(
                 arc.face,
                 s2
-              ) by sep
+              ).toDouble) (sep)
             } yield
               PLPath(
                 NormalPath[SkewPantsHexagon](Vector(arc)),
@@ -220,8 +224,8 @@ object PLArc {
 
   def fixedInitialEnumerate(
       arc: NormalArc[SkewPantsHexagon],
-      initialDisplacement: BigDecimal,
-      sep: BigDecimal
+      initialDisplacement: Double,
+      sep: Double
   ): ParSet[PLArc] = {
     require(
       !(arc.terminalEdge.isInstanceOf[BoundaryEdge] || arc.initialEdge
@@ -229,14 +233,14 @@ object PLArc {
     )
     arc.terminalEdge match {
       case e2: SkewCurveEdge =>
-        for (d2: BigDecimal <- BigDecimal(0) to e2.length by sep)
+        for (d2: Double <- rng (0) (e2.length.toDouble) (sep))
           yield PLArc(arc, initialDisplacement, d2)
       case s2: PantsSeam =>
         for {
-          d2: BigDecimal <- BigDecimal(0) to SkewPantsHexagon.getSeamLength(
+          d2: Double <- rng (0) (SkewPantsHexagon.getSeamLength(
             arc.face,
             s2
-          ) by sep
+          ).toDouble) (sep)
         } yield PLArc(arc, initialDisplacement, d2)
     }
   }.to(ParSet)
@@ -244,8 +248,8 @@ object PLArc {
 
 case class PLPath(
     base: NormalPath[SkewPantsHexagon],
-    initialDisplacements: Vector[BigDecimal],
-    finalDisplacements: Vector[BigDecimal]
+    initialDisplacements: Vector[Double],
+    finalDisplacements: Vector[Double]
 ) {
   require(
     (base.edges.size == initialDisplacements.size) && (base.edges.size == finalDisplacements.size)
@@ -313,6 +317,7 @@ case class PLPath(
 }
 
 object PLPath {
+  import PLArc.rng
   implicit val rw: RW[PLPath] = macroRW
 
   /**
@@ -325,9 +330,9 @@ object PLPath {
     */
   def findInitDisplacement(
       arc1: NormalArc[SkewPantsHexagon],
-      arc1displacement: BigDecimal,
+      arc1displacement: Double,
       arc2: NormalArc[SkewPantsHexagon]
-  ): BigDecimal = {
+  ): Double = {
     require(
       (arc1.terminalEdge == arc2.initialEdge) || (arc1.terminalEdge == arc2.initialEdge.flip)
     )
@@ -335,7 +340,7 @@ object PLPath {
     arc2.initialEdge match {
       case e2: SkewCurveEdge =>
         if (arc1.terminalEdge == arc2.initialEdge) arc1displacement
-        else (e2.length - arc1displacement)
+        else (e2.length.toDouble - arc1displacement)
       case s2: PantsSeam =>
         if (arc1.terminalEdge == arc2.initialEdge) arc1displacement
         else (SkewPantsHexagon.getSeamLength(arc2.face, s2) - arc1displacement)
@@ -349,13 +354,13 @@ object PLPath {
     * @param baseEdges Edges of a NormalPath part of which has been enumerated into a PLPath
     * @param numdone Number of edges of the NormalPath that have been enumerated into accum
     * @param sep Separation of endpoints of the appended PLArc
-    * @return Set of PLPaths extending accum by one PLArcs with the endpoints of PLPaths separated by sep
+    * @return Set of PLPaths extending accum by one PLArcs with the endpoints of PLPaths separated.toDouble) (sep)
     */
   def appendPLArc(
       accum: ParSet[PLPath],
       baseEdges: Vector[NormalArc[SkewPantsHexagon]],
       numdone: Index,
-      sep: BigDecimal
+      sep: Double
   ): ParSet[PLPath] = {
     if (numdone == baseEdges.size) accum
     else {
@@ -363,7 +368,7 @@ object PLPath {
         case e2: SkewCurveEdge =>
           for {
             path <- accum
-            d2: BigDecimal <- (BigDecimal(0) to e2.length by sep)
+            d2: Double <- (rng (0) (e2.length.toDouble) (sep))
           } yield
             PLPath(
               path.base.:+(baseEdges(numdone)),
@@ -377,10 +382,10 @@ object PLPath {
         case s2: PantsSeam =>
           for {
             path <- accum
-            d2: BigDecimal <- BigDecimal(0) to SkewPantsHexagon.getSeamLength(
+            d2: Double <- rng (0) (SkewPantsHexagon.getSeamLength(
               baseEdges(numdone).face,
               s2
-            ) by sep
+            ).toDouble) (sep)
           } yield
             PLPath(
               path.base.:+(baseEdges(numdone)),
@@ -418,7 +423,7 @@ object PLPath {
       accum: ParSet[PLPath],
       baseedges: Vector[NormalArc[SkewPantsHexagon]],
       numdone: Index,
-      sep: BigDecimal,
+      sep: Double,
       bound: Double
   ): ParSet[PLPath] = {
     if (numdone == baseedges.size) accum
@@ -433,7 +438,7 @@ object PLPath {
   }
 
   /**
-    * For a given NormalPath, enumerate minimal PLPaths with endpoints separated by sep and length less than bound
+    * For a given NormalPath, enumerate minimal PLPaths with endpoints separated.toDouble) (sep) and length less than bound
     *
     * @param base NormalPath to be enumerated
     * @param sep separation between endpoints
@@ -442,7 +447,7 @@ object PLPath {
     */
   def enumMinimal(
       base: NormalPath[SkewPantsHexagon],
-      sep: BigDecimal,
+      sep: Double,
       bound: Double
   ): ParSet[PLPath] = {
     enumMinimalRec(
@@ -466,7 +471,7 @@ object PLPath {
     */
   def enumMinimalClosed(
       base: NormalPath[SkewPantsHexagon],
-      sep: BigDecimal,
+      sep: Double,
       bound: Double
   ): Option[PLPath] = {
     require(base.isClosed, s"$base is not closed")
@@ -509,7 +514,7 @@ object PLPath {
     */
   def enumMinimalClosedFamily(
       paths: Vector[NormalPath[SkewPantsHexagon]],
-      sep: BigDecimal,
+      sep: Double,
       bound: Double
   ): Map[NormalPath[SkewPantsHexagon], Option[PLPath]] = {
     require(paths.forall(_.isClosed), "All paths are not closed")
@@ -548,7 +553,7 @@ object PLPath {
   def shorten(
       complex: TwoComplex[SkewPantsHexagon],
       path: PLPath,
-      sep: BigDecimal,
+      sep: Double,
       uniqrepuptoflipandcyclicper: Map[NormalPath[SkewPantsHexagon], NormalPath[
         SkewPantsHexagon
       ]],
@@ -661,7 +666,7 @@ object PLPath {
   def postEnumIsotopyCheck(
       complex: TwoComplex[SkewPantsHexagon],
       paths: Set[PLPath],
-      sep: BigDecimal,
+      sep: Double,
       uniqrepuptoflipandcyclicper: Map[NormalPath[SkewPantsHexagon], NormalPath[
         SkewPantsHexagon
       ]],
@@ -703,7 +708,7 @@ object PLPath {
   def getPostEnumIsotopyClass(
       complex: TwoComplex[SkewPantsHexagon],
       path: PLPath,
-      sep: BigDecimal,
+      sep: Double,
       uniqrepuptoflipandcyclicper: Map[NormalPath[SkewPantsHexagon], NormalPath[
         SkewPantsHexagon
       ]],
@@ -751,8 +756,8 @@ object PLPath {
   def shortPathsfromSurface(
       surf: SkewPantsSurface,
       sizebound: Int,
-      sep: BigDecimal,
-      tol: BigDecimal
+      sep: Double,
+      tol: Double
   ): Set[PLPath] = {
     require(surf.isClosedSurface, "Surface is not closed")
     val enumlenbound: Double = ((surf.cs.map(_.length).min) * tol).toDouble
@@ -794,8 +799,8 @@ object PLPath {
   def shortPathsData(
       surf: SkewPantsSurface,
       sizebound: Int,
-      sep: BigDecimal,
-      tol: BigDecimal
+      sep: Double,
+      tol: Double
   ) = {
     require(surf.isClosedSurface, "Surface is not closed")
     val enumlenbound: Double = ((surf.cs.map(_.length).min) * tol).toDouble
@@ -829,8 +834,8 @@ object PLPath {
 case class ShortPathsData(
     surf: SkewPantsSurface,
     sizebound: Int,
-    sep: BigDecimal,
-    tol: BigDecimal,
+    sep: Double,
+    tol: Double,
     enumLenBound: Double,
     clPaths: Map[NormalPath[SkewPantsHexagon], NormalPath[SkewPantsHexagon]],
     uniqueClPaths: Map[NormalPath[SkewPantsHexagon], NormalPath[

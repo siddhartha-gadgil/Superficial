@@ -225,16 +225,17 @@ case class PantsSeam(
 }
 
 object PantsSeam {
+  import SkewCurveEdge.close
   def compareSeamPoints(
       ps1: PantsSeam,
-      pos1: BigDecimal,
+      pos1: Double,
       ps2: PantsSeam,
-      pos2: BigDecimal,
-      len: BigDecimal
+      pos2: Double,
+      len: Double
   ): Boolean = {
     require((ps1 == ps2) || (ps1 == ps2.flip))
-    if (ps1 == ps2) (pos1 == pos2)
-    else (pos1 + pos2 == len)
+    if (ps1 == ps2) close(pos1, pos2)
+    else close(pos1+ pos2, len)
   }
 }
 
@@ -605,15 +606,18 @@ case class SkewCurveEdge(
 }
 
 object SkewCurveEdge {
+  val tolerance = math.pow(10, -6)
+  def close(x: Double, y: Double) = math.abs(x - y) < tolerance
+
   def comparePoints(
       edge1: SkewCurveEdge,
-      disp1: BigDecimal,
+      disp1: Double,
       edge2: SkewCurveEdge,
-      disp2: BigDecimal
+      disp2: Double
   ): Boolean = {
     require((edge1 == edge2) || (edge1 == edge2.flip))
-    if (edge1 == edge2) (disp1 == disp2)
-    else (disp1 + disp2 == edge1.length)
+    if (edge1 == edge2) close(disp1, disp2)
+    else close(disp1 + disp2, edge1.length.toDouble)
   }
 }
 
@@ -784,8 +788,8 @@ object SkewPantsHexagon {
         }
     }
   }
-  def getSeamLength(sph: SkewPantsHexagon, ps: PantsSeam): BigDecimal = {
-    BigDecimal(sph.seamLengthMap(ps))
+  def getSeamLength(sph: SkewPantsHexagon, ps: PantsSeam): Double = {
+    sph.seamLengthMap(ps)
   }
 
   def adjacentSkewCurveEdges(face: Polygon, i1: Index, i2: Index): Boolean = {
