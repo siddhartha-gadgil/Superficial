@@ -42,7 +42,7 @@ case class PLArc(
         )
       case p: PantsSeam => Some(finalDisplacement.doubleValue)
     }
-    
+
   lazy val length: Double = {
     require(
       base.face.edgeLengths
@@ -50,7 +50,7 @@ case class PLArc(
     )
     if (base.face.top) {
       Hexagon
-        base.face.topHex
+      base.face.topHex
         .arcLength(
           SkewPantsHexagon.skewIndexToHexagonIndex(base.face, base.initial),
           SkewPantsHexagon.skewIndexToHexagonIndex(base.face, base.terminal),
@@ -87,9 +87,10 @@ case class PLArc(
 }
 
 object PLArc {
-  def rng(init: Double) (term: Double) (sep : Double) = Vector.tabulate(((term- init)/sep).floor.toInt)(j => init + j * sep)
+  def rng(init: Double)(term: Double)(sep: Double) =
+    Vector.tabulate(((term - init) / sep).floor.toInt)(j => init + j * sep)
 
-  rng (3) (2) (1)
+  rng(3)(2)(1)
 
   def freeEnumerate(
       arc: NormalArc[SkewPantsHexagon],
@@ -99,42 +100,9 @@ object PLArc {
       !(arc.terminalEdge.isInstanceOf[BoundaryEdge] || arc.initialEdge
         .isInstanceOf[BoundaryEdge])
     )
-    arc.initialEdge match {
-      case e1: SkewCurveEdge =>
-        arc.terminalEdge match {
-          case e2: SkewCurveEdge =>
-            for (d1: Double <- rng (0) (e1.length.toDouble) (sep);
-                 d2: Double <- rng (0) (e2.length.toDouble) (sep))
-              yield PLArc(arc, d1, d2)
-          case s2: PantsSeam =>
-            for (d1: Double <- rng (0) (e1.length.toDouble) (sep);
-                 d2: Double <- rng (0) (SkewPantsHexagon
-                   .getSeamLength(arc.face, s2).toDouble) (sep))
-              yield PLArc(arc, d1, d2)
-        }
-      case s1: PantsSeam =>
-        arc.terminalEdge match {
-          case e2: SkewCurveEdge =>
-            for {
-              d1: Double <- rng (0) (SkewPantsHexagon.getSeamLength(
-                arc.face,
-                s1
-              ).toDouble) (sep)
-              d2: Double <- rng (0) (e2.length.toDouble) (sep)
-            } yield PLArc(arc, d1, d2)
-          case s2: PantsSeam =>
-            for {
-              d1: Double <- rng (0) (SkewPantsHexagon.getSeamLength(
-                arc.face,
-                s1
-              ).toDouble) (sep)
-              d2: Double <- rng (0) (SkewPantsHexagon.getSeamLength(
-                arc.face,
-                s2
-              ).toDouble) (sep)
-            } yield PLArc(arc, d1, d2)
-        }
-    }
+    for (d1: Double <- rng(0)(arc.face.sideLength(arc.initialEdge))(sep);
+         d2: Double <- rng(0)(arc.face.sideLength(arc.terminalEdge))(sep))
+      yield PLArc(arc, d1, d2)
   }.to(ParSet)
 
   /**
@@ -152,66 +120,14 @@ object PLArc {
       !(arc.terminalEdge.isInstanceOf[BoundaryEdge] || arc.initialEdge
         .isInstanceOf[BoundaryEdge])
     )
-    arc.initialEdge match {
-      case e1: SkewCurveEdge =>
-        arc.terminalEdge match {
-          case e2: SkewCurveEdge =>
-            for {
-              d1: Double <- rng (0) (e1.length.toDouble) (sep)
-              d2: Double <- rng (0) (e2.length.toDouble) (sep)
-            } yield
-              PLPath(
-                NormalPath[SkewPantsHexagon](Vector(arc)),
-                Vector(d1),
-                Vector(d2)
-              )
-          case s2: PantsSeam =>
-            for {
-              d1: Double <- rng (0) (e1.length.toDouble) (sep)
-              d2: Double <- rng (0) (SkewPantsHexagon.getSeamLength(
-                arc.face,
-                s2
-              ).toDouble) (sep)
-            } yield
-              PLPath(
-                NormalPath[SkewPantsHexagon](Vector(arc)),
-                Vector(d1),
-                Vector(d2)
-              )
-        }
-      case s1: PantsSeam =>
-        arc.terminalEdge match {
-          case e2: SkewCurveEdge =>
-            for {
-              d1: Double <- rng (0) (SkewPantsHexagon.getSeamLength(
-                arc.face,
-                s1
-              ).toDouble) (sep)
-              d2: Double <- rng (0) (e2.length.toDouble) (sep)
-            } yield
-              PLPath(
-                NormalPath[SkewPantsHexagon](Vector(arc)),
-                Vector(d1),
-                Vector(d2)
-              )
-          case s2: PantsSeam =>
-            for {
-              d1: Double <- rng (0) (SkewPantsHexagon.getSeamLength(
-                arc.face,
-                s1
-              ).toDouble) (sep)
-              d2: Double <- rng (0) (SkewPantsHexagon.getSeamLength(
-                arc.face,
-                s2
-              ).toDouble) (sep)
-            } yield
-              PLPath(
-                NormalPath[SkewPantsHexagon](Vector(arc)),
-                Vector(d1),
-                Vector(d2)
-              )
-        }
-    }
+    for (d1: Double <- rng(0)(arc.face.sideLength(arc.initialEdge))(sep);
+         d2: Double <- rng(0)(arc.face.sideLength(arc.terminalEdge))(sep))
+      yield
+        PLPath(
+          NormalPath[SkewPantsHexagon](Vector(arc)),
+          Vector(d1),
+          Vector(d2)
+        )
   }.to(ParSet)
 
   def fixedInitialEnumerate(
@@ -223,18 +139,8 @@ object PLArc {
       !(arc.terminalEdge.isInstanceOf[BoundaryEdge] || arc.initialEdge
         .isInstanceOf[BoundaryEdge])
     )
-    arc.terminalEdge match {
-      case e2: SkewCurveEdge =>
-        for (d2: Double <- rng (0) (e2.length.toDouble) (sep))
-          yield PLArc(arc, initialDisplacement, d2)
-      case s2: PantsSeam =>
-        for {
-          d2: Double <- rng (0) (SkewPantsHexagon.getSeamLength(
-            arc.face,
-            s2
-          ).toDouble) (sep)
-        } yield PLArc(arc, initialDisplacement, d2)
-    }
+    for (d2: Double <- rng(0)(arc.face.sideLength(arc.terminalEdge))(sep))
+      yield PLArc(arc, initialDisplacement, d2)
   }.to(ParSet)
 }
 
@@ -251,8 +157,9 @@ case class PLPath(
       .isInstanceOf[BoundaryEdge] || base.edges.last.terminalEdge
       .isInstanceOf[BoundaryEdge])
   )
-  lazy val plArcs: Vector[PLArc] = for (i <- (0 to (base.edges.size - 1)).toVector)
-    yield PLArc(base.edges(i), initialDisplacements(i), finalDisplacements(i))
+  lazy val plArcs: Vector[PLArc] =
+    for (i <- (0 to (base.edges.size - 1)).toVector)
+      yield PLArc(base.edges(i), initialDisplacements(i), finalDisplacements(i))
   require(
     plArcs.zip(plArcs.tail).forall {
       case (arc1, arc2) =>
@@ -291,19 +198,10 @@ case class PLPath(
           (initialDisplacements.head - finalDisplacements.last).toDouble
         ) < tol)
       case false =>
-        base.terminalEdge match {
-          case s: SkewCurveEdge =>
-            (math.abs(
-              (initialDisplacements.head - (s.length - finalDisplacements.last)).toDouble
-            ) < tol)
-          case p: PantsSeam =>
-            (math.abs(
-              (initialDisplacements.head - (SkewPantsHexagon.getSeamLength(
-                base.terminalFace,
-                p
-              ) - finalDisplacements.last)).toDouble
-            ) < tol)
-        }
+        (math.abs(
+          initialDisplacements.head - (base.terminalFace
+            .sideLength(base.terminalEdge) - finalDisplacements.last)
+        ) < tol)
     }
   }
 }
@@ -329,14 +227,8 @@ object PLPath {
       (arc1.terminalEdge == arc2.initialEdge) || (arc1.terminalEdge == arc2.initialEdge.flip)
     )
     require(!(arc1.terminalEdge.isInstanceOf[BoundaryEdge]))
-    arc2.initialEdge match {
-      case e2: SkewCurveEdge =>
-        if (arc1.terminalEdge == arc2.initialEdge) arc1displacement
-        else (e2.length.toDouble - arc1displacement)
-      case s2: PantsSeam =>
-        if (arc1.terminalEdge == arc2.initialEdge) arc1displacement
-        else (SkewPantsHexagon.getSeamLength(arc2.face, s2) - arc1displacement)
-    }
+    if (arc1.terminalEdge == arc2.initialEdge) arc1displacement
+    else (arc2.face.sideLength(arc2.initialEdge) - arc1displacement)
   }
 
   /**
@@ -356,39 +248,21 @@ object PLPath {
   ): ParSet[PLPath] = {
     if (numdone == baseEdges.size) accum
     else {
-      baseEdges(numdone).terminalEdge match {
-        case e2: SkewCurveEdge =>
-          for {
-            path <- accum
-            d2: Double <- (rng (0) (e2.length.toDouble) (sep))
-          } yield
-            PLPath(
-              path.base.:+(baseEdges(numdone)),
-              path.initialDisplacements :+ findInitDisplacement(
-                baseEdges(numdone - 1),
-                path.finalDisplacements.last,
-                baseEdges(numdone)
-              ),
-              path.finalDisplacements :+ d2
-            )
-        case s2: PantsSeam =>
-          for {
-            path <- accum
-            d2: Double <- rng (0) (SkewPantsHexagon.getSeamLength(
-              baseEdges(numdone).face,
-              s2
-            ).toDouble) (sep)
-          } yield
-            PLPath(
-              path.base.:+(baseEdges(numdone)),
-              path.initialDisplacements :+ findInitDisplacement(
-                baseEdges(numdone - 1),
-                path.finalDisplacements.last,
-                baseEdges(numdone)
-              ),
-              path.finalDisplacements :+ d2
-            )
-      }
+      for {
+        path <- accum
+        d2: Double <- (rng(0)(
+          baseEdges(numdone).face.sideLength(baseEdges(numdone).terminalEdge)
+        )(sep))
+      } yield
+        PLPath(
+          path.base.:+(baseEdges(numdone)),
+          path.initialDisplacements :+ findInitDisplacement(
+            baseEdges(numdone - 1),
+            path.finalDisplacements.last,
+            baseEdges(numdone)
+          ),
+          path.finalDisplacements :+ d2
+        )
     }.to(ParSet)
   }
 
