@@ -691,7 +691,23 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
         )
       }
     }
+
+    
   }
+
+  lazy val topHex = Hexagon
+        .Hyperbolic(
+          edgeLengths(0).get,
+          edgeLengths(1).get,
+          edgeLengths(2).get
+        )
+
+  lazy val bottomHex = Hexagon
+        .Hyperbolic(
+          edgeLengths(0).get,
+          edgeLengths(2).get,
+          edgeLengths(1).get
+        )
 
   lazy val boundary = fillSeams(pants, segments, top)
   lazy val sides = boundary.size

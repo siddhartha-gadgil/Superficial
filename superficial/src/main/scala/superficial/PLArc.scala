@@ -50,11 +50,7 @@ case class PLArc(
     )
     if (base.face.top) {
       Hexagon
-        .Hyperbolic(
-          base.face.edgeLengths(0).get,
-          base.face.edgeLengths(1).get,
-          base.face.edgeLengths(2).get
-        )
+        base.face.topHex
         .arcLength(
           SkewPantsHexagon.skewIndexToHexagonIndex(base.face, base.initial),
           SkewPantsHexagon.skewIndexToHexagonIndex(base.face, base.terminal),
@@ -62,12 +58,7 @@ case class PLArc(
           hexagonFinalDisplacement.get
         )
     } else {
-      Hexagon
-        .Hyperbolic(
-          base.face.edgeLengths(0).get,
-          base.face.edgeLengths(2).get,
-          base.face.edgeLengths(1).get
-        )
+      base.face.bottomHex
         .arcLength(
           SkewPantsHexagon.skewIndexToHexagonIndex(base.face, base.initial),
           SkewPantsHexagon.skewIndexToHexagonIndex(base.face, base.terminal),
