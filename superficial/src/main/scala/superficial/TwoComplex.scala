@@ -5,6 +5,15 @@ import scala.collection.immutable.Nil
 import superficial.Generator.a
 import EdgePath._
 
+object require{
+  def flag : Boolean = on
+
+  val on: Boolean = true
+
+  def apply(requirement : => Boolean, message: String) : Unit = if (flag) Predef.require(requirement, message) else ()
+  def apply(requirement : => Boolean) : Unit = if (flag) Predef.require(requirement) else ()
+}
+
 /**
   * Abstract polygon, with given edges and vertices, i.e. a two-complex with a single face.
   * @param sides number of sides

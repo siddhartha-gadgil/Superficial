@@ -172,11 +172,15 @@ object Hexagon {
     * @param c the fifth side
     */
   case class Hyperbolic(a: Double, b: Double, c: Double) {
-    def sideLength(n: Index): Double =
+    def sideLengthFun(n: Index): Double =
       if (n % 2 == 0) Vector(a, b, c)(n / 2)
-      else side(length(n - 1), length(n + 1), length(n + 3))
+      else side(lengthFun(n - 1), lengthFun(n + 1), lengthFun(n + 3))
 
-    def length(n: Int): Double = sideLength(mod6(n))
+    def lengthFun(n: Int): Double = sideLengthFun(mod6(n))
+
+    lazy val sideLength = (0 to 5).map(j => j -> sideLengthFun(j)).toMap
+
+    def length(n: Int) = sideLength(mod6(n))
 
     def getArcLength(
         i: Int,

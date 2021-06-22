@@ -42,6 +42,7 @@ case class PLArc(
         )
       case p: PantsSeam => Some(finalDisplacement.doubleValue)
     }
+    
   lazy val length: Double = {
     require(
       base.face.edgeLengths
