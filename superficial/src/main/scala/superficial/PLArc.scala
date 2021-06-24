@@ -231,6 +231,19 @@ object PLPath {
     else (arc2.face.sideLength(arc2.initialEdge) - arc1displacement)
   }
 
+  def findFinalDisplacement(
+      arc1: NormalArc[SkewPantsHexagon],
+      arc2displacement: Double,
+      arc2: NormalArc[SkewPantsHexagon]
+  ): Double = {
+    require(
+      (arc1.terminalEdge == arc2.initialEdge) || (arc1.terminalEdge == arc2.initialEdge.flip)
+    )
+    require(!(arc1.terminalEdge.isInstanceOf[BoundaryEdge]))
+    if (arc1.terminalEdge == arc2.initialEdge) arc2displacement
+    else (arc1.face.sideLength(arc1.terminalEdge) - arc2displacement)
+  }
+
   /**
     * Append a PLArc to a PLPath
     *
@@ -327,6 +340,16 @@ object PLPath {
     )
   }
 
+  def returnExactlyClosed(
+    path: PLPath,
+    threshold: Double
+  ): Option[PLPath] = {
+    require(path.base.isClosed, s"$path is not closed")
+    if ((math.abs(findInitDisplacement(path.base.edges.last, path.plArcs.last.finalDisplacement, path.base.edges.head) - path.plArcs.head.initialDisplacement)) < threshold) {
+      Some(PLPath(path.base, path.initialDisplacements, path.finalDisplacements.dropRight(1) :+ findFinalDisplacement(path.base.edges.last, path.initialDisplacements.head, path.base.edges.head)))
+    } else None
+  }
+
   /**
     * Given a closed NormalPath, optionally return the minimal PLPath corresponding to it if its length is less than a given bound
     *
@@ -342,29 +365,8 @@ object PLPath {
   ): Option[PLPath] = {
     require(base.isClosed, s"$base is not closed")
     enumMinimal(base, sep, bound)
-      .groupBy(_.initialDisplacements.head)
-      .map {
-        case (_, s) =>
-          s.minBy(
-            p =>
-              math.abs(
-                p.initialDisplacements.head.toDouble - findInitDisplacement(
-                  p.base.edges.last,
-                  p.finalDisplacements.last,
-                  p.base.edges.head
-                ).toDouble
-              )
-          )
-      }
-      .filter { p =>
-        math.abs(
-          p.initialDisplacements.head.toDouble - findInitDisplacement(
-            p.base.edges.last,
-            p.finalDisplacements.last,
-            p.base.edges.head
-          ).toDouble
-        ) <= (2 * sep)
-      }
+      .map(path => returnExactlyClosed(path, 1.5*sep))
+      .flatten
       .seq
       .minByOption(_.length)
   }
