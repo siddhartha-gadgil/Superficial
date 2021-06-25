@@ -88,7 +88,7 @@ case class PLArc(
 
 object PLArc {
   def rng(init: Double)(term: Double)(sep: Double) =
-    Vector.tabulate(((term - init) / sep).floor.toInt)(j => init + j * sep)
+    Vector.tabulate(((term - init) / sep).floor.toInt + 1)(j => init + j * sep)
 
   rng(3)(2)(1)
 
@@ -341,12 +341,28 @@ object PLPath {
   }
 
   def returnExactlyClosed(
-    path: PLPath,
-    threshold: Double
+      path: PLPath,
+      threshold: Double
   ): Option[PLPath] = {
     require(path.base.isClosed, s"$path is not closed")
-    if ((math.abs(findInitDisplacement(path.base.edges.last, path.plArcs.last.finalDisplacement, path.base.edges.head) - path.plArcs.head.initialDisplacement)) < threshold) {
-      Some(PLPath(path.base, path.initialDisplacements, path.finalDisplacements.dropRight(1) :+ findFinalDisplacement(path.base.edges.last, path.initialDisplacements.head, path.base.edges.head)))
+    if ((math.abs(
+          findInitDisplacement(
+            path.base.edges.last,
+            path.plArcs.last.finalDisplacement,
+            path.base.edges.head
+          ) - path.plArcs.head.initialDisplacement
+        )) < threshold) {
+      Some(
+        PLPath(
+          path.base,
+          path.initialDisplacements,
+          path.finalDisplacements.dropRight(1) :+ findFinalDisplacement(
+            path.base.edges.last,
+            path.initialDisplacements.head,
+            path.base.edges.head
+          )
+        )
+      )
     } else None
   }
 
@@ -365,7 +381,7 @@ object PLPath {
   ): Option[PLPath] = {
     require(base.isClosed, s"$base is not closed")
     enumMinimal(base, sep, bound)
-      .map(path => returnExactlyClosed(path, 1.5*sep))
+      .map(path => returnExactlyClosed(path, 1.5 * sep))
       .flatten
       .seq
       .minByOption(_.length)
