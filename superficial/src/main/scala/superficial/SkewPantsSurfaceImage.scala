@@ -136,7 +136,7 @@ case class SkewHexImageGen(
     thicknessMap: Map[Edge, Int],
     labelMap: Map[Edge, String],
     radius: Double = 100
-) extends PolygonImageGen(hex.boundary.size, radius) {
+) extends RegularPolygonImageGen(hex.boundary.size, radius) {
   val edgeImages: Vector[Picture[Unit]] =
     hex.boundary.zipWithIndex.map {
       case (edge, j) =>

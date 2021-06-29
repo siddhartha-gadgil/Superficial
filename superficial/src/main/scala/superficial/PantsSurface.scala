@@ -671,7 +671,7 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
       skewVertices(PantsBoundary(pants, direction), top, cs)
     }
 
-  private lazy val segments: Vector[Vector[Edge]] = {
+  lazy val segments: Vector[Vector[Edge]] = {
     if (top) {
       Z3.enum.map { direction: Z3 =>
         skewEdges(

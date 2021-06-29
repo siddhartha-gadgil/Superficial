@@ -11,12 +11,17 @@ import Polygon.Index
 import doodle.java2d._
 import cats.implicits._
 
-class PolygonImageGen(sides: Int, radius: Double = 100) {
-  val centerAngle: Angle = 360.degrees / sides.toDouble
+class RegularPolygonImageGen(val sides: Int, radius: Double = 100) extends PolygonImageGen{
 
   val vertices: Vector[Point] = (0 until sides)
-    .map(index => Point.polar(radius, centerAngle * index.toDouble))
+    .map(index => Point.polar(radius, (360.degrees / sides.toDouble) * index.toDouble))
     .toVector
+}
+
+trait PolygonImageGen{
+  val vertices: Vector[Point]
+
+  val sides: Int
 
   val edgePaths: Vector[Picture[Unit]] =
     vertices.zip(vertices.tail :+ vertices.head).toVector.map {
