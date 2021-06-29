@@ -146,7 +146,7 @@ object Quadrangulation {
     val otherHalfOfEdgePathMap = halfOfEdgePathMap.map(el => (el._1.flip, el._2.reverse))
     val edgeToEdgePathMap = (halfOfEdgePathMap ++ otherHalfOfEdgePathMap).toMap
 
-    val quad = PureComplex(newFaces)
+    val quad = PureComplex(newFaces.toSet)
 
     assert(isQuadrangulation(quad), s"The result of the algorithm doesn't give a quadragulation")
 

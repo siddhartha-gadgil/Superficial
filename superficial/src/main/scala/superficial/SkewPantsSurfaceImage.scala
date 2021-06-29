@@ -34,8 +34,30 @@ final case class SkewPantsSurfaceImage(skp: SkewPantsSurface, radius: Double) {
       .map(_.flip)
       .zip(edgeColours)).toMap
 
-  val labelMap: Map[Edge, Int] = skp.positiveEdges.zipWithIndex.flatMap {
-    case (e, j) => Vector(e -> (j + 1), e.flip -> (j + 1))
+  val edgesInBoundaries =
+    skp.edges
+      .flatMap(
+        e => skp.edgeIndices(e).map { case (f, i, b) => (e -> b, i -> f) }
+      )
+      .toMap
+
+  def edgeView(index: Int, hex: SkewPantsHexagon): String = {
+    val h = (if (hex.top) "+" else "-") + hex.pants.toString()
+    s"$h:$index"
+  }
+
+  // println(edgesInBoundaries.keys.mkString("Edges in boudaries map:\n", "\n", "\n"))
+  val baseLabels: Map[Edge, String] =
+    skp.positiveEdges.zipWithIndex.flatMap {
+      case (e, j) => Vector(e -> (j + 1).toString, e.flip -> (j + 1).toString)
+    }.toMap
+
+  val labelMap: Map[Edge, String] = skp.edges.map { e =>
+    val opt = for {
+      (i1, h1) <- edgesInBoundaries.get(e, true)
+      (i2, h2) <- edgesInBoundaries.get(e, false)
+    } yield (edgeView(i1, h1) + "|" + edgeView(i2, h2))
+    e -> opt.getOrElse(baseLabels(e))
   }.toMap
 
   val faceImageGen =
@@ -112,7 +134,7 @@ case class SkewHexImageGen(
     hex: SkewPantsHexagon,
     colourMap: Map[Edge, Color],
     thicknessMap: Map[Edge, Int],
-    labelMap: Map[Edge, Int],
+    labelMap: Map[Edge, String],
     radius: Double = 100
 ) extends PolygonImageGen(hex.boundary.size, radius) {
   val edgeImages: Vector[Picture[Unit]] =

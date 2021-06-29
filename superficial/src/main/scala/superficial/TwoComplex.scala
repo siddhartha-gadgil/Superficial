@@ -30,6 +30,8 @@ trait Polygon extends TwoComplex[Polygon] {
     */
   val boundary: Vector[Edge]
 
+  override lazy val halfEdges: Vector[Edge] = boundary
+
   lazy val basePoint : Vertex = boundary.head.initial // override for empty boundary
 
   def checkBoundary =
@@ -272,11 +274,11 @@ trait TwoComplex[P <: Polygon] { twoComplex =>
       case oe: OrientedEdge if oe.positivelyOriented => oe}  
 
   // to take care of unoriented edges
-  lazy val halfEdges: Set[Edge] =
+  lazy val halfEdges: Vector[Edge] =
     TwoComplex.halfEdges(
       (edges -- positiveEdges.toSet).toList,
       positiveEdges.toSet
-    )
+    ).toVector
   
 
   def edgeIndex(edge: Edge) : Option[(Int, Boolean)] = {
