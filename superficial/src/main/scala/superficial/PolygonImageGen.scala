@@ -23,13 +23,13 @@ trait PolygonImageGen{
 
   val sides: Int
 
-  val edgePaths: Vector[Picture[Unit]] =
+  lazy val edgePaths: Vector[Picture[Unit]] =
     vertices.zip(vertices.tail :+ vertices.head).toVector.map {
       case (init, term) =>
         OpenPath(List(moveTo(init), lineTo(term))).path
     }
 
-  val edgePathsMid: Vector[(Picture[Unit], Point)] =
+  lazy val edgePathsMid: Vector[(Picture[Unit], Point)] =
     vertices.zip(vertices.tail :+ vertices.head).toVector.map {
       case (init, term) =>
         (

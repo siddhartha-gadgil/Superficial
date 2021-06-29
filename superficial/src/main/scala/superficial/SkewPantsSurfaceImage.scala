@@ -136,8 +136,27 @@ case class SkewHexImageGen(
     thicknessMap: Map[Edge, Int],
     labelMap: Map[Edge, String],
     radius: Double = 100
-) extends RegularPolygonImageGen(hex.boundary.size, radius) {
-  val edgeImages: Vector[Picture[Unit]] =
+) extends PolygonImageGen {
+  val sides: Int = hex.boundary.size
+
+  val hexVertices: Vector[Point] = (0 until 6)
+    .map(index => Point.polar(radius, (360.degrees / 6.0) * index.toDouble))
+    .toVector  
+
+  val vertices: Vector[Point] = 
+    hex.segments.zipWithIndex.flatMap{
+      case (edges, j) => 
+        val totalLength = edges.map(e => hex.sideLength(e)).sum
+        val init = hexVertices(2 * j)
+        val term = hexVertices(2 * j + 1)
+        import PolygonImageGen.convex
+        (0 to edges.size).map{
+          i => 
+              convex(init, term, (edges.take(i).map(hex.sideLength(_)).sum) /totalLength)
+        }
+    }
+
+  lazy val edgeImages: Vector[Picture[Unit]] =
     hex.boundary.zipWithIndex.map {
       case (edge, j) =>
         val (ep, mid) = edgePathsMid(j)
@@ -148,7 +167,7 @@ case class SkewHexImageGen(
         label.on(path)
     }
 
-  val polygon = edgeImages.reduce(_ on _)
+  lazy val polygon = edgeImages.reduce(_ on _)
 }
 
 object SkewPantsSurfaceImage {
