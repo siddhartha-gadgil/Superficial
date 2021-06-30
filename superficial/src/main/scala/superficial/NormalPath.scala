@@ -402,6 +402,11 @@ object NormalPath {
     }
   }
 
+  def rotateAndFlip[P <: Polygon](path: NormalPath[P]) = {
+    val rotated = ((0 until path.edges.size).map(k => NormalPath(path.edges.drop(k) ++ path.edges.take(k)))).toSet
+    rotated union (rotated.map(_.flip))
+  }
+
   /**
     * A map that takes each closed normalpath to its representative upto flips and cyclic permutations that will be enumerated
     *
@@ -415,7 +420,8 @@ object NormalPath {
     val groups = paths
       .groupBy(
         path =>
-          (path.edges.size, Set(path.edges.toSet, path.edges.map(_.flip).toSet))
+          rotateAndFlip(path)
+          // (path.edges.size, Set(path.edges.toSet, path.edges.map(_.flip).toSet))
       )
       .values
       .toSet
