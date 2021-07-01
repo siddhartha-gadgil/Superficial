@@ -670,14 +670,36 @@ object PLPath {
     )
   }
 
-  //Unsure of the mathematics behind this, pending
-  def isotopicNearby(
-      complex: TwoComplex[SkewPantsHexagon],
-      baseplpath: PLPath,
-      paths: Set[PLPath]
-  ): Set[PLPath] = {
-    val nearbyarcs = NormalPath.pathNeighbouringArcs(complex, baseplpath.base)
-    paths.filter(p => p.base.edges.toSet.subsetOf(nearbyarcs))
+  /**
+    * Searches for a maximal systole over a family of surfaces specified by supplied parameters
+    *
+    * @param genus Genus of the surface
+    * @param cuffLengthBound Upper bound for cuff lengths, lower bound is always 1
+    * @param lengthStep Step for cuff lengths
+    * @param twistStep Step for twists
+    * @param normalPathLengthBound Upper bound for length of normalpaths
+    * @param sep Separation between adjacent endpoints of PLPaths
+    * @param tol Tolerance multiplier for length of closed curves over shortest pant cuff 
+    * @return Vector of surfaces with maximal systoles
+    */
+  def findMaximalSystole(
+    genus: Int,
+    cuffLengthBound: BigDecimal, 
+    lengthStep: BigDecimal,
+    twistStep: BigDecimal,
+    normalPathLengthBound: Int,
+    sep: Double,
+    tol: Double
+  ): Vector[(SkewPantsSurface, Set[PLPath])] = {
+    val twists = (BigDecimal(0) until BigDecimal(1) by twistStep).toVector
+    val lengths = (BigDecimal(1) to cuffLengthBound by lengthStep).toVector
+    val skewsurfs = (for {
+      surf <- PantsSurface.allClosed((2*genus) - 2)
+      skewsurf <- SkewPantsSurface.enumerate(surf, twists, lengths)
+    } yield skewsurf).filter(_.cs.exists(_.length == 1))
+    val systoles = skewsurfs.zip(skewsurfs.map(s => PLPath.shortPathsfromSurface(s, normalPathLengthBound, sep, tol)))
+    val maxsize = systoles.map(_._2.size).max
+    systoles.filter(_._2.size == maxsize)
   }
 
   def shortPathsData(
