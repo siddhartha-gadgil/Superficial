@@ -487,16 +487,16 @@ object NormalPath {
     * @return
     */
   def removeVertexLinkingSubPaths[P <: Polygon](
-      edges: Vector[NormalArc[P]],
-      recedges: Vector[NormalArc[P]]
-  ): Option[NormalPath[P]] = recedges.isEmpty match {
-    case true => if (edges.isEmpty) None else Some(NormalPath(edges))
+      accum: Vector[NormalArc[P]],
+      recEdges: Vector[NormalArc[P]]
+  ): Option[NormalPath[P]] = recEdges.isEmpty match {
+    case true => if (accum.isEmpty) None else Some(NormalPath(accum))
     case false =>
-      endsGoAround(NormalPath(recedges)) match {
-        case None => removeVertexLinkingSubPaths(edges, recedges.init)
+      endsGoAround(NormalPath(recEdges)) match {
+        case None => removeVertexLinkingSubPaths(accum, recEdges.init)
         case Some(newedges) =>
           removeVertexLinkingSubPaths(
-            newedges ++ edges.diff(recedges),
+            newedges ++ accum.diff(recEdges),
             newedges
           )
       }
@@ -774,9 +774,16 @@ sealed trait PathHomotopy[P <: Polygon] {
   val start: Option[NormalPath[P]]
 
   val end: Option[NormalPath[P]]
+
+  def +:(path: NormalPath[P]) = PathHomotopy.PathProduct(Some(path), this, None)
+
+  def |(that: PathHomotopy[P]) = PathHomotopy.Composition(this, that)
 }
 
 object PathHomotopy {
+  def edges[P <: Polygon](pathOpt: Option[NormalPath[P]]): Vector[NormalArc[P]] = 
+        pathOpt.map(_.edges).getOrElse(Vector())
+
   case class VertexLinking[P <: Polygon](
       curve: NormalPath[P],
       vertex: Vertex
@@ -826,23 +833,23 @@ object PathHomotopy {
 
   }
 
-  case class Const[P <: Polygon](curve: NormalPath[P]) extends PathHomotopy[P] {
-    val start: Option[NormalPath[P]] = Some(curve)
+  case class Const[P <: Polygon](curveOpt: Option[NormalPath[P]]) extends PathHomotopy[P] {
+    val start: Option[NormalPath[P]] = curveOpt
 
-    val end: Option[NormalPath[P]] = Some(curve)
+    val end: Option[NormalPath[P]] = curveOpt
 
   }
 
   case class PathProduct[P <: Polygon](
-      prePath: NormalPath[P],
+      prePath: Option[NormalPath[P]] = None,
       homotopy: PathHomotopy[P],
-      postPath: NormalPath[P]
+      postPath: Option[NormalPath[P]] = None
   ) extends PathHomotopy[P] {
     val start: Option[NormalPath[P]] =
-      homotopy.start.map(p => prePath ++ p ++ postPath)
+      homotopy.start.map(p => NormalPath(edges(prePath) ++ p.edges ++ edges(postPath)))
 
     val end: Option[NormalPath[P]] =
-      homotopy.end.map(p => prePath ++ p ++ postPath)
+      homotopy.end.map(p => NormalPath(edges(prePath) ++ p.edges ++ edges(postPath)))
 
   }
 
