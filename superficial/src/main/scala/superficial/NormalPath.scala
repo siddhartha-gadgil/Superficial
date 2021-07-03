@@ -2,7 +2,6 @@ package superficial
 
 import Polygon.Index
 import upickle.default.{ReadWriter => RW, macroRW, _}
-import scala.collection.immutable.VectorImpl
 
 /**
   * A normal arc in a face
@@ -403,7 +402,9 @@ object NormalPath {
   }
 
   def rotateAndFlip[P <: Polygon](path: NormalPath[P]) = {
-    val rotated = ((0 until path.edges.size).map(k => NormalPath(path.edges.drop(k) ++ path.edges.take(k)))).toSet
+    val rotated = ((0 until path.edges.size)
+      .map(k => NormalPath(path.edges.drop(k) ++ path.edges.take(k))))
+      .toSet
     rotated union (rotated.map(_.flip))
   }
 
@@ -419,9 +420,8 @@ object NormalPath {
     require(paths.forall(_.isClosed), "All paths are not closed")
     val groups = paths
       .groupBy(
-        path =>
-          rotateAndFlip(path)
-          // (path.edges.size, Set(path.edges.toSet, path.edges.map(_.flip).toSet))
+        path => rotateAndFlip(path)
+        // (path.edges.size, Set(path.edges.toSet, path.edges.map(_.flip).toSet))
       )
       .values
       .toSet
@@ -678,6 +678,7 @@ object NormalPath {
   }
 
   // Helper for shortening path by crossing a vertex
+  @deprecated("using otherWayAroundInstead")
   def surgery(
       complex: TwoComplex[SkewPantsHexagon],
       path: NormalPath[SkewPantsHexagon],
@@ -769,32 +770,137 @@ object NormalPath {
   }
 }
 
-sealed trait PathHomotopy{
-  val start : Option[NormalPath[SkewPantsHexagon]]
+sealed trait PathHomotopy[P <: Polygon] {
+  val start: Option[NormalPath[P]]
 
-  val end : Option[NormalPath[SkewPantsHexagon]]
+  val end: Option[NormalPath[P]]
 }
 
-object PathHomotopy{
-  case class VertexLinking(curve : NormalPath[SkewPantsHexagon], vertex: Vertex) extends PathHomotopy{
-    require{(curve.edges.forall(arc => 
-                arc.initialEdge.initial == vertex && arc.terminalEdge.initial == vertex ))  ||
-            (curve.edges.forall(arc => 
-                arc.initialEdge.terminal == vertex && arc.terminalEdge.terminal == vertex  ))}
-    val start: Option[NormalPath[SkewPantsHexagon]] = Some(curve)
-    
-    val end: Option[NormalPath[SkewPantsHexagon]] = None
-    
+object PathHomotopy {
+  case class VertexLinking[P <: Polygon](
+      curve: NormalPath[P],
+      vertex: Vertex
+  ) extends PathHomotopy[P] {
+    require {
+      (curve.edges.forall(
+        arc =>
+          arc.initialEdge.initial == vertex && arc.terminalEdge.initial == vertex
+      )) ||
+      (curve.edges.forall(
+        arc =>
+          arc.initialEdge.terminal == vertex && arc.terminalEdge.terminal == vertex
+      ))
+    }
+    val start: Option[NormalPath[P]] = Some(curve)
+
+    val end: Option[NormalPath[P]] = None
+
   }
 
-  case class EdgeNbd(arc: NormalArc[SkewPantsHexagon]) extends PathHomotopy{
-    val start: Option[NormalPath[SkewPantsHexagon]] = Some(NormalPath(Vector(arc)))
-    
-    val end: Option[NormalPath[SkewPantsHexagon]] = None
+  case class EdgeNbd[P <: Polygon](arc: NormalArc[P])
+      extends PathHomotopy[P] {
+    val start: Option[NormalPath[P]] = Some(
+      NormalPath(Vector(arc))
+    )
+
+    val end: Option[NormalPath[P]] = None
 
     require(arc.initial == arc.terminal)
-    
+
   }
 
-  
+  case class InFace[P <: Polygon](
+      first: NormalPath[P],
+      second: NormalPath[P],
+      face: P
+  ) extends PathHomotopy[P] {
+    val start: Option[NormalPath[P]] = Some(first)
+
+    val end: Option[NormalPath[P]] = Some(second)
+
+    require {
+      first.initialIndex == second.initialIndex && first.terminalIndex == second.terminalIndex &&
+      first.edges.forall(e => e.face == face) &&
+      second.edges.forall(e => e.face == face)
+    }
+
+  }
+
+  case class Const[P <: Polygon](curve: NormalPath[P]) extends PathHomotopy[P] {
+    val start: Option[NormalPath[P]] = Some(curve)
+
+    val end: Option[NormalPath[P]] = Some(curve)
+
+  }
+
+  case class PathProduct[P <: Polygon](
+      prePath: NormalPath[P],
+      homotopy: PathHomotopy[P],
+      postPath: NormalPath[P]
+  ) extends PathHomotopy[P] {
+    val start: Option[NormalPath[P]] =
+      homotopy.start.map(p => prePath ++ p ++ postPath)
+
+    val end: Option[NormalPath[P]] =
+      homotopy.end.map(p => prePath ++ p ++ postPath)
+
+  }
+
+  case class Composition[P <: Polygon](first: PathHomotopy[P], second: PathHomotopy[P])
+      extends PathHomotopy[P] {
+    val start: Option[NormalPath[P]] = first.start
+
+    val end: Option[NormalPath[P]] = second.end
+
+    require(first.end == second.start)
+  }
+
+  case class UpsideDown[P <: Polygon](homotopy: PathHomotopy[P]) extends PathHomotopy[P] {
+    val start: Option[NormalPath[P]] = homotopy.end
+
+    val end: Option[NormalPath[P]] = homotopy.start
+
+  }
+
+  case class Flip[P <: Polygon](homotopy: PathHomotopy[P]) extends PathHomotopy[P] {
+    val start: Option[NormalPath[P]] = homotopy.start.map(_.flip)
+
+    val end: Option[NormalPath[P]] = homotopy.end.map(_.flip)
+
+  }
+
+}
+
+sealed trait FreeHomotopy[P <: Polygon] {
+  val start: Option[NormalPath[P]]
+
+  val end: Option[NormalPath[P]]
+}
+
+object FreeHomotopy {
+  case class LoopHomotopy[P <: Polygon](homotopy: PathHomotopy[P]) extends FreeHomotopy[P] {
+    val start: Option[NormalPath[P]] = homotopy.start
+
+    val end: Option[NormalPath[P]] = homotopy.end
+
+    require(start.forall(_.isClosed))
+  }
+
+  case class Rotation[P <: Polygon](path: NormalPath[P], shift: Int)
+      extends FreeHomotopy[P] {
+    val start: Option[NormalPath[P]] = Some(path)
+
+    val end: Option[NormalPath[P]] = Some(
+      NormalPath(path.edges.drop(shift) ++ path.edges.take(shift))
+    )
+
+    require(path.isClosed)
+  }
+
+  case class Flip[P <: Polygon](homotopy: FreeHomotopy[P]) extends FreeHomotopy[P] {
+    val start: Option[NormalPath[P]] = homotopy.start.map(_.flip)
+
+    val end: Option[NormalPath[P]] = homotopy.end.map(_.flip)
+
+  }
 }

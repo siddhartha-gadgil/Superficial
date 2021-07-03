@@ -3,6 +3,7 @@
 .coursier/
 out/
 *.jar
+tmp/
 
 # sbt specific
 .cache
