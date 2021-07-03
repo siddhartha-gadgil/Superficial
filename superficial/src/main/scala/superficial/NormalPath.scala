@@ -768,3 +768,33 @@ object NormalPath {
     }
   }
 }
+
+sealed trait PathHomotopy{
+  val start : Option[NormalPath[SkewPantsHexagon]]
+
+  val end : Option[NormalPath[SkewPantsHexagon]]
+}
+
+object PathHomotopy{
+  case class VertexLinking(curve : NormalPath[SkewPantsHexagon], vertex: Vertex) extends PathHomotopy{
+    require{(curve.edges.forall(arc => 
+                arc.initialEdge.initial == vertex && arc.terminalEdge.initial == vertex ))  ||
+            (curve.edges.forall(arc => 
+                arc.initialEdge.terminal == vertex && arc.terminalEdge.terminal == vertex  ))}
+    val start: Option[NormalPath[SkewPantsHexagon]] = Some(curve)
+    
+    val end: Option[NormalPath[SkewPantsHexagon]] = None
+    
+  }
+
+  case class EdgeNbd(arc: NormalArc[SkewPantsHexagon]) extends PathHomotopy{
+    val start: Option[NormalPath[SkewPantsHexagon]] = Some(NormalPath(Vector(arc)))
+    
+    val end: Option[NormalPath[SkewPantsHexagon]] = None
+
+    require(arc.initial == arc.terminal)
+    
+  }
+
+  
+}
