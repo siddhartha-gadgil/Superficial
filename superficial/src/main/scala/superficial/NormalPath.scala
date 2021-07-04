@@ -2,6 +2,7 @@ package superficial
 
 import Polygon.Index
 import upickle.default.{ReadWriter => RW, macroRW, _}
+import doodle.core.Vec
 
 /**
   * A normal arc in a face
@@ -216,6 +217,17 @@ case class NormalPath[P <: Polygon](edges: Vector[NormalArc[P]]) {
 
 object NormalPath {
   implicit val rw: RW[NormalPath[SkewPantsHexagon]] = macroRW
+
+  def optEdges[P <: Polygon](
+      pathOpt: Option[NormalPath[P]]
+  ): Vector[NormalArc[P]] =
+    pathOpt.map(_.edges).getOrElse(Vector())
+
+  def opt[P <: Polygon](v: Vector[NormalArc[P]]): Option[NormalPath[P]] =
+    if (v.isEmpty) None else Some(NormalPath(v))
+
+  def concat[P<: Polygon](first: Option[NormalPath[P]], second : Option[NormalPath[P]]): Option[NormalPath[P]] =
+    opt(optEdges(first) ++ optEdges(second))
 
   @annotation.tailrec
   def enumerateRec[P <: Polygon](
@@ -483,24 +495,48 @@ object NormalPath {
     * Optionally returns the resulting normalpath, with None returned if the normalpath ends up being trivial
     *
     * @param edges the edges
-    * @param recedges parameter for recursion, should equal edges at the start
+    * @param recedges parameter for recursion, should equal edges at the start (in general those that need to be processesed)
     * @return
     */
   def removeVertexLinkingSubPaths[P <: Polygon](
-      accum: Vector[NormalArc[P]],
+      edges: Vector[NormalArc[P]],
       recEdges: Vector[NormalArc[P]]
   ): Option[NormalPath[P]] = recEdges.isEmpty match {
-    case true => if (accum.isEmpty) None else Some(NormalPath(accum))
+    case true => if (edges.isEmpty) None else Some(NormalPath(edges))
     case false =>
       endsGoAround(NormalPath(recEdges)) match {
-        case None => removeVertexLinkingSubPaths(accum, recEdges.init)
+        case None => removeVertexLinkingSubPaths(edges, recEdges.init) 
         case Some(newedges) =>
           removeVertexLinkingSubPaths(
-            newedges ++ accum.diff(recEdges),
+            newedges ++ edges.diff(recEdges),
             newedges
           )
       }
   }
+
+  // Modified implementation (for easier reasoning) with proof
+  def removeVertexLinkingSubPathsPf(
+    edges: Vector[NormalArc[SkewPantsHexagon]],
+    accum: Vector[NormalArc[SkewPantsHexagon]] = Vector(),
+    accumProof: PathHomotopy[SkewPantsHexagon] = PathHomotopy.Const(None)
+  ) : (Option[NormalPath[SkewPantsHexagon]], PathHomotopy[SkewPantsHexagon]) = {
+    require(accumProof.endEdges == accum, "accumulated proof must match accumulated edges")
+    if (edges.isEmpty) (opt(accum), accumProof) 
+    else
+      endsGoAround(NormalPath(edges)) match {
+        case None =>
+          val lastPf = PathHomotopy.Const(Some(NormalPath(Vector(edges.last)))) 
+          removeVertexLinkingSubPathsPf(edges.init, edges.last +: accum, lastPf * accumProof)
+        case Some(newEdges) => 
+          val dropped = edges.drop(newEdges.size)
+          val vert = dropped.last.whichVertexLinking.get
+          val droppedProof = PathHomotopy.VertexLinking(NormalPath(dropped), vert)
+          removeVertexLinkingSubPathsPf(newEdges, accum, droppedProof * accumProof)
+      }
+  }.ensuring(
+    {case (path, proof) => proof.end == path},
+    s"result of homotopy must be the final surve"
+  )
 
   /**
     * From a given closed NormalPath, recursively remove NormalArcs that go from an edge to itself and
@@ -770,19 +806,27 @@ object NormalPath {
   }
 }
 
+import NormalPath._
+
 sealed trait PathHomotopy[P <: Polygon] {
   val start: Option[NormalPath[P]]
 
   val end: Option[NormalPath[P]]
 
-  def +:(path: NormalPath[P]) = PathHomotopy.PathProduct(Some(path), this, None)
+  val startEdges = optEdges(start)
 
-  def |(that: PathHomotopy[P]) = PathHomotopy.Composition(this, that)
+  val endEdges = optEdges(end)
+
+  def |(that: PathHomotopy[P]) = PathHomotopy.HomotopyProduct(this, that)
+
+  def *(that: PathHomotopy[P]) = PathHomotopy.PathwiseProduct(this, that)
+
+  lazy val homotopyFlip = PathHomotopy.HomotopyFlip(this)
+  
+  lazy val pathFlip = PathHomotopy.PathwiseFlip(this)
 }
 
 object PathHomotopy {
-  def edges[P <: Polygon](pathOpt: Option[NormalPath[P]]): Vector[NormalArc[P]] = 
-        pathOpt.map(_.edges).getOrElse(Vector())
 
   case class VertexLinking[P <: Polygon](
       curve: NormalPath[P],
@@ -804,8 +848,7 @@ object PathHomotopy {
 
   }
 
-  case class EdgeNbd[P <: Polygon](arc: NormalArc[P])
-      extends PathHomotopy[P] {
+  case class EdgeNbd[P <: Polygon](arc: NormalArc[P]) extends PathHomotopy[P] {
     val start: Option[NormalPath[P]] = Some(
       NormalPath(Vector(arc))
     )
@@ -833,28 +876,28 @@ object PathHomotopy {
 
   }
 
-  case class Const[P <: Polygon](curveOpt: Option[NormalPath[P]]) extends PathHomotopy[P] {
+  case class Const[P <: Polygon](curveOpt: Option[NormalPath[P]])
+      extends PathHomotopy[P] {
     val start: Option[NormalPath[P]] = curveOpt
 
     val end: Option[NormalPath[P]] = curveOpt
 
   }
 
-  case class PathProduct[P <: Polygon](
-      prePath: Option[NormalPath[P]] = None,
-      homotopy: PathHomotopy[P],
-      postPath: Option[NormalPath[P]] = None
+  case class PathwiseProduct[P <: Polygon](
+      first: PathHomotopy[P],
+      second: PathHomotopy[P]
   ) extends PathHomotopy[P] {
-    val start: Option[NormalPath[P]] =
-      homotopy.start.map(p => NormalPath(edges(prePath) ++ p.edges ++ edges(postPath)))
-
-    val end: Option[NormalPath[P]] =
-      homotopy.end.map(p => NormalPath(edges(prePath) ++ p.edges ++ edges(postPath)))
-
+    val start: Option[NormalPath[P]] = concat(first.start, second.start)
+    
+    val end: Option[NormalPath[P]] = concat(first.end, second.end)
+    
   }
 
-  case class Composition[P <: Polygon](first: PathHomotopy[P], second: PathHomotopy[P])
-      extends PathHomotopy[P] {
+  case class HomotopyProduct[P <: Polygon](
+      first: PathHomotopy[P],
+      second: PathHomotopy[P]
+  ) extends PathHomotopy[P] {
     val start: Option[NormalPath[P]] = first.start
 
     val end: Option[NormalPath[P]] = second.end
@@ -862,14 +905,16 @@ object PathHomotopy {
     require(first.end == second.start)
   }
 
-  case class UpsideDown[P <: Polygon](homotopy: PathHomotopy[P]) extends PathHomotopy[P] {
+  case class HomotopyFlip[P <: Polygon](homotopy: PathHomotopy[P])
+      extends PathHomotopy[P] {
     val start: Option[NormalPath[P]] = homotopy.end
 
     val end: Option[NormalPath[P]] = homotopy.start
 
   }
 
-  case class Flip[P <: Polygon](homotopy: PathHomotopy[P]) extends PathHomotopy[P] {
+  case class PathwiseFlip[P <: Polygon](homotopy: PathHomotopy[P])
+      extends PathHomotopy[P] {
     val start: Option[NormalPath[P]] = homotopy.start.map(_.flip)
 
     val end: Option[NormalPath[P]] = homotopy.end.map(_.flip)
@@ -885,7 +930,8 @@ sealed trait FreeHomotopy[P <: Polygon] {
 }
 
 object FreeHomotopy {
-  case class LoopHomotopy[P <: Polygon](homotopy: PathHomotopy[P]) extends FreeHomotopy[P] {
+  case class LoopHomotopy[P <: Polygon](homotopy: PathHomotopy[P])
+      extends FreeHomotopy[P] {
     val start: Option[NormalPath[P]] = homotopy.start
 
     val end: Option[NormalPath[P]] = homotopy.end
@@ -904,7 +950,8 @@ object FreeHomotopy {
     require(path.isClosed)
   }
 
-  case class Flip[P <: Polygon](homotopy: FreeHomotopy[P]) extends FreeHomotopy[P] {
+  case class Flip[P <: Polygon](homotopy: FreeHomotopy[P])
+      extends FreeHomotopy[P] {
     val start: Option[NormalPath[P]] = homotopy.start.map(_.flip)
 
     val end: Option[NormalPath[P]] = homotopy.end.map(_.flip)
