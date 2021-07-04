@@ -226,7 +226,10 @@ object NormalPath {
   def opt[P <: Polygon](v: Vector[NormalArc[P]]): Option[NormalPath[P]] =
     if (v.isEmpty) None else Some(NormalPath(v))
 
-  def concat[P<: Polygon](first: Option[NormalPath[P]], second : Option[NormalPath[P]]): Option[NormalPath[P]] =
+  def concat[P <: Polygon](
+      first: Option[NormalPath[P]],
+      second: Option[NormalPath[P]]
+  ): Option[NormalPath[P]] =
     opt(optEdges(first) ++ optEdges(second))
 
   @annotation.tailrec
@@ -505,7 +508,7 @@ object NormalPath {
     case true => if (edges.isEmpty) None else Some(NormalPath(edges))
     case false =>
       endsGoAround(NormalPath(recEdges)) match {
-        case None => removeVertexLinkingSubPaths(edges, recEdges.init) 
+        case None => removeVertexLinkingSubPaths(edges, recEdges.init)
         case Some(newedges) =>
           removeVertexLinkingSubPaths(
             newedges ++ edges.diff(recEdges),
@@ -515,26 +518,38 @@ object NormalPath {
   }
 
   // Modified implementation (for easier reasoning) with proof
-  def removeVertexLinkingSubPathsPf(
-    edges: Vector[NormalArc[SkewPantsHexagon]],
-    accum: Vector[NormalArc[SkewPantsHexagon]] = Vector(),
-    accumProof: PathHomotopy[SkewPantsHexagon] = PathHomotopy.Const(None)
-  ) : (Option[NormalPath[SkewPantsHexagon]], PathHomotopy[SkewPantsHexagon]) = {
-    require(accumProof.endEdges == accum, "accumulated proof must match accumulated edges")
-    if (edges.isEmpty) (opt(accum), accumProof) 
+  def removeVertexLinkingSubPathsPf[P <: Polygon](
+      edges: Vector[NormalArc[P]],
+      accum: Vector[NormalArc[P]] = Vector(),
+      accumProof: PathHomotopy[P] = PathHomotopy.Const[P](None)
+  ): (Option[NormalPath[P]], PathHomotopy[P]) = {
+    require(
+      accumProof.endEdges == accum,
+      "accumulated proof must match accumulated edges"
+    )
+    if (edges.isEmpty) (opt(accum), accumProof)
     else
       endsGoAround(NormalPath(edges)) match {
         case None =>
-          val lastPf = PathHomotopy.Const(Some(NormalPath(Vector(edges.last)))) 
-          removeVertexLinkingSubPathsPf(edges.init, edges.last +: accum, lastPf * accumProof)
-        case Some(newEdges) => 
+          val lastPf = PathHomotopy.Const(Some(NormalPath(Vector(edges.last))))
+          removeVertexLinkingSubPathsPf(
+            edges.init,
+            edges.last +: accum,
+            lastPf * accumProof
+          )
+        case Some(newEdges) =>
           val dropped = edges.drop(newEdges.size)
           val vert = dropped.last.whichVertexLinking.get
-          val droppedProof = PathHomotopy.VertexLinking(NormalPath(dropped), vert)
-          removeVertexLinkingSubPathsPf(newEdges, accum, droppedProof * accumProof)
+          val droppedProof =
+            PathHomotopy.VertexLinking(NormalPath(dropped), vert)
+          removeVertexLinkingSubPathsPf(
+            newEdges,
+            accum,
+            droppedProof * accumProof
+          )
       }
   }.ensuring(
-    {case (path, proof) => proof.end == path},
+    { case (path, proof) => proof.end == path },
     s"result of homotopy must be the final surve"
   )
 
@@ -585,6 +600,95 @@ object NormalPath {
           }
         })
         .getOrElse(removeVertexLinkingSubPaths(newedges, newedges))
+    }
+  }
+
+  /**
+    * From a given closed NormalPath, recursively remove NormalArcs that go from an edge to itself and
+    * replace a subsequence of NormalArcs in a single face by a single NormalArc
+    *
+    * @param path the NormalPath
+    * @return
+    */
+  def makeClosedPathsTautPf[P <: Polygon](
+      path: NormalPath[P],
+      accumPf: FreeHomotopy[P]
+  ): (Option[NormalPath[P]], FreeHomotopy[P]) = {
+    require(
+      accumPf.end == Some(path),
+      "accumulated proof should give homotopy to given path"
+    )
+    import path.edges
+    require(
+      ((edges.last.terminalEdge == edges.head.initialEdge.flip) || (edges.last.terminalEdge == edges.head.initialEdge)),
+      "Path given by edges is not closed"
+    ) // implicitly assuming path is not empty
+    val newedges: Vector[NormalArc[P]] =
+      edges.filter(e => (e.initial != e.terminal))
+    val filterPfVec: Vector[PathHomotopy[P]] = edges.map(
+      e =>
+        if (e.initial != e.terminal)
+          PathHomotopy.Const(Some(NormalPath(Vector(e))))
+        else PathHomotopy.EdgeNbd(e)
+    )
+    val filterPf: FreeHomotopy[P] = filterPfVec.reduce(_ | _).free
+    if (newedges.isEmpty) (None, filterPf)
+    else {
+      val samefaceedgepairOpt = newedges
+        .zip(newedges.tail :+ newedges.head)
+        .find(p => (p._1.face == p._2.face) && (p._1.terminal == p._2.initial))
+      samefaceedgepairOpt
+        .map({ samefaceedgepair =>
+          val indextoremove = newedges.indexOf(samefaceedgepair._1)
+          if (indextoremove != (newedges.length - 1)) {
+            val newArc = NormalArc(
+              newedges(indextoremove).initial,
+              newedges(indextoremove + 1).terminal,
+              newedges(indextoremove).face
+            )
+            val mergePiecePf = PathHomotopy.InFace(
+              NormalPath(edges.drop(indextoremove).take(2)),
+              NormalPath(Vector(newArc)),
+              newArc.face
+            )
+            val mergePf = (PathHomotopy
+              .Const(opt(edges.take(indextoremove))) * mergePiecePf * PathHomotopy
+              .Const(opt(edges.drop(indextoremove + 2)))).free
+            makeClosedPathsTautPf(
+              NormalPath(
+                (newedges.slice(0, indextoremove) :+ newArc) ++ newedges
+                  .drop(indextoremove + 2)
+              ),
+              accumPf | filterPf | mergePf
+            )
+          } else {
+            {
+              val newArc = NormalArc(
+                newedges.last.initial,
+                newedges.head.terminal,
+                newedges.head.face
+              )
+              val mergePiecePf = PathHomotopy.InFace(
+                NormalPath(Vector(edges.last, edges.head)),
+                NormalPath(Vector(newArc)),
+                newArc.face
+              )
+              val mergePf = FreeHomotopy.shifRight(path, 1) | (PathHomotopy
+                .Const(opt(edges.take(indextoremove))) * mergePiecePf * PathHomotopy
+                .Const(opt(edges.drop(indextoremove + 2)))).free
+              makeClosedPathsTautPf(
+                NormalPath(
+                  newArc +: newedges.drop(1).dropRight(1)
+                ),
+                accumPf | filterPf | mergePf
+              )
+            }
+          }
+        })
+        .getOrElse {
+          val (newPath, purgePf) = removeVertexLinkingSubPathsPf(newedges)
+          (newPath, accumPf | filterPf | purgePf.free)
+        }
     }
   }
 
@@ -691,6 +795,44 @@ object NormalPath {
         )
       )
     else makeClosedPathsTaut(NormalPath(path.edges ++ vertexlinkingpath.edges))
+  }
+
+  def otherWayAroundVertexPf[P <: Polygon](
+      complex: TwoComplex[P],
+      path: NormalPath[P],
+      indextomove: Index,
+      lefttoright: Boolean
+  ): (Option[NormalPath[P]], FreeHomotopy[P]) = {
+    val face = path.edges(indextomove).face
+    val initIndex = path.edges(indextomove).terminal
+    val edge = face.boundary(initIndex)
+    val vertex = if (lefttoright) edge.initial else edge.terminal
+    val vertexlinkingpath = vertexLinkingPath(
+      complex,
+      face,
+      initIndex,
+      lefttoright
+    )
+    val vertexPf = PathHomotopy.VertexLinking(vertexlinkingpath, vertex)
+    if (indextomove != (path.edges.size - 1)) {
+      val preEdges: Vector[NormalArc[P]] = path.edges
+        .slice(0, indextomove + 1)
+      val postEdges: Vector[NormalArc[P]] = path.edges
+        .slice(indextomove + 1, path.edges.size)
+      val insertPf = PathHomotopy.Const(opt(preEdges)) * vertexPf * PathHomotopy.Const(opt(postEdges))
+      
+      val (resPath,tautPf ) = makeClosedPathsTautPf(
+        NormalPath(
+          preEdges ++ vertexlinkingpath.edges ++ postEdges
+        ),
+        insertPf.free
+      )
+      resPath -> tautPf
+    } else {
+      val insertPf : PathHomotopy[P] = PathHomotopy.Const(Some(path)) * vertexPf
+      val (resPath,tautPf )=  makeClosedPathsTautPf(NormalPath(path.edges ++ vertexlinkingpath.edges), insertPf.free)
+      resPath -> tautPf
+    }
   }
 
   /**
@@ -822,8 +964,10 @@ sealed trait PathHomotopy[P <: Polygon] {
   def *(that: PathHomotopy[P]) = PathHomotopy.PathwiseProduct(this, that)
 
   lazy val homotopyFlip = PathHomotopy.HomotopyFlip(this)
-  
+
   lazy val pathFlip = PathHomotopy.PathwiseFlip(this)
+
+  lazy val free: FreeHomotopy[P] = FreeHomotopy.LoopHomotopy(this)
 }
 
 object PathHomotopy {
@@ -875,7 +1019,6 @@ object PathHomotopy {
     }
 
   }
-
   case class Const[P <: Polygon](curveOpt: Option[NormalPath[P]])
       extends PathHomotopy[P] {
     val start: Option[NormalPath[P]] = curveOpt
@@ -883,15 +1026,14 @@ object PathHomotopy {
     val end: Option[NormalPath[P]] = curveOpt
 
   }
-
   case class PathwiseProduct[P <: Polygon](
       first: PathHomotopy[P],
       second: PathHomotopy[P]
   ) extends PathHomotopy[P] {
     val start: Option[NormalPath[P]] = concat(first.start, second.start)
-    
+
     val end: Option[NormalPath[P]] = concat(first.end, second.end)
-    
+
   }
 
   case class HomotopyProduct[P <: Polygon](
@@ -901,6 +1043,8 @@ object PathHomotopy {
     val start: Option[NormalPath[P]] = first.start
 
     val end: Option[NormalPath[P]] = second.end
+
+    override lazy val free: FreeHomotopy[P] = first.free | second.free
 
     require(first.end == second.start)
   }
@@ -927,6 +1071,9 @@ sealed trait FreeHomotopy[P <: Polygon] {
   val start: Option[NormalPath[P]]
 
   val end: Option[NormalPath[P]]
+
+  def |(that: FreeHomotopy[P]): FreeHomotopy[P] =
+    FreeHomotopy.HomotopyProduct(this, that)
 }
 
 object FreeHomotopy {
@@ -939,7 +1086,7 @@ object FreeHomotopy {
     require(start.forall(_.isClosed))
   }
 
-  case class Rotation[P <: Polygon](path: NormalPath[P], shift: Int)
+  case class ShiftLeft[P <: Polygon](path: NormalPath[P], shift: Int)
       extends FreeHomotopy[P] {
     val start: Option[NormalPath[P]] = Some(path)
 
@@ -950,11 +1097,37 @@ object FreeHomotopy {
     require(path.isClosed)
   }
 
-  case class Flip[P <: Polygon](homotopy: FreeHomotopy[P])
+  def shiftLeft[P <: Polygon](path: NormalPath[P], shift: Int) =
+    ShiftLeft(path, shift)
+
+  def shifRight[P <: Polygon](path: NormalPath[P], shift: Int) =
+    ShiftLeft(path, path.edges.size - shift)
+
+  case class PathwiseFlip[P <: Polygon](homotopy: FreeHomotopy[P])
       extends FreeHomotopy[P] {
     val start: Option[NormalPath[P]] = homotopy.start.map(_.flip)
 
     val end: Option[NormalPath[P]] = homotopy.end.map(_.flip)
 
   }
+
+  case class HomotopyFlip[P <: Polygon](homotopy: FreeHomotopy[P])
+      extends FreeHomotopy[P] {
+    val start: Option[NormalPath[P]] = homotopy.end
+
+    val end: Option[NormalPath[P]] = homotopy.start
+
+  }
+
+  case class HomotopyProduct[P <: Polygon](
+      first: FreeHomotopy[P],
+      second: FreeHomotopy[P]
+  ) extends FreeHomotopy[P] {
+    val start: Option[NormalPath[P]] = first.start
+
+    val end: Option[NormalPath[P]] = second.end
+
+    require(first.end == second.start)
+  }
+
 }
