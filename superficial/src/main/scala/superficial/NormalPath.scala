@@ -416,7 +416,7 @@ object NormalPath {
     }
   }
 
-  def rotateAndFlip[P <: Polygon](path: NormalPath[P]) = {
+  def rotateAndFlip[P <: Polygon](path: NormalPath[P]): Set[NormalPath[P]] = {
     val rotated = ((0 until path.edges.size)
       .map(k => NormalPath(path.edges.drop(k) ++ path.edges.take(k))))
       .toSet
@@ -1025,6 +1025,8 @@ object PathHomotopy {
 
     val end: Option[NormalPath[P]] = curveOpt
 
+    override lazy val free: FreeHomotopy[P] = FreeHomotopy.Const(curveOpt.get)
+
   }
   case class PathwiseProduct[P <: Polygon](
       first: PathHomotopy[P],
@@ -1086,6 +1088,16 @@ object FreeHomotopy {
     require(start.forall(_.isClosed))
   }
 
+  case class Const[P<: Polygon](path: NormalPath[P]) extends FreeHomotopy[P]{
+    val start: Option[NormalPath[P]] = Some(path)
+    
+    val end: Option[NormalPath[P]] = Some(path)
+    
+    assert(path.isClosed)
+
+    override def |(that: FreeHomotopy[P]): FreeHomotopy[P] = that
+  }
+
   case class ShiftLeft[P <: Polygon](path: NormalPath[P], shift: Int)
       extends FreeHomotopy[P] {
     val start: Option[NormalPath[P]] = Some(path)
@@ -1102,6 +1114,7 @@ object FreeHomotopy {
 
   def shifRight[P <: Polygon](path: NormalPath[P], shift: Int) =
     ShiftLeft(path, path.edges.size - shift)
+
 
   case class PathwiseFlip[P <: Polygon](homotopy: FreeHomotopy[P])
       extends FreeHomotopy[P] {
@@ -1129,5 +1142,23 @@ object FreeHomotopy {
 
     require(first.end == second.start)
   }
+
+  case class ReverseOrientation[P <: Polygon](path: NormalPath[P]) extends FreeHomotopy[P]{
+    val start: Option[NormalPath[P]] = Some(path)
+    
+    val end: Option[NormalPath[P]] = Some(path.flip)
+
+    require(path.isClosed)
+    
+  }
+
+  def findRotation[P <: Polygon](source : NormalPath[P], target: NormalPath[P]): Option[FreeHomotopy[P]] = 
+    (0 until source.edges.size).find(k => source.edges.drop(k) ++ source.edges.take(k) == target.edges).map{
+      j => shiftLeft(source, j)
+    }
+
+  def getRotationOrFlip[P <: Polygon](source : NormalPath[P], target: NormalPath[P]): FreeHomotopy[P] =
+    findRotation(source, target).getOrElse(ReverseOrientation(source) | findRotation(source.flip, target).get)
+    
 
 }
