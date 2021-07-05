@@ -431,7 +431,7 @@ object PLPath {
     * @param path the PLPath
     * @param sep separation between endpoints while enumerating candidates for minimal PLPath
     * @param uniqrepuptoflipandcyclicper map from normalpath to the candidate which is enumerated to PLPath
-    * @param enumdata map from the normalpaths that are enumerated to their minimal PL representatives
+    * @param shortestPlReps map from the normalpaths that are enumerated to their minimal PL representatives
     * @return Shortened PLPath
     */
   def shorten(
@@ -441,7 +441,7 @@ object PLPath {
       uniqrepuptoflipandcyclicper: Map[NormalPath[SkewPantsHexagon], NormalPath[
         SkewPantsHexagon
       ]],
-      enumdata: Map[NormalPath[SkewPantsHexagon], Option[PLPath]]
+      shortestPlReps: Map[NormalPath[SkewPantsHexagon], Option[PLPath]]
   ): Option[PLPath] = {
     require(path.base.isClosed, "Path is not closed")
     val arcsclosetovertex: Vector[(Boolean, Int)] = path.plArcs
@@ -450,7 +450,7 @@ object PLPath {
       .flatMap { case (optB, j) => optB.map(b => (b, j)) }
     if (path.base.isVertexLinking) None
     else if (arcsclosetovertex.nonEmpty) {
-      // all paths obtained by pushing across a vertex (vertex arbitrarily chosen)
+      // all paths obtained by pushing across a vertex
       val normalpaths = (for { i <- arcsclosetovertex } yield
         NormalPath.otherWayAroundVertex(complex, path.base, i._2, i._1))
       if (normalpaths.contains(None)) None
@@ -463,8 +463,8 @@ object PLPath {
             s"path $path not in uniqueUptoFlipAndCyclicPer"
           )
           shortPath <- shortPathOpt
-          spOpt = enumdata.get(shortPath)
-          _ = assert(spOpt.nonEmpty, s"path $shortPath not in enumdata")
+          spOpt = shortestPlReps.get(shortPath)
+          _ = assert(spOpt.nonEmpty, s"path $shortPath not in shortestPlReps")
           sp <- spOpt
         } yield sp
 
@@ -479,7 +479,7 @@ object PLPath {
                 newminplpath._1,
                 sep,
                 uniqrepuptoflipandcyclicper,
-                enumdata
+                shortestPlReps
               )
             else Some(path)
           }
@@ -543,7 +543,7 @@ object PLPath {
     * @param paths the set of paths
     * @param sep separation between endpoints while enumerating candidates for minimal PLPath
     * @param uniqrepuptoflipandcyclicper map from normalpath to the candidate which is enumerated to PLPath
-    * @param enumdata  map from the normalpaths that are enumerated to their minimal PL representatives
+    * @param shortestPlReps  map from the normalpaths that are enumerated to their minimal PL representatives
     * @param accum parameter for recursion
     * @return Set of isotopy classes
     */
@@ -554,7 +554,7 @@ object PLPath {
       uniqrepuptoflipandcyclicper: Map[NormalPath[SkewPantsHexagon], NormalPath[
         SkewPantsHexagon
       ]],
-      enumdata: Map[NormalPath[SkewPantsHexagon], Option[PLPath]],
+      shortestPlReps: Map[NormalPath[SkewPantsHexagon], Option[PLPath]],
       accum: Set[Set[PLPath]] = Set()
   ): Set[Set[PLPath]] = {
     require(paths.map(_.base).forall(_.isClosed), "All paths are not closed")
@@ -565,14 +565,14 @@ object PLPath {
         paths.head,
         sep,
         uniqrepuptoflipandcyclicper,
-        enumdata
+        shortestPlReps
       )
       postEnumIsotopyCheck(
         complex,
         removeGivenPaths(paths, eqclass),
         sep,
         uniqrepuptoflipandcyclicper,
-        enumdata,
+        shortestPlReps,
         accum + eqclass
       )
     }
@@ -585,7 +585,7 @@ object PLPath {
     * @param path the PLPath
     * @param sep separation between endpoints while enumerating candidates for minimal PLPath
     * @param uniqrepuptoflipandcyclicper map from normalpath to the candidate which is enumerated to PLPath
-    * @param enumdata map from the normalpaths that are enumerated to their minimal PL representatives
+    * @param shortestPlReps map from the normalpaths that are enumerated to their minimal PL representatives
     * @param accum parameter for recursion
     * @return The isotopy class
     */
@@ -596,7 +596,7 @@ object PLPath {
       uniqrepuptoflipandcyclicper: Map[NormalPath[SkewPantsHexagon], NormalPath[
         SkewPantsHexagon
       ]],
-      enumdata: Map[NormalPath[SkewPantsHexagon], Option[PLPath]],
+      shortestPlReps: Map[NormalPath[SkewPantsHexagon], Option[PLPath]],
       accum: Set[PLPath] = Set()
   ): Set[PLPath] = {
     val arcsclosetovertex = path.plArcs
@@ -610,7 +610,7 @@ object PLPath {
         path <- normalpaths.flatten
         repPath <- uniqrepuptoflipandcyclicper.get(path)
       } yield
-        enumdata
+        shortestPlReps
           .get(
             repPath
           )
@@ -621,7 +621,7 @@ object PLPath {
           plpath,
           sep,
           uniqrepuptoflipandcyclicper,
-          enumdata,
+          shortestPlReps,
           accum + path
         )).foldLeft(accum + path)((a, b) => a.union(b))
     } else Set(path)
