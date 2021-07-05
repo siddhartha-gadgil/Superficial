@@ -11,6 +11,8 @@ import doodle.core.Vec
   * @param face the face containing the arc
   */
 case class NormalArc[P <: Polygon](initial: Index, terminal: Index, face: P) {
+  override val hashCode: Int = scala.util.hashing.MurmurHash3.productHash(this)
+
   val terminalEdge = face.boundary(terminal)
 
   val initialEdge = face.boundary(initial)
@@ -160,6 +162,8 @@ case class NormalPath[P <: Polygon](edges: Vector[NormalArc[P]]) {
       )
       require(!(e1.terminalEdge.isInstanceOf[BoundaryEdge]))
   }
+
+  override val hashCode: Int = scala.util.hashing.MurmurHash3.productHash(this)
 
   val length = edges.size
 

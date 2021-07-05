@@ -157,6 +157,8 @@ case class PLPath(
       .isInstanceOf[BoundaryEdge] || base.edges.last.terminalEdge
       .isInstanceOf[BoundaryEdge])
   )
+
+  override val hashCode: Int = scala.util.hashing.MurmurHash3.productHash(this)
   lazy val plArcs: Vector[PLArc] =
     for (i <- (0 to (base.edges.size - 1)).toVector)
       yield PLArc(base.edges(i), initialDisplacements(i), finalDisplacements(i))
@@ -488,6 +490,27 @@ object PLPath {
     } else Some(path)
   }
 
+  def shortenProved(
+      complex: TwoComplex[SkewPantsHexagon],
+      path: PLPath,
+      sep: Double,
+      uniqrepuptoflipandcyclicper: Map[NormalPath[SkewPantsHexagon], NormalPath[
+        SkewPantsHexagon
+      ]],
+      shortestPlReps: Map[NormalPath[SkewPantsHexagon], Option[PLPath]]
+  ): (Option[PLPath], FreeHomotopy[SkewPantsHexagon]) =
+    shortenPf(
+      complex,
+      path,
+      sep,
+      uniqrepuptoflipandcyclicper,
+      shortestPlReps,
+      FreeHomotopy.Const(path.base)
+    ).ensuring {
+      case (endCurve, pf) =>
+        pf.start == Some(path.base) && pf.end == endCurve.map(_.base)
+    }
+
   def shortenPf(
       complex: TwoComplex[SkewPantsHexagon],
       path: PLPath,
@@ -499,6 +522,10 @@ object PLPath {
       accumPf: FreeHomotopy[SkewPantsHexagon]
   ): (Option[PLPath], FreeHomotopy[SkewPantsHexagon]) = {
     require(path.base.isClosed, "Path is not closed")
+    require(
+      accumPf.end == Some(path.base),
+      s"the accumulated homotopy\nfrom: ${accumPf.start}\nto: ${accumPf.end}  should be to the path:\n${path.base}"
+    )
     val arcsclosetovertex: Vector[(Boolean, Int)] = path.plArcs
       .map(_.finalPointClosetoVertex(1.5 * sep))
       .zipWithIndex
@@ -740,7 +767,7 @@ object PLPath {
         .collect {
           case (Some(path), pf) => path -> pf
         }
-        .filter(_._1.length < (path.length + 3 * sep))        
+        .filter(_._1.length < (path.length + 3 * sep))
       (for {
         (plpath, pf) <- plpaths.filterNot(xy => accumPfs.keySet.contains(xy._1))
       } yield
