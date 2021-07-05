@@ -631,7 +631,7 @@ object NormalPath {
           PathHomotopy.Const(Some(NormalPath(Vector(e))))
         else PathHomotopy.EdgeNbd(e)
     )
-    val filterPf: FreeHomotopy[P] = filterPfVec.reduce(_ | _).free
+    val filterPf: FreeHomotopy[P] = filterPfVec.reduce(_ * _).free
     if (newedges.isEmpty) (None, filterPf)
     else {
       val samefaceedgepairOpt = newedges
@@ -647,13 +647,13 @@ object NormalPath {
               newedges(indextoremove).face
             )
             val mergePiecePf = PathHomotopy.InFace(
-              NormalPath(edges.drop(indextoremove).take(2)),
+              NormalPath(newedges.drop(indextoremove).take(2)),
               NormalPath(Vector(newArc)),
               newArc.face
             )
             val mergePf = (PathHomotopy
-              .Const(opt(edges.take(indextoremove))) * mergePiecePf * PathHomotopy
-              .Const(opt(edges.drop(indextoremove + 2)))).free
+              .Const(opt(newedges.take(indextoremove))) * mergePiecePf * PathHomotopy
+              .Const(opt(newedges.drop(indextoremove + 2)))).free
             makeClosedPathsTautPf(
               NormalPath(
                 (newedges.slice(0, indextoremove) :+ newArc) ++ newedges
@@ -669,13 +669,13 @@ object NormalPath {
                 newedges.head.face
               )
               val mergePiecePf = PathHomotopy.InFace(
-                NormalPath(Vector(edges.last, edges.head)),
+                NormalPath(Vector(newedges.last, newedges.head)),
                 NormalPath(Vector(newArc)),
                 newArc.face
               )
-              val mergePf = FreeHomotopy.shifRight(path, 1) | (PathHomotopy
-                .Const(opt(edges.take(indextoremove))) * mergePiecePf * PathHomotopy
-                .Const(opt(edges.drop(indextoremove + 2)))).free
+              val mergePf = FreeHomotopy.shifRight(NormalPath(newedges), 1) | (mergePiecePf *
+                PathHomotopy
+                  .Const(opt(newedges.drop(1).dropRight(1)))).free
               makeClosedPathsTautPf(
                 NormalPath(
                   newArc +: newedges.drop(1).dropRight(1)
@@ -819,9 +819,10 @@ object NormalPath {
         .slice(0, indextomove + 1)
       val postEdges: Vector[NormalArc[P]] = path.edges
         .slice(indextomove + 1, path.edges.size)
-      val insertPf = PathHomotopy.Const(opt(preEdges)) * vertexPf * PathHomotopy.Const(opt(postEdges))
-      
-      val (resPath,tautPf ) = makeClosedPathsTautPf(
+      val insertPf = PathHomotopy.Const(opt(preEdges)) * vertexPf.homotopyFlip * PathHomotopy
+        .Const(opt(postEdges))
+
+      val (resPath, tautPf) = makeClosedPathsTautPf(
         NormalPath(
           preEdges ++ vertexlinkingpath.edges ++ postEdges
         ),
@@ -829,8 +830,12 @@ object NormalPath {
       )
       resPath -> tautPf
     } else {
-      val insertPf : PathHomotopy[P] = PathHomotopy.Const(Some(path)) * vertexPf
-      val (resPath,tautPf )=  makeClosedPathsTautPf(NormalPath(path.edges ++ vertexlinkingpath.edges), insertPf.free)
+      val insertPf: PathHomotopy[P] = PathHomotopy.Const(Some(path)) * vertexPf.homotopyFlip
+      val (resPath, tautPf) =
+        makeClosedPathsTautPf(
+          NormalPath(path.edges ++ vertexlinkingpath.edges),
+          insertPf.free
+        )
       resPath -> tautPf
     }
   }
@@ -955,9 +960,9 @@ sealed trait PathHomotopy[P <: Polygon] {
 
   val end: Option[NormalPath[P]]
 
-  val startEdges = optEdges(start)
+  lazy val startEdges = optEdges(start)
 
-  val endEdges = optEdges(end)
+  lazy val endEdges = optEdges(end)
 
   def |(that: PathHomotopy[P]) = PathHomotopy.HomotopyProduct(this, that)
 
@@ -976,16 +981,29 @@ object PathHomotopy {
       curve: NormalPath[P],
       vertex: Vertex
   ) extends PathHomotopy[P] {
-    require {
-      (curve.edges.forall(
-        arc =>
-          arc.initialEdge.initial == vertex && arc.terminalEdge.initial == vertex
-      )) ||
-      (curve.edges.forall(
-        arc =>
-          arc.initialEdge.terminal == vertex && arc.terminalEdge.terminal == vertex
-      ))
-    }
+    require(
+      {
+        (curve.edges.forall(
+          arc =>
+            arc.initialEdge.initial == vertex && arc.terminalEdge.terminal == vertex
+        )) ||
+        (curve.edges.forall(
+          arc =>
+            arc.initialEdge.terminal == vertex && arc.terminalEdge.initial == vertex
+        ))
+
+      },
+      s"""
+          |vertex: $vertex
+          |initial-initial=${curve.edges.map(_.initialEdge.initial).distinct}
+          |initial-terminal=${curve.edges.map(_.initialEdge.terminal).distinct}
+          |terminal-terminal=${curve.edges
+           .map(_.terminalEdge.terminal)
+           .distinct}
+          |terminal-initial=${curve.edges
+           .map(_.terminalEdge.initial)
+           .distinct}""".stripMargin
+    )
     val start: Option[NormalPath[P]] = Some(curve)
 
     val end: Option[NormalPath[P]] = None
@@ -1085,15 +1103,25 @@ object FreeHomotopy {
 
     val end: Option[NormalPath[P]] = homotopy.end
 
-    require(start.forall(_.isClosed))
+    start.foreach { path =>
+      import path.edges
+      require(
+        ((edges.last.terminalEdge == edges.head.initialEdge.flip) || (edges.last.terminalEdge == edges.head.initialEdge)),
+        "Path given by edges is not closed"
+      )
+    }
   }
 
-  case class Const[P<: Polygon](path: NormalPath[P]) extends FreeHomotopy[P]{
+  case class Const[P <: Polygon](path: NormalPath[P]) extends FreeHomotopy[P] {
     val start: Option[NormalPath[P]] = Some(path)
-    
+
     val end: Option[NormalPath[P]] = Some(path)
-    
-    assert(path.isClosed)
+
+    import path.edges
+    require(
+      ((edges.last.terminalEdge == edges.head.initialEdge.flip) || (edges.last.terminalEdge == edges.head.initialEdge)),
+      "Path given by edges is not closed"
+    )
 
     override def |(that: FreeHomotopy[P]): FreeHomotopy[P] = that
   }
@@ -1106,7 +1134,11 @@ object FreeHomotopy {
       NormalPath(path.edges.drop(shift) ++ path.edges.take(shift))
     )
 
-    require(path.isClosed)
+    import path.edges
+    require(
+      ((edges.last.terminalEdge == edges.head.initialEdge.flip) || (edges.last.terminalEdge == edges.head.initialEdge)),
+      "Path given by edges is not closed"
+    )
   }
 
   def shiftLeft[P <: Polygon](path: NormalPath[P], shift: Int) =
@@ -1114,7 +1146,6 @@ object FreeHomotopy {
 
   def shifRight[P <: Polygon](path: NormalPath[P], shift: Int) =
     ShiftLeft(path, path.edges.size - shift)
-
 
   case class PathwiseFlip[P <: Polygon](homotopy: FreeHomotopy[P])
       extends FreeHomotopy[P] {
@@ -1140,25 +1171,38 @@ object FreeHomotopy {
 
     val end: Option[NormalPath[P]] = second.end
 
-    require(first.end == second.start)
+    require(first.end == second.start, s"${first.end}\n does not match \n${second.start} \nwhile gluing")
   }
 
-  case class ReverseOrientation[P <: Polygon](path: NormalPath[P]) extends FreeHomotopy[P]{
+  case class ReverseOrientation[P <: Polygon](path: NormalPath[P])
+      extends FreeHomotopy[P] {
     val start: Option[NormalPath[P]] = Some(path)
-    
+
     val end: Option[NormalPath[P]] = Some(path.flip)
 
-    require(path.isClosed)
-    
+    import path.edges
+    require(
+      ((edges.last.terminalEdge == edges.head.initialEdge.flip) || (edges.last.terminalEdge == edges.head.initialEdge)),
+      "Path given by edges is not closed"
+    )
   }
 
-  def findRotation[P <: Polygon](source : NormalPath[P], target: NormalPath[P]): Option[FreeHomotopy[P]] = 
-    (0 until source.edges.size).find(k => source.edges.drop(k) ++ source.edges.take(k) == target.edges).map{
-      j => shiftLeft(source, j)
-    }
+  def findRotation[P <: Polygon](
+      source: NormalPath[P],
+      target: NormalPath[P]
+  ): Option[FreeHomotopy[P]] =
+    (0 until source.edges.size)
+      .find(k => source.edges.drop(k) ++ source.edges.take(k) == target.edges)
+      .map { j =>
+        shiftLeft(source, j)
+      }
 
-  def getRotationOrFlip[P <: Polygon](source : NormalPath[P], target: NormalPath[P]): FreeHomotopy[P] =
-    findRotation(source, target).getOrElse(ReverseOrientation(source) | findRotation(source.flip, target).get)
-    
+  def getRotationOrFlip[P <: Polygon](
+      source: NormalPath[P],
+      target: NormalPath[P]
+  ): FreeHomotopy[P] =
+    findRotation(source, target).getOrElse(
+      ReverseOrientation(source) | findRotation(source.flip, target).get
+    )
 
 }
