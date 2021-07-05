@@ -708,6 +708,86 @@ object PLPath {
     } else Set(path)
   }
 
+  def getPostEnumIsotopyClassPf(
+      complex: TwoComplex[SkewPantsHexagon],
+      path: PLPath,
+      sep: Double,
+      uniqrepuptoflipandcyclicper: Map[NormalPath[SkewPantsHexagon], NormalPath[
+        SkewPantsHexagon
+      ]],
+      shortestPlReps: Map[NormalPath[SkewPantsHexagon], Option[PLPath]],
+      pathPf: FreeHomotopy[SkewPantsHexagon],
+      accumPfs: Map[PLPath, FreeHomotopy[SkewPantsHexagon]] = Map()
+  ): Map[PLPath, FreeHomotopy[SkewPantsHexagon]] = {
+    val arcsclosetovertex = path.plArcs
+      .map(_.finalPointClosetoVertex(1.5 * sep))
+      .zipWithIndex
+      .filter(_._1.isDefined)
+    if (arcsclosetovertex.nonEmpty) {
+      val normalpaths = (for { i <- arcsclosetovertex } yield
+        NormalPath.otherWayAroundVertexPf(complex, path.base, i._2, i._1.get))
+      val plpaths = (for {
+        (path, vertPf) <- normalpaths.collect {
+          case (Some(path), pf) => path -> pf
+        }
+        repPath <- uniqrepuptoflipandcyclicper.get(path)
+        shortPath = shortestPlReps(repPath)
+      } yield
+        shortPath -> (pathPf | vertPf | FreeHomotopy.getRotationOrFlip(
+          path,
+          repPath
+        )))
+        .collect {
+          case (Some(path), pf) => path -> pf
+        }
+        .filter(_._1.length < (path.length + 3 * sep))        
+      (for {
+        (plpath, pf) <- plpaths.filterNot(xy => accumPfs.keySet.contains(xy._1))
+      } yield
+        getPostEnumIsotopyClassPf(
+          complex,
+          plpath,
+          sep,
+          uniqrepuptoflipandcyclicper,
+          shortestPlReps,
+          pf,
+          accumPfs + (path -> pathPf)
+        )).fold(accumPfs + (path -> pathPf))(_ ++ _)
+    } else Map(path -> pathPf)
+  }
+
+  def postEnumIsotopyCheckPf(
+      complex: TwoComplex[SkewPantsHexagon],
+      paths: Set[PLPath],
+      sep: Double,
+      uniqrepuptoflipandcyclicper: Map[NormalPath[SkewPantsHexagon], NormalPath[
+        SkewPantsHexagon
+      ]],
+      shortestPlReps: Map[NormalPath[SkewPantsHexagon], Option[PLPath]],
+      accum: Set[Map[PLPath, FreeHomotopy[SkewPantsHexagon]]] = Set()
+  ): Set[Map[PLPath, FreeHomotopy[SkewPantsHexagon]]] = {
+    require(paths.map(_.base).forall(_.isClosed), "All paths are not closed")
+    if (paths.isEmpty) accum
+    else {
+      val eqclass = getPostEnumIsotopyClassPf(
+        complex,
+        paths.head,
+        sep,
+        uniqrepuptoflipandcyclicper,
+        shortestPlReps,
+        FreeHomotopy.Const(paths.head.base)
+      )
+      postEnumIsotopyCheckPf(
+        complex,
+        removeGivenPaths(paths, eqclass.keySet),
+        sep,
+        uniqrepuptoflipandcyclicper,
+        shortestPlReps,
+        accum + eqclass
+      )
+    }
+  }
+
   /**
     * Given a surface, gives PLPaths that are shortest in their isotopy class
     * and have length not much more than the smallest pants cuff
