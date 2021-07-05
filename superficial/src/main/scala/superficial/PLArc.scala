@@ -488,6 +488,87 @@ object PLPath {
     } else Some(path)
   }
 
+  def shortenPf(
+      complex: TwoComplex[SkewPantsHexagon],
+      path: PLPath,
+      sep: Double,
+      uniqrepuptoflipandcyclicper: Map[NormalPath[SkewPantsHexagon], NormalPath[
+        SkewPantsHexagon
+      ]],
+      shortestPlReps: Map[NormalPath[SkewPantsHexagon], Option[PLPath]],
+      accumPf: FreeHomotopy[SkewPantsHexagon]
+  ): (Option[PLPath], FreeHomotopy[SkewPantsHexagon]) = {
+    require(path.base.isClosed, "Path is not closed")
+    val arcsclosetovertex: Vector[(Boolean, Int)] = path.plArcs
+      .map(_.finalPointClosetoVertex(1.5 * sep))
+      .zipWithIndex
+      .flatMap { case (optB, j) => optB.map(b => (b, j)) }
+    if (path.base.isVertexLinking)
+      None ->
+        (accumPf | PathHomotopy
+          .VertexLinking(path.base, path.base.edges.head.whichVertexLinking.get)
+          .free) // homotopically trivial
+    else if (arcsclosetovertex.isEmpty)
+      Some(path) -> accumPf // no perturbations
+    else {
+      // all paths obtained by pushing across a vertex
+      val normalpaths =
+        for {
+          i <- arcsclosetovertex
+          (newPath, otherWayPf) = NormalPath.otherWayAroundVertexPf(
+            complex,
+            path.base,
+            i._2,
+            i._1
+          )
+        } yield newPath -> (accumPf | otherWayPf)
+
+      normalpaths
+        .find(_._1 == None)
+        .map {
+          case (_, trivPf) => None -> trivPf
+        } // homotopically trivial
+        .getOrElse {
+          val plpaths = for {
+            (Some(path), pathPf) <- normalpaths
+            shortPathOpt = uniqrepuptoflipandcyclicper.get(path)
+            _ = assert(
+              shortPathOpt.nonEmpty,
+              s"path $path not in uniqueUptoFlipAndCyclicPer"
+            )
+            shortPath <- shortPathOpt
+            flipPf = FreeHomotopy.getRotationOrFlip(path, shortPath)
+            spOpt = shortestPlReps.get(shortPath)
+            _ = assert(spOpt.nonEmpty, s"path $shortPath not in shortestPlReps")
+            sp <- spOpt
+          } yield (sp, pathPf | flipPf)
+
+          val plpBdd =
+            plpaths.collect {
+              case (Some(plp), pf) => plp -> pf
+            }
+          val newminplpathOpt = plpBdd
+            .zip(plpBdd.map(_._1.length))
+            .minByOption(_._2)
+          newminplpathOpt
+            .map {
+              case ((newminplpath, pf), l) =>
+                if (l < path.length)
+                  shortenPf(
+                    complex,
+                    newminplpath,
+                    sep,
+                    uniqrepuptoflipandcyclicper,
+                    shortestPlReps,
+                    pf
+                  )
+                else Some(path) -> accumPf // original curve shortest
+            }
+            .getOrElse(Some(path) -> accumPf) // no bounded perturbations
+        }
+    }
+  }
+
   /**
     * Remove duplicates upto flips and cyclic permutations given a set of closed PLPaths
     *
@@ -679,25 +760,29 @@ object PLPath {
     * @param twistStep Step for twists
     * @param normalPathLengthBound Upper bound for length of normalpaths
     * @param sep Separation between adjacent endpoints of PLPaths
-    * @param tol Tolerance multiplier for length of closed curves over shortest pant cuff 
+    * @param tol Tolerance multiplier for length of closed curves over shortest pant cuff
     * @return Vector of surfaces with maximal systoles
     */
   def findMaximalSystole(
-    genus: Int,
-    cuffLengthBound: BigDecimal, 
-    lengthStep: BigDecimal,
-    twistStep: BigDecimal,
-    normalPathLengthBound: Int,
-    sep: Double,
-    tol: Double
+      genus: Int,
+      cuffLengthBound: BigDecimal,
+      lengthStep: BigDecimal,
+      twistStep: BigDecimal,
+      normalPathLengthBound: Int,
+      sep: Double,
+      tol: Double
   ): Vector[(SkewPantsSurface, Set[PLPath])] = {
     val twists = (BigDecimal(0) until BigDecimal(1) by twistStep).toVector
     val lengths = (BigDecimal(1) to cuffLengthBound by lengthStep).toVector
     val skewsurfs = (for {
-      surf <- PantsSurface.allClosed((2*genus) - 2)
+      surf <- PantsSurface.allClosed((2 * genus) - 2)
       skewsurf <- SkewPantsSurface.enumerate(surf, twists, lengths)
     } yield skewsurf).filter(_.cs.exists(_.length == 1))
-    val systoles = skewsurfs.zip(skewsurfs.map(s => PLPath.shortPathsfromSurface(s, normalPathLengthBound, sep, tol)))
+    val systoles = skewsurfs.zip(
+      skewsurfs.map(
+        s => PLPath.shortPathsfromSurface(s, normalPathLengthBound, sep, tol)
+      )
+    )
     val maxsize = systoles.map(_._2.size).max
     systoles.filter(_._2.size == maxsize)
   }
