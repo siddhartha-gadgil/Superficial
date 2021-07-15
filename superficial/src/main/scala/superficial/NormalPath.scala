@@ -3,6 +3,7 @@ package superficial
 import Polygon.Index
 import upickle.default.{ReadWriter => RW, macroRW, _}
 import doodle.core.Vec
+import scala.tools.nsc.doc.html.HtmlTags
 
 /**
   * A normal arc in a face
@@ -39,6 +40,13 @@ case class NormalArc[P <: Polygon](initial: Index, terminal: Index, face: P) {
 }
 
 object NormalArc {
+
+  type cptNormalArcSPH = (Index, Index, Index, Boolean)
+
+  def toCpt(arc: NormalArc[SkewPantsHexagon]): cptNormalArcSPH = (arc.initial, arc.terminal, arc.face.pants, arc.face.top)
+
+  def fromCpt(cptarc: cptNormalArcSPH, skewsurf: SkewPantsSurface): NormalArc[SkewPantsHexagon] = NormalArc(cptarc._1, cptarc._2, SkewPantsHexagon(cptarc._3, cptarc._4, skewsurf.cs))
+
   def enumerate[P <: Polygon](complex: TwoComplex[P]): Set[NormalArc[P]] =
     for {
       face <- complex.faces
@@ -221,6 +229,12 @@ case class NormalPath[P <: Polygon](edges: Vector[NormalArc[P]]) {
 
 object NormalPath {
   implicit val rw: RW[NormalPath[SkewPantsHexagon]] = macroRW
+
+  type cptNormalPathSPH = Vector[NormalArc.cptNormalArcSPH]
+
+  def toCpt(path: NormalPath[SkewPantsHexagon]): cptNormalPathSPH = path.edges.map(arc => NormalArc.toCpt(arc))
+
+  def fromCpt(cptpath: cptNormalPathSPH, skewsurf: SkewPantsSurface): NormalPath[SkewPantsHexagon] = NormalPath(cptpath.map(c => NormalArc.fromCpt(c, skewsurf)))
 
   def optEdges[P <: Polygon](
       pathOpt: Option[NormalPath[P]]

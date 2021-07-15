@@ -212,6 +212,12 @@ object PLPath {
   import PLArc.rng
   implicit val rw: RW[PLPath] = macroRW
 
+  type cptPLPath = (NormalPath.cptNormalPathSPH, Vector[Double], Vector[Double])
+
+  def toCpt(plpath: PLPath): cptPLPath = (NormalPath.toCpt(plpath.base), plpath.initialDisplacements, plpath.finalDisplacements)
+
+  def fromCpt(cptplpath: cptPLPath, skewsurf: SkewPantsSurface):PLPath = PLPath(NormalPath.fromCpt(cptplpath._1, skewsurf), cptplpath._2, cptplpath._3)
+  
   /**
     * determine initial displacement of the second arc to glue with first arc
     *
@@ -417,6 +423,13 @@ object PLPath {
       data: Map[NormalPath[SkewPantsHexagon], Option[PLPath]]
   ): String = write(data)
 
+  def minimalClosedFamilyToJsonCpt(
+      data: Map[NormalPath[SkewPantsHexagon], Option[PLPath]],
+      skewsurf: SkewPantsSurface
+  ): String = {
+    write((skewsurf,data.map(p => NormalPath.toCpt(p._1)->p._2.flatMap(plp => Some(toCpt(plp))))))
+  }
+
   /**
     * Read enumerated PL paths from string
     *
@@ -425,6 +438,12 @@ object PLPath {
     */
   def minimalClosedFamilyFromJson(js: String) =
     read[Map[NormalPath[SkewPantsHexagon], Option[PLPath]]](js)
+
+  def minimalClosedFamilyFromJsonCpt(js: String) = {
+    val cptdata = read[(SkewPantsSurface,Map[NormalPath.cptNormalPathSPH, Option[cptPLPath]])](js)
+    cptdata._2.map(p => NormalPath.fromCpt(p._1, cptdata._1)->p._2.flatMap(plp => Some(fromCpt(plp, cptdata._1))))
+  }
+    
 
   /**
     * Shorten a PL-path by moving path across vertices and checking if length reduces
