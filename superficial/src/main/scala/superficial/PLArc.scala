@@ -940,7 +940,7 @@ object PLPath {
       sizebound: Int,
       sep: Double,
       tol: Double
-  ) = {
+  ): ShortPathsData = {
     require(surf.isClosedSurface, "Surface is not closed")
     val enumlenbound: Double = ((surf.cs.map(_.length).min) * tol).toDouble
     val clPaths = NormalPath
@@ -964,8 +964,21 @@ object PLPath {
         .flatMap(path => PLPath.shorten(surf, path, sep, uniqclpaths, plpaths))
         .toSet
     )
-    postEnumIsotopyCheck(surf, shortPaths, sep, uniqclpaths, plpaths).map(
-      _.minBy(_.length)
+    val finalShortPaths: Set[PLPath] =
+      postEnumIsotopyCheck(surf, shortPaths, sep, uniqclpaths, plpaths).map(
+        _.minBy(_.length)
+      )
+    ShortPathsData(
+      surf,
+      sizebound,
+      sep,
+      tol,
+      enumlenbound,
+      clPaths,
+      uniqclpaths,
+      plpaths,
+      shortPaths,
+      finalShortPaths
     )
   }
 }
@@ -976,7 +989,7 @@ case class ShortPathsData(
     sep: Double,
     tol: Double,
     enumLenBound: Double,
-    clPaths: Map[NormalPath[SkewPantsHexagon], NormalPath[SkewPantsHexagon]],
+    clPaths: Set[NormalPath[SkewPantsHexagon]],
     uniqueClPaths: Map[NormalPath[SkewPantsHexagon], NormalPath[
       SkewPantsHexagon
     ]],
@@ -991,6 +1004,46 @@ object ShortPathsData {
   implicit val rw: RW[ShortPathsData] = macroRW
 
   def fromJson(s: String) = read[ShortPathsData](s)
+
+  def toCpt(shortpathsdata: ShortPathsData) = ShortPathsDataCpt(
+    shortpathsdata.surf,
+    shortpathsdata.sizebound,
+    shortpathsdata.sep,
+    shortpathsdata.tol,
+    shortpathsdata.enumLenBound,
+    shortpathsdata.clPaths.map(path => NormalPath.toCpt(path)),
+    shortpathsdata.uniqueClPaths
+      .map(p => NormalPath.toCpt(p._1) -> NormalPath.toCpt(p._2)),
+    shortpathsdata.plPaths.map(
+      p =>
+        NormalPath.toCpt(p._1) -> p._2.flatMap(plp => Some(PLPath.toCpt(plp)))
+    ),
+    shortpathsdata.baseShortPaths.map(PLPath.toCpt(_)),
+    shortpathsdata.shortPaths.map(PLPath.toCpt(_))
+  )
+
+  def fromCpt(cptshortpathsdata: ShortPathsDataCpt) = ShortPathsData(
+    cptshortpathsdata.surf,
+    cptshortpathsdata.sizebound,
+    cptshortpathsdata.sep,
+    cptshortpathsdata.tol,
+    cptshortpathsdata.enumLenBound,
+    cptshortpathsdata.clPaths
+      .map(path => NormalPath.fromCpt(path, cptshortpathsdata.surf)),
+    cptshortpathsdata.uniqueClPaths.map(
+      p =>
+        NormalPath.fromCpt(p._1, cptshortpathsdata.surf) -> NormalPath
+          .fromCpt(p._2, cptshortpathsdata.surf)
+    ),
+    cptshortpathsdata.plPaths.map(
+      p =>
+        NormalPath.fromCpt(p._1, cptshortpathsdata.surf) -> p._2
+          .flatMap(plp => Some(PLPath.fromCpt(plp, cptshortpathsdata.surf)))
+    ),
+    cptshortpathsdata.baseShortPaths
+      .map(PLPath.fromCpt(_, cptshortpathsdata.surf)),
+    cptshortpathsdata.shortPaths.map(PLPath.fromCpt(_, cptshortpathsdata.surf))
+  )
 }
 
 case class ShortPathsDataCpt(
@@ -999,7 +1052,7 @@ case class ShortPathsDataCpt(
     sep: Double,
     tol: Double,
     enumLenBound: Double,
-    clPaths: Map[NormalPath.cptNormalPathSPH, NormalPath.cptNormalPathSPH],
+    clPaths: Set[NormalPath.cptNormalPathSPH],
     uniqueClPaths: Map[
       NormalPath.cptNormalPathSPH,
       NormalPath.cptNormalPathSPH
