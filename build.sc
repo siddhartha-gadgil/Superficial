@@ -28,7 +28,8 @@ object superficial extends CommonModule with SbtModule{
     ivy"com.lihaoyi::fastparse:2.3.0",
     ivy"com.lihaoyi::upickle::1.4.0",
     ivy"org.scala-lang.modules::scala-parallel-collections:1.0.0",
-    ivy"org.creativescala::doodle:0.9.21"
+    ivy"org.creativescala::doodle:0.9.21",
+    ivy"com.lihaoyi::os-lib:0.7.8"
   )
 
   def bin() : define.Command[PathRef] = T.command {
