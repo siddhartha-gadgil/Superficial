@@ -34,6 +34,7 @@ lazy val superficial = project.settings(
   libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.7" % "test",
   libraryDependencies += "org.creativescala" %% "doodle" % "0.9.21",
   libraryDependencies += "com.lihaoyi" %%% "upickle" % "1.4.0",
+  libraryDependencies += "com.lihaoyi" %% "os-lib" % "0.7.8",
   testFrameworks += new TestFramework("utest.runner.Framework")
 )
 

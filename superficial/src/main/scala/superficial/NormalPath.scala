@@ -43,9 +43,18 @@ object NormalArc {
 
   type cptNormalArcSPH = (Index, Index, Index, Boolean)
 
-  def toCpt(arc: NormalArc[SkewPantsHexagon]): cptNormalArcSPH = (arc.initial, arc.terminal, arc.face.pants, arc.face.top)
+  def toCpt(arc: NormalArc[SkewPantsHexagon]): cptNormalArcSPH =
+    (arc.initial, arc.terminal, arc.face.pants, arc.face.top)
 
-  def fromCpt(cptarc: cptNormalArcSPH, skewsurf: SkewPantsSurface): NormalArc[SkewPantsHexagon] = NormalArc(cptarc._1, cptarc._2, SkewPantsHexagon(cptarc._3, cptarc._4, skewsurf.cs))
+  def fromCpt(
+      cptarc: cptNormalArcSPH,
+      skewsurf: SkewPantsSurface
+  ): NormalArc[SkewPantsHexagon] =
+    NormalArc(
+      cptarc._1,
+      cptarc._2,
+      SkewPantsHexagon(cptarc._3, cptarc._4, skewsurf.cs)
+    )
 
   def enumerate[P <: Polygon](complex: TwoComplex[P]): Set[NormalArc[P]] =
     for {
@@ -232,9 +241,14 @@ object NormalPath {
 
   type cptNormalPathSPH = Vector[NormalArc.cptNormalArcSPH]
 
-  def toCpt(path: NormalPath[SkewPantsHexagon]): cptNormalPathSPH = path.edges.map(arc => NormalArc.toCpt(arc))
+  def toCpt(path: NormalPath[SkewPantsHexagon]): cptNormalPathSPH =
+    path.edges.map(arc => NormalArc.toCpt(arc))
 
-  def fromCpt(cptpath: cptNormalPathSPH, skewsurf: SkewPantsSurface): NormalPath[SkewPantsHexagon] = NormalPath(cptpath.map(c => NormalArc.fromCpt(c, skewsurf)))
+  def fromCpt(
+      cptpath: cptNormalPathSPH,
+      skewsurf: SkewPantsSurface
+  ): NormalPath[SkewPantsHexagon] =
+    NormalPath(cptpath.map(c => NormalArc.fromCpt(c, skewsurf)))
 
   def optEdges[P <: Polygon](
       pathOpt: Option[NormalPath[P]]
@@ -464,6 +478,41 @@ object NormalPath {
     }.toMap
   }
 
+  def uniqueUptoFlipAndCyclicPermToJson(
+      data: Map[NormalPath[SkewPantsHexagon], NormalPath[SkewPantsHexagon]]
+  ): String = write(data)
+
+  def uniqueUptoFlipAndCyclicPermToJsonCpt(
+      data: Map[NormalPath[SkewPantsHexagon], NormalPath[SkewPantsHexagon]],
+      skewsurf: SkewPantsSurface
+  ): String = {
+    write(
+      (
+        skewsurf,
+        data.map(
+          p => NormalPath.toCpt(p._1) -> NormalPath.toCpt(p._2)
+        )
+      )
+    )
+  }
+
+  def uniqueUptoFlipAndCyclicPermFromJson(js: String) =
+    read[Map[NormalPath[SkewPantsHexagon], NormalPath[SkewPantsHexagon]]](js)
+
+  def uniqueUptoFlipAndCyclicPermFromJsonCpt(js: String) = {
+    val cptdata = read[
+      (
+          SkewPantsSurface,
+          Map[NormalPath.cptNormalPathSPH, NormalPath.cptNormalPathSPH]
+      )
+    ](js)
+    cptdata._2.map(
+      p =>
+        NormalPath.fromCpt(p._1, cptdata._1) -> NormalPath
+          .fromCpt(p._2, cptdata._1)
+    )
+  }
+
   // old version of uniqueUptoFlipAndCyclicPerm
   def uniqRepUptoFlipAndCyclicPer[P <: Polygon](
       paths: Set[NormalPath[P]]
@@ -691,7 +740,8 @@ object NormalPath {
                 NormalPath(Vector(newArc)),
                 newArc.face
               )
-              val mergePf = FreeHomotopy.shifRight(NormalPath(newedges), 1) | (mergePiecePf *
+              val mergePf = FreeHomotopy
+                .shifRight(NormalPath(newedges), 1) | (mergePiecePf *
                 PathHomotopy
                   .Const(opt(newedges.drop(1).dropRight(1)))).free
               makeClosedPathsTautPf(
@@ -1189,7 +1239,10 @@ object FreeHomotopy {
 
     val end: Option[NormalPath[P]] = second.end
 
-    require(first.end == second.start, s"${first.end}\n does not match \n${second.start} \nwhile gluing")
+    require(
+      first.end == second.start,
+      s"${first.end}\n does not match \n${second.start} \nwhile gluing"
+    )
   }
 
   case class ReverseOrientation[P <: Polygon](path: NormalPath[P])

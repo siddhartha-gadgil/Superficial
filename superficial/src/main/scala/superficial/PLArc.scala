@@ -214,10 +214,20 @@ object PLPath {
 
   type cptPLPath = (NormalPath.cptNormalPathSPH, Vector[Double], Vector[Double])
 
-  def toCpt(plpath: PLPath): cptPLPath = (NormalPath.toCpt(plpath.base), plpath.initialDisplacements, plpath.finalDisplacements)
+  def toCpt(plpath: PLPath): cptPLPath =
+    (
+      NormalPath.toCpt(plpath.base),
+      plpath.initialDisplacements,
+      plpath.finalDisplacements
+    )
 
-  def fromCpt(cptplpath: cptPLPath, skewsurf: SkewPantsSurface):PLPath = PLPath(NormalPath.fromCpt(cptplpath._1, skewsurf), cptplpath._2, cptplpath._3)
-  
+  def fromCpt(cptplpath: cptPLPath, skewsurf: SkewPantsSurface): PLPath =
+    PLPath(
+      NormalPath.fromCpt(cptplpath._1, skewsurf),
+      cptplpath._2,
+      cptplpath._3
+    )
+
   /**
     * determine initial displacement of the second arc to glue with first arc
     *
@@ -427,7 +437,14 @@ object PLPath {
       data: Map[NormalPath[SkewPantsHexagon], Option[PLPath]],
       skewsurf: SkewPantsSurface
   ): String = {
-    write((skewsurf,data.map(p => NormalPath.toCpt(p._1)->p._2.flatMap(plp => Some(toCpt(plp))))))
+    write(
+      (
+        skewsurf,
+        data.map(
+          p => NormalPath.toCpt(p._1) -> p._2.flatMap(plp => Some(toCpt(plp)))
+        )
+      )
+    )
   }
 
   /**
@@ -440,10 +457,15 @@ object PLPath {
     read[Map[NormalPath[SkewPantsHexagon], Option[PLPath]]](js)
 
   def minimalClosedFamilyFromJsonCpt(js: String) = {
-    val cptdata = read[(SkewPantsSurface,Map[NormalPath.cptNormalPathSPH, Option[cptPLPath]])](js)
-    cptdata._2.map(p => NormalPath.fromCpt(p._1, cptdata._1)->p._2.flatMap(plp => Some(fromCpt(plp, cptdata._1))))
+    val cptdata = read[
+      (SkewPantsSurface, Map[NormalPath.cptNormalPathSPH, Option[cptPLPath]])
+    ](js)
+    cptdata._2.map(
+      p =>
+        NormalPath.fromCpt(p._1, cptdata._1) -> p._2
+          .flatMap(plp => Some(fromCpt(plp, cptdata._1)))
+    )
   }
-    
 
   /**
     * Shorten a PL-path by moving path across vertices and checking if length reduces
@@ -969,4 +991,28 @@ object ShortPathsData {
   implicit val rw: RW[ShortPathsData] = macroRW
 
   def fromJson(s: String) = read[ShortPathsData](s)
+}
+
+case class ShortPathsDataCpt(
+    surf: SkewPantsSurface,
+    sizebound: Int,
+    sep: Double,
+    tol: Double,
+    enumLenBound: Double,
+    clPaths: Map[NormalPath.cptNormalPathSPH, NormalPath.cptNormalPathSPH],
+    uniqueClPaths: Map[
+      NormalPath.cptNormalPathSPH,
+      NormalPath.cptNormalPathSPH
+    ],
+    plPaths: Map[NormalPath.cptNormalPathSPH, Option[PLPath.cptPLPath]],
+    baseShortPaths: Set[PLPath.cptPLPath],
+    shortPaths: Set[PLPath.cptPLPath]
+) {
+  def toJson: String = write(this)
+}
+
+object ShortPathsDataCpt {
+  implicit val rw: RW[ShortPathsDataCpt] = macroRW
+
+  def fromJson(s: String) = read[ShortPathsDataCpt](s)
 }
