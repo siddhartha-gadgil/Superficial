@@ -1131,7 +1131,7 @@ object PantsSurface {
     * Margulis constant
     */
   val margulis =
-    Hexagon.arccosh(sqrt((2 * cos(2 * Pi / 7) - 1) / (8 * cos(Pi / 7) + 7)))
+    2* Hexagon.arcsinh(sqrt((2 * cos(2 * Pi / 7) - 1) / (8 * cos(Pi / 7) + 7)))
 
   /**
     * determine whether the pants decompositions are isomorphic
