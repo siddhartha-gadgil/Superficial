@@ -993,10 +993,10 @@ case class ShortPathsfromSurfaceFinder(
   val enumLenBound: Double = ((surf.cs.map(_.length).min) * tol).toDouble
 
   // length 1 & 2 paths
-  lazy val len2Normal = NormalPath.enumerate(surf, Some(2))
+  val len2Normal = NormalPath.enumerate(surf, Some(2))
 
   // optional minimal length of segments, `None` means larger than enumLengthBound
-  lazy val len2Pl =
+  val len2Pl =
     len2Normal
       .map(
         path =>
@@ -1035,7 +1035,7 @@ case class ShortPathsfromSurfaceFinder(
   def segFilter(path: NormalPath[SkewPantsHexagon]): Boolean =
       segBound(path.edges.toList).exists(_ < enumLenBound)
 
-  lazy val uniqueclosedPaths
+  val uniqueclosedPaths
       : Map[NormalPath[SkewPantsHexagon], NormalPath[SkewPantsHexagon]] =
     NormalPath.uniqueUptoFlipAndCyclicPerm(
       NormalPath
