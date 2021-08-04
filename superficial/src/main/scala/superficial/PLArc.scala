@@ -983,6 +983,89 @@ object PLPath {
   }
 }
 
+case class ShortPathsfromSurfaceFinder(
+    surf: SkewPantsSurface,
+    maxSegments: Int,
+    sep: Double,
+    tol: Double
+) {
+  require(surf.isClosedSurface, "Surface is not closed")
+  val enumLenBound: Double = ((surf.cs.map(_.length).min) * tol).toDouble
+
+  // length 1 & 2 paths
+  lazy val len2Normal = NormalPath.enumerate(surf, Some(2))
+
+  // optional minimal length of segments, `None` means larger than enumLengthBound
+  lazy val len2Pl =
+    len2Normal
+      .map(
+        path =>
+          path -> PLPath
+            .enumMinimal(path, sep, enumLenBound)
+            .map(_.length)
+            .seq
+            .minOption
+      )
+      .filter(_._2.forall(_ < enumLenBound))
+      .toMap
+
+  def segBound(l: List[NormalArc[SkewPantsHexagon]]): Option[Double] =
+    (l match {
+      case head :: next =>
+        len2Pl(NormalPath(Vector(head))).flatMap { headBound =>
+          segBound(next).map(tailBound => headBound + tailBound).flatMap {
+            split1Bound => // bound from splitting head from tail
+              next match {
+                case head2 :: next2 =>
+                  len2Pl(NormalPath(Vector(head, head2)))
+                    .flatMap { headBound =>
+                      segBound(next2).map { tailBound =>
+                        headBound + tailBound
+                      }
+                    }
+                    .map(split2Bound => math.max(split1Bound, split2Bound))
+                case scala.collection.immutable.Nil => Some(split1Bound)
+              }
+          }
+        }
+      case scala.collection.immutable.Nil => Some(0.0) // no bound for length 0
+    }).filter(_ < enumLenBound) // saves considering cases
+
+  // check whether segments of length at most 2 lengths are consistent with total length bound
+  def segFilter(path: NormalPath[SkewPantsHexagon]): Boolean =
+      segBound(path.edges.toList).exists(_ < enumLenBound)
+
+  lazy val uniqueclosedPaths
+      : Map[NormalPath[SkewPantsHexagon], NormalPath[SkewPantsHexagon]] =
+    NormalPath.uniqueUptoFlipAndCyclicPerm(
+      NormalPath
+        .enumerate[SkewPantsHexagon](surf, Some(maxSegments), segFilter(_))
+        .filter(_.isClosed)
+    )
+  lazy val plPaths: Map[NormalPath[SkewPantsHexagon], Option[PLPath]] =
+    PLPath.enumMinimalClosedFamily(
+      uniqueclosedPaths.values.toVector,
+      sep,
+      enumLenBound
+    )
+  lazy val nonDegeneratePlPaths: Vector[PLPath] =
+    plPaths.values.flatten.toVector.filter(_.base.length < maxSegments)
+  lazy val shortPathsPf =
+    nonDegeneratePlPaths
+      .map(
+        path =>
+          PLPath.shortenProved(surf, path, sep, uniqueclosedPaths, plPaths)
+      )
+
+  lazy val shortPathsDupl: Set[PLPath] = shortPathsPf.map(_._1).flatten.toSet
+
+  lazy val shortPaths: Set[PLPath] = PLPath
+    .postEnumIsotopyCheck(surf, shortPathsDupl, sep, uniqueclosedPaths, plPaths)
+    .map(
+      _.minBy(_.length)
+    )
+}
+
 case class ShortPathsData(
     surf: SkewPantsSurface,
     sizebound: Int,
