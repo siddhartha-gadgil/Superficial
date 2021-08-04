@@ -4,6 +4,7 @@ import Polygon.Index
 import upickle.default.{ReadWriter => RW, macroRW, _}
 import doodle.core.Vec
 import scala.tools.nsc.doc.html.HtmlTags
+import scala.collection.parallel._, immutable.ParSet
 
 /**
   * A normal arc in a face
@@ -63,6 +64,15 @@ object NormalArc {
       terminal <- face.indices
       if terminal != initial
     } yield NormalArc(initial, terminal, face)
+
+  def enumeratePar[P <: Polygon](complex: TwoComplex[P]): ParSet[NormalArc[P]] =
+    for {
+      face <- complex.faces.to(ParSet)
+      initial <- face.indices
+      terminal <- face.indices
+      if terminal != initial
+    } yield NormalArc(initial, terminal, face)
+
 
   /**
     * For arcs that are parallel to an edge in a SkewPantsHexagon, get the arc in the adjacent polygon
@@ -297,6 +307,39 @@ object NormalPath {
     }
   }
 
+  @annotation.tailrec
+  def enumerateRecPar[P <: Polygon](
+      complex: TwoComplex[P],
+      maxAppendLength: Option[Int],
+      p: NormalPath[P] => Boolean,
+      latest: ParSet[NormalPath[P]],
+      accum: ParSet[NormalPath[P]]
+  ): ParSet[NormalPath[P]] = {
+    if (maxAppendLength.contains(0) || latest.isEmpty) accum
+    else {
+      val newPaths =
+        (
+          for {
+            path <- latest
+            (face, i1) <- complex.edgeIndices(path.terminalEdge).map {
+              case (f, i, _) => (f, i)
+            } -
+              (path.terminalFace -> path.terminalIndex)
+            i2 <- face.indices
+            if (i2 != i1)
+            arc = NormalArc(i1, i2, face)
+          } yield path :+ arc
+        ).filter(endsGoAround(_).isEmpty).filter(p)
+      enumerateRecPar(
+        complex,
+        maxAppendLength.map(_ - 1),
+        p,
+        newPaths,
+        accum union newPaths
+      )
+    }
+  }
+
   /**
     * recursively enumerate normal paths satisfying a hereditary condition with
     * optional bound on length;
@@ -315,10 +358,10 @@ object NormalPath {
     else {
       val lengthOne =
         NormalArc
-          .enumerate(complex)
+          .enumeratePar(complex)
           .map((arc) => NormalPath(Vector(arc)))
           .filter(p)
-      enumerateRec(complex, maxLength.map(_ - 1), p, lengthOne, lengthOne)
+      enumerateRecPar(complex, maxLength.map(_ - 1), p, lengthOne, lengthOne).seq
     }
 
   /**
