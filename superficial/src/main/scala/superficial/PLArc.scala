@@ -84,6 +84,40 @@ case class PLArc(
              ) < threshold) Some(false)
     else None
   }
+
+  def initialPointClosetoVertex(threshold: Double): Option[Boolean] = {
+    if (initialDisplacement < threshold) Some(true)
+    else if (math.abs(
+               base.face
+                 .sideLength(base.initialEdge) - initialDisplacement.toDouble
+             ) < threshold) Some(false)
+    else None
+  }
+
+  def edgesAfterNearbyVertices(threshold: Double): Option[(Int, Int)] = {
+    val termCheck = finalPointClosetoVertex(threshold)
+    val termNextEdge = termCheck.map(
+      chk => if (chk) base.terminal else (base.terminal + 1) % base.face.sides
+    )
+    val initCheck = initialPointClosetoVertex(threshold)
+    val initNextEdge = initCheck.map(
+      chk => if (chk) base.initial else (base.initial + 1) % base.face.sides
+    )
+    for {
+      term <- termNextEdge
+      init <- initNextEdge
+    } yield (math.min(term, init), math.max(term, init))
+  }
+
+  def shortSegmentsBetweenEnds(threshold: Double): Option[Vector[Edge]] =
+    edgesAfterNearbyVertices(threshold).flatMap {
+      case (i, j) =>
+        if (j - i <= 2) {
+          Some(base.face.boundary.drop(i).take(j - i))
+        } else if (i + base.face.sides - j < 2) {
+          Some(base.face.boundary.drop(j) ++ base.face.boundary.take(i))
+        } else None
+    }
 }
 
 object PLArc {
@@ -1033,7 +1067,7 @@ case class ShortPathsfromSurfaceFinder(
 
   // check whether segments of length at most 2 lengths are consistent with total length bound
   def segFilter(path: NormalPath[SkewPantsHexagon]): Boolean =
-      segBound(path.edges.toList).exists(_ < enumLenBound)
+    segBound(path.edges.toList).exists(_ < enumLenBound)
 
   val uniqueclosedPaths
       : Map[NormalPath[SkewPantsHexagon], NormalPath[SkewPantsHexagon]] =
