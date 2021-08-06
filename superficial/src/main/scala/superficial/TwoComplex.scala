@@ -8,7 +8,7 @@ import EdgePath._
 object require{
   def flag : Boolean = on
 
-  val on: Boolean = true
+  var on: Boolean = true
 
   def apply(requirement : => Boolean, message: String) : Unit = if (flag) Predef.require(requirement, message) else ()
   def apply(requirement : => Boolean) : Unit = if (flag) Predef.require(requirement) else ()
