@@ -732,7 +732,7 @@ case class SkewPantsHexagon(pants: Index, top: Boolean, cs: Set[SkewCurve])
     )
     edge match {
       case s: SkewCurveEdge => s.length.toDouble
-      case p: PantsSeam     => SkewPantsHexagon.getSeamLength(this, p).toDouble
+      case p: PantsSeam     => seamLengthMap(p)
       case _                => 0
     }
   }
