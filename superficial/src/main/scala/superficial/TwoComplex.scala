@@ -1,17 +1,53 @@
-  package superficial
+package superficial
 
 import Polygon.Index
 import scala.collection.immutable.Nil
 import superficial.Generator.a
 import EdgePath._
+import scala.collection.mutable
+import scala.concurrent.duration._
 
-object require{
-  def flag : Boolean = on
+object require {
+  def flag: Boolean = on
 
   var on: Boolean = true
 
-  def apply(requirement : => Boolean, message: String) : Unit = if (flag) Predef.require(requirement, message) else ()
-  def apply(requirement : => Boolean) : Unit = if (flag) Predef.require(requirement) else ()
+  def apply(requirement: => Boolean, message: String): Unit =
+    if (flag) Predef.require(requirement, message) else ()
+  def apply(requirement: => Boolean): Unit =
+    if (flag) Predef.require(requirement) else ()
+}
+
+object timed {
+  val milliTimes: mutable.Map[String, List[Long]] = mutable.Map()
+
+  def duration(l: Long): FiniteDuration = FiniteDuration(l, MILLISECONDS)
+
+  def addTime(name: String, time: Long): Unit = {
+    milliTimes(name) = time :: (milliTimes.getOrElse(name, List()))
+  }
+
+  def apply[R](name: String)(f: => R): R = {
+    val start = System.currentTimeMillis()
+    val result = f
+    addTime(name, System.currentTimeMillis() - start)
+    result
+  }
+
+  def count(name: String): Int = milliTimes.get(name).map(_.length).getOrElse(0)
+
+  def total(name: String): FiniteDuration = duration(milliTimes.get(name).map(_.sum).getOrElse(0L))
+
+  def average(name: String): FiniteDuration =
+    if (count(name) > 0)(total(name)) / count(name) else duration(0L)
+
+  def reset(): Unit = {
+    milliTimes.clear()
+  }
+
+  def report(): Unit = {
+    println(milliTimes.toString)
+  }
 }
 
 /**
@@ -32,7 +68,8 @@ trait Polygon extends TwoComplex[Polygon] {
 
   override lazy val halfEdges: Vector[Edge] = boundary
 
-  lazy val basePoint : Vertex = boundary.head.initial // override for empty boundary
+  lazy val basePoint
+      : Vertex = boundary.head.initial // override for empty boundary
 
   def checkBoundary =
     Polygon.checkBoundary(boundary) // not asserted here because of possible delayed initialization
@@ -75,11 +112,12 @@ trait Polygon extends TwoComplex[Polygon] {
       .filter { (n) =>
         e == boundary(n) || e.flip == boundary(n)
       }
-      .map(n => (n, e == boundary(n)))    
+      .map(n => (n, e == boundary(n)))
 }
 
 object Polygon {
-  /** Checks that for each conseutive edges e1 and e2 e1.terminal == e2.intial */ 
+
+  /** Checks that for each conseutive edges e1 and e2 e1.terminal == e2.intial */
   def checkBoundary(v: Vector[Edge]) =
     v.zip(v.tail).forall { case (e1, e2) => e1.terminal == e2.initial } && (
       v.last.terminal == v.head.initial
@@ -100,7 +138,7 @@ object Polygon {
         yield PolygonEdge(self, e, positiveOriented = true)
 
     lazy val vertices: Set[Vertex] =
-      (indices map (PolygonVertex(self, _))).toSet     
+      (indices map (PolygonVertex(self, _))).toSet
   }
 
   def apply(bdy: Vector[Edge]): Polygon = {
@@ -111,7 +149,7 @@ object Polygon {
       val boundary: Vector[Edge] = bdy
       val vertices: Set[Vertex] = bdy.map(_.initial).toSet
     }
-    
+
   }
 
   def degenerate(v: Vertex): Polygon = new Polygon {
@@ -159,8 +197,11 @@ object TwoComplex {
       val faces: Set[P] = fs.toSet
     }
   }
-  case class Concrete(vertices: Set[Vertex], edges: Set[Edge], faces: Set[Polygon])
-      extends TwoComplex[Polygon]
+  case class Concrete(
+      vertices: Set[Vertex],
+      edges: Set[Edge],
+      faces: Set[Polygon]
+  ) extends TwoComplex[Polygon]
 
   @annotation.tailrec
   def halfEdges(edges: List[Edge], accum: Set[Edge]): Set[Edge] = edges match {
@@ -176,23 +217,37 @@ object TwoComplex {
       .map { e =>
         allCollapsed1(complex.collapseEdge(e)._1)
       }
-      .getOrElse(complex).ensuring{_.checkComplex}
+      .getOrElse(complex)
+      .ensuring { _.checkComplex }
 
-  def allCollapsed (complex : TwoComplex[Polygon]) : (TwoComplex[Polygon], ((EdgePath => EdgePath), (EdgePath => EdgePath))) = {
+  def allCollapsed(
+      complex: TwoComplex[Polygon]
+  ): (TwoComplex[Polygon], ((EdgePath => EdgePath), (EdgePath => EdgePath))) = {
 
-    def helper (twoComplex: TwoComplex[Polygon], forwardEdgePathMap: (EdgePath => EdgePath), backwardEdgePathMap: (EdgePath => EdgePath)) :
-           (TwoComplex[Polygon], ((EdgePath => EdgePath), (EdgePath => EdgePath))) = {
-      nonLoop(twoComplex).map(
-        e => {
-          val eCollapsed = twoComplex.collapseEdge(e)
-          def newForwardMap (edgePath : EdgePath) : EdgePath = (eCollapsed)._2._1(forwardEdgePathMap(edgePath))
-          def newBackWardMap (edgePath : EdgePath) : EdgePath = backwardEdgePathMap(eCollapsed._2._2(edgePath))
-          helper(eCollapsed._1, newForwardMap, newBackWardMap)
-        }
-      )
-      .getOrElse((twoComplex, (forwardEdgePathMap, backwardEdgePathMap))).ensuring{_._1.checkComplex}       
+    def helper(
+        twoComplex: TwoComplex[Polygon],
+        forwardEdgePathMap: (EdgePath => EdgePath),
+        backwardEdgePathMap: (EdgePath => EdgePath)
+    )
+        : (
+            TwoComplex[Polygon],
+            ((EdgePath => EdgePath), (EdgePath => EdgePath))
+        ) = {
+      nonLoop(twoComplex)
+        .map(
+          e => {
+            val eCollapsed = twoComplex.collapseEdge(e)
+            def newForwardMap(edgePath: EdgePath): EdgePath =
+              (eCollapsed)._2._1(forwardEdgePathMap(edgePath))
+            def newBackWardMap(edgePath: EdgePath): EdgePath =
+              backwardEdgePathMap(eCollapsed._2._2(edgePath))
+            helper(eCollapsed._1, newForwardMap, newBackWardMap)
+          }
+        )
+        .getOrElse((twoComplex, (forwardEdgePathMap, backwardEdgePathMap)))
+        .ensuring { _._1.checkComplex }
     }
-    def identityFun (edgePath : EdgePath) = edgePath
+    def identityFun(edgePath: EdgePath) = edgePath
     helper(complex, identityFun, identityFun)
   }
 
@@ -207,21 +262,21 @@ object TwoComplex {
     val firstTail = first.boundary.drop(firstHead.size + 1) // edges after e
     val secondHead = second.boundary.takeWhile(_ != e.flip) // edges before e
     val secondTail = second.boundary.drop(secondHead.size + 1) // edges after e
-    val bdy = firstHead ++ secondTail ++ secondHead ++ firstTail 
+    val bdy = firstHead ++ secondTail ++ secondHead ++ firstTail
     if (bdy.nonEmpty) Polygon(bdy) else Polygon.degenerate(e.initial)
   }.ensuring(poly => poly.checkPoly)
 
   /**
     * Symbolic two-complexes, i.e. two-complexes with vertices, edges and faces determined by their names.
-    * 
+    *
     * For example, here is how a torus is constructed.
-    * 
+    *
     * {{{
     * TwoComplex.symbolic(
     *     "x")(
     *     "a" -> ("x", "x"), "b" -> ("x", "x"))(
     *     "face" -> Seq("a" -> true, "b" -> true, "a" -> false, "b" -> false)
-    *     ) 
+    *     )
     * }}}
     *
     * @param vertexNames names of vertices separated by commas,
@@ -271,17 +326,19 @@ trait TwoComplex[P <: Polygon] { twoComplex =>
 
   lazy val positiveEdges: Vector[OrientedEdge] =
     edges.toVector.collect {
-      case oe: OrientedEdge if oe.positivelyOriented => oe}  
+      case oe: OrientedEdge if oe.positivelyOriented => oe
+    }
 
   // to take care of unoriented edges
   lazy val halfEdges: Vector[Edge] =
-    TwoComplex.halfEdges(
-      (edges -- positiveEdges.toSet).toList,
-      positiveEdges.toSet
-    ).toVector
-  
+    TwoComplex
+      .halfEdges(
+        (edges -- positiveEdges.toSet).toList,
+        positiveEdges.toSet
+      )
+      .toVector
 
-  def edgeIndex(edge: Edge) : Option[(Int, Boolean)] = {
+  def edgeIndex(edge: Edge): Option[(Int, Boolean)] = {
     halfEdges.zipWithIndex
       .find { case (e, i) => e == edge || e.flip == edge }
       .map { case (e, i) => (i, e == edge) }
@@ -317,7 +374,9 @@ trait TwoComplex[P <: Polygon] { twoComplex =>
    * The other method is also an edgePath map but in the opposite direction. That is it takes
    * edgePaths in the resulting TwoComplex and returns an edgePath in the original twoComplex.
    **/
-  def collapseEdge(e: Edge): (TwoComplex[Polygon], (EdgePath => EdgePath, EdgePath => EdgePath)) = {
+  def collapseEdge(
+      e: Edge
+  ): (TwoComplex[Polygon], (EdgePath => EdgePath, EdgePath => EdgePath)) = {
     require(e.initial != e.terminal, s"cannot collapse loop $e at ${e.initial}")
     // map from edges to new edges
     val newEdgeHalfMap: Map[Edge, Edge] =
@@ -342,7 +401,7 @@ trait TwoComplex[P <: Polygon] { twoComplex =>
           case (k, v) => (k.flip, v.flip)
         }
 
-    val newEdgeBackMap : Map[Edge, Edge] = newEdgeMap.map(_.swap)    
+    val newEdgeBackMap: Map[Edge, Edge] = newEdgeMap.map(_.swap)
 
     def newPoly(polygon: Polygon): Polygon =
       new Polygon {
@@ -362,37 +421,54 @@ trait TwoComplex[P <: Polygon] { twoComplex =>
       override def toString(): String = s"$twoComplex/$e @ $hashCode"
     }
 
-    def forwardEdgePathMap (edgePath : EdgePath) : EdgePath = {
-      require(edgePath.inTwoComplex(twoComplex), s"$edgePath is not a path in $twoComplex")
-      val newPath : EdgePath = edgePath match {
+    def forwardEdgePathMap(edgePath: EdgePath): EdgePath = {
+      require(
+        edgePath.inTwoComplex(twoComplex),
+        s"$edgePath is not a path in $twoComplex"
+      )
+      val newPath: EdgePath = edgePath match {
         case Constant(vertex) => {
           if (vertex == e.terminal) Constant(e.initial) else Constant(vertex)
-          }
+        }
         case Append(init, last) => {
-          if (last == e) forwardEdgePathMap(init) else forwardEdgePathMap(init).+(newEdgeMap(last))
-          }    
-        } 
-      assert(newPath.inTwoComplex(newComplex), s"$newPath is not a path in $newComplex")
-      newPath 
-    }
-
-    def backwardEdgePathMap (edgePath : EdgePath) : EdgePath = {
-      require(edgePath.inTwoComplex(newComplex), s"$edgePath is not a path in $newComplex")
-      val newPath : EdgePath = edgePath match {
-        case Constant(vertex) => Constant(vertex)
-        case Append(init, last) => {
-          val backInit : EdgePath = backwardEdgePathMap(init)
-          val backLast : Edge = newEdgeBackMap(last)
-          if (backInit.terminal == e.initial && backLast.initial == e.terminal) backInit.+(e).+(backLast)
-          else if (backInit.terminal == e.terminal && backLast.initial == e.initial) backInit.+(e.flip).+(backLast)
-          else {
-            assert(backInit.terminal == backLast.initial, 
-              s"${backInit.terminal} is not equal to ${backLast.initial} and they don't differ by the collapsed edge $e")
-            backInit.+(backLast)   
-          } 
+          if (last == e) forwardEdgePathMap(init)
+          else forwardEdgePathMap(init).+(newEdgeMap(last))
         }
       }
-      assert(newPath.inTwoComplex(twoComplex), s"$newPath is not a path in $twoComplex")
+      assert(
+        newPath.inTwoComplex(newComplex),
+        s"$newPath is not a path in $newComplex"
+      )
+      newPath
+    }
+
+    def backwardEdgePathMap(edgePath: EdgePath): EdgePath = {
+      require(
+        edgePath.inTwoComplex(newComplex),
+        s"$edgePath is not a path in $newComplex"
+      )
+      val newPath: EdgePath = edgePath match {
+        case Constant(vertex) => Constant(vertex)
+        case Append(init, last) => {
+          val backInit: EdgePath = backwardEdgePathMap(init)
+          val backLast: Edge = newEdgeBackMap(last)
+          if (backInit.terminal == e.initial && backLast.initial == e.terminal)
+            backInit.+(e).+(backLast)
+          else if (backInit.terminal == e.terminal && backLast.initial == e.initial)
+            backInit.+(e.flip).+(backLast)
+          else {
+            assert(
+              backInit.terminal == backLast.initial,
+              s"${backInit.terminal} is not equal to ${backLast.initial} and they don't differ by the collapsed edge $e"
+            )
+            backInit.+(backLast)
+          }
+        }
+      }
+      assert(
+        newPath.inTwoComplex(twoComplex),
+        s"$newPath is not a path in $twoComplex"
+      )
       newPath
     }
 
@@ -404,11 +480,13 @@ trait TwoComplex[P <: Polygon] { twoComplex =>
     *
     * @param v the vertex
     * @return set of neighbours
-    */ 
+    */
   def vertexNbr(v: Vertex): Set[Vertex] = {
-    val s = (twoComplex.edges.filter(_.initial == v).map(_.terminal)).
-        union(twoComplex.edges.filter(_.terminal == v).map(_.initial))
-    s+v
+    val s = (twoComplex.edges
+      .filter(_.initial == v)
+      .map(_.terminal))
+      .union(twoComplex.edges.filter(_.terminal == v).map(_.initial))
+    s + v
   }
 
   //Collects a first order neighbourhood of a set onto a set
@@ -427,7 +505,7 @@ trait TwoComplex[P <: Polygon] { twoComplex =>
     *
     * @param v the starting vertex
     * @return set of initial neighbours
-    */ 
+    */
   def connectedComponent(v: Vertex): Set[Vertex] = {
     maxSetNbr(Set(v))
   }
@@ -439,145 +517,161 @@ trait TwoComplex[P <: Polygon] { twoComplex =>
     */
   def isConnectedComplex: Boolean = {
     val vOpt = twoComplex.vertices.toList.headOption
-    vOpt.map{v => connectedComponent(v) == twoComplex.vertices}.getOrElse(true)
+    vOpt
+      .map { v =>
+        connectedComponent(v) == twoComplex.vertices
+      }
+      .getOrElse(true)
   }
 
-  /** 
-   *given an edge, find a face whose boundary contains e (if it exists, it is unique); 
-   * take the next edge along the boundary
-   */
-  def succOpt (e : Edge) : Option[Edge] = {
-      val mayBefaceOfEdge = twoComplex.faces.find(_.boundary.contains(e))
-      mayBefaceOfEdge flatMap {
-        faceOfEdge => 
-          val indexOfEdge = faceOfEdge.boundary.indexOf(e)
-          if (indexOfEdge <= -1) None
-          else if (indexOfEdge == faceOfEdge.boundary.length - 1) Some(faceOfEdge.boundary.head)
-          else Some(faceOfEdge.boundary(indexOfEdge + 1))
-      }
-  }    
-  /** 
-   *given an edge, find a face whose boundary contains e (if it exists, it is unique); 
-   * take the previous edge along the boundary 
-   */
-  def predOpt (e : Edge) : Option[Edge] = {
-      val mayBefaceOfEdge = twoComplex.faces.find(_.boundary.contains(e))
-      mayBefaceOfEdge flatMap {
-        faceOfEdge => 
-          val indexOfEdge = faceOfEdge.boundary.indexOf(e)
-          if (indexOfEdge <= -1) None
-          else if (indexOfEdge == 0) Some(faceOfEdge.boundary.last)
-          else Some(faceOfEdge.boundary(indexOfEdge - 1))
-      }
-  }        
-
-  /** 
-   *gives the edge with same terminal vertex obtained by left rotation.
-   */
-  def rotateLeftOpt (e : Edge) : Option[Edge] = {
-    succOpt(e) flatMap {
-      f => Some(f.flip)
+  /**
+    *given an edge, find a face whose boundary contains e (if it exists, it is unique);
+    * take the next edge along the boundary
+    */
+  def succOpt(e: Edge): Option[Edge] = {
+    val mayBefaceOfEdge = twoComplex.faces.find(_.boundary.contains(e))
+    mayBefaceOfEdge flatMap { faceOfEdge =>
+      val indexOfEdge = faceOfEdge.boundary.indexOf(e)
+      if (indexOfEdge <= -1) None
+      else if (indexOfEdge == faceOfEdge.boundary.length - 1)
+        Some(faceOfEdge.boundary.head)
+      else Some(faceOfEdge.boundary(indexOfEdge + 1))
     }
   }
 
-  /** 
-   *gives the edge with same terminal vertex obtained by right rotation.
-   */
-  def rotateRightOpt (e : Edge) : Option[Edge] = predOpt(e.flip)
-  
-  /** 
-   *auxilliary function to start with an edge and take all edges by rotating left 
-   */
-  def orbit (e : Edge, steps : Int, opt  : Edge => Option[Edge], accum : Set[Edge]) : Set[Edge] = {
+  /**
+    *given an edge, find a face whose boundary contains e (if it exists, it is unique);
+    * take the previous edge along the boundary
+    */
+  def predOpt(e: Edge): Option[Edge] = {
+    val mayBefaceOfEdge = twoComplex.faces.find(_.boundary.contains(e))
+    mayBefaceOfEdge flatMap { faceOfEdge =>
+      val indexOfEdge = faceOfEdge.boundary.indexOf(e)
+      if (indexOfEdge <= -1) None
+      else if (indexOfEdge == 0) Some(faceOfEdge.boundary.last)
+      else Some(faceOfEdge.boundary(indexOfEdge - 1))
+    }
+  }
+
+  /**
+    *gives the edge with same terminal vertex obtained by left rotation.
+    */
+  def rotateLeftOpt(e: Edge): Option[Edge] = {
+    succOpt(e) flatMap { f =>
+      Some(f.flip)
+    }
+  }
+
+  /**
+    *gives the edge with same terminal vertex obtained by right rotation.
+    */
+  def rotateRightOpt(e: Edge): Option[Edge] = predOpt(e.flip)
+
+  /**
+    *auxilliary function to start with an edge and take all edges by rotating left
+    */
+  def orbit(
+      e: Edge,
+      steps: Int,
+      opt: Edge => Option[Edge],
+      accum: Set[Edge]
+  ): Set[Edge] = {
     if (steps <= 0) accum
-    else { 
-     val nextEdge = opt(e)
-     nextEdge.fold(accum + e)(f => orbit(f, steps - 1, opt, accum + e)  )
+    else {
+      val nextEdge = opt(e)
+      nextEdge.fold(accum + e)(f => orbit(f, steps - 1, opt, accum + e))
     }
-  } 
+  }
 
   /**
-   *all edges to the left of the edge e including itself
-   */  
-  def allEdgesToTheLeftOf (e : Edge) = orbit(e, edges.size + 1, rotateLeftOpt(_), Set.empty)
-  
-  /** 
-   *all edges to the left of the edge e including itself
-   */
-  def allEdgesToTheRightOf (e : Edge) = orbit(e, edges.size + 1, rotateRightOpt(_), Set.empty)
-  
-  /** 
-   *set of all edges ending at v 
-   */
-  def edgesEndingAt (v : Vertex) = 
-    ((twoComplex.edges.filter(_.terminal == v).toSet) ++ // FIXME the second term is not needed for a valid two-complex
-     (twoComplex.edges.filter(_.initial == v).map(_.flip)))
+    *all edges to the left of the edge e including itself
+    */
+  def allEdgesToTheLeftOf(e: Edge) =
+    orbit(e, edges.size + 1, rotateLeftOpt(_), Set.empty)
 
   /**
-   * The degree of a vertex
-   */
+    *all edges to the left of the edge e including itself
+    */
+  def allEdgesToTheRightOf(e: Edge) =
+    orbit(e, edges.size + 1, rotateRightOpt(_), Set.empty)
+
+  /**
+    *set of all edges ending at v
+    */
+  def edgesEndingAt(v: Vertex) =
+    ((twoComplex.edges
+      .filter(_.terminal == v)
+      .toSet) ++ // FIXME the second term is not needed for a valid two-complex
+      (twoComplex.edges.filter(_.initial == v).map(_.flip)))
+
+  /**
+    * The degree of a vertex
+    */
   def degree(v: Vertex): Int = edgesEndingAt(v).size
 
-  /** 
-   * checks if we start with an edge e with v == e.terminal, using left rotations, 
-   * (by iterating) we should get all edges with terminal vertex v.
-   * The naming is slightly misleading. Do give suggestions for better names
-  */
-  def transitiveRotations (v : Vertex) : Boolean = {
-    assert( twoComplex.vertices.contains(v), "vertex is not part of the complex")
-    val edgesEndingAtVertex = edgesEndingAt(v) // set of all edges ending at v
-  
-    if (edgesEndingAtVertex.nonEmpty) {
-      ((edgesEndingAtVertex == allEdgesToTheLeftOf(edgesEndingAtVertex.head)) 
-       && 
-      (edgesEndingAtVertex == allEdgesToTheRightOf(edgesEndingAtVertex.head))) 
-    }
-    else true // if there are no edges ending at v then there is nothing to check
-  }   
-  
   /**
-   * Occurences of edges in faces, counting multiplicity
-   *
-   * @param e
-   */
-  def edgeOccurences(e: Edge) : Int = faces.flatMap(_.boundary).count(_ == e)
+    * checks if we start with an edge e with v == e.terminal, using left rotations,
+    * (by iterating) we should get all edges with terminal vertex v.
+    * The naming is slightly misleading. Do give suggestions for better names
+    */
+  def transitiveRotations(v: Vertex): Boolean = {
+    assert(twoComplex.vertices.contains(v), "vertex is not part of the complex")
+    val edgesEndingAtVertex = edgesEndingAt(v) // set of all edges ending at v
+
+    if (edgesEndingAtVertex.nonEmpty) {
+      ((edgesEndingAtVertex == allEdgesToTheLeftOf(edgesEndingAtVertex.head))
+      &&
+      (edgesEndingAtVertex == allEdgesToTheRightOf(edgesEndingAtVertex.head)))
+    } else
+      true // if there are no edges ending at v then there is nothing to check
+  }
 
   /**
-   * Checks if the given edge is at the boundary. That is exactly one of
-   * e and e.flip is inside a face of the twocomplex
-   */
-  def isEdgeAtBoundary (e : Edge) : Boolean = {
-    ( (edgeOccurences(e) == 0) && (edgeOccurences(e.flip) >= 1)
-    ||(edgeOccurences(e) >= 1) && (edgeOccurences(e.flip) == 0))
+    * Occurences of edges in faces, counting multiplicity
+    *
+    * @param e
+    */
+  def edgeOccurences(e: Edge): Int = faces.flatMap(_.boundary).count(_ == e)
+
+  /**
+    * Checks if the given edge is at the boundary. That is exactly one of
+    * e and e.flip is inside a face of the twocomplex
+    */
+  def isEdgeAtBoundary(e: Edge): Boolean = {
+    ((edgeOccurences(e) == 0) && (edgeOccurences(e.flip) >= 1)
+    || (edgeOccurences(e) >= 1) && (edgeOccurences(e.flip) == 0))
   }
 
   /*
-   * Checks if the twoComplex is a closed surface. 
+   * Checks if the twoComplex is a closed surface.
    */
-  def isClosedSurface : Boolean = {
-    
+  def isClosedSurface: Boolean = {
+
     // checks if the edge e is in exactly one face
-    def edgeInOneFace (e : Edge): Boolean = {
-     edgeOccurences(e) == 1
-    } 
-    
+    def edgeInOneFace(e: Edge): Boolean = {
+      edgeOccurences(e) == 1
+    }
+
     // checks if each edge is in exactly one face
-    val condition1 = twoComplex.edges.forall(edgeInOneFace(_)) 
+    val condition1 = twoComplex.edges.forall(edgeInOneFace(_))
     // every vertex is in some edge
-    val condition2 = twoComplex.edges.flatMap(ed => Set(ed.initial, ed.terminal)) == twoComplex.vertices
-    // for all veritces one can get all edges ending at it by going around by either left or right turns (not both) 
-    val condition3 = vertices.toList.foldLeft(true)(_ && twoComplex.transitiveRotations(_))
+    val condition2 = twoComplex.edges.flatMap(
+      ed => Set(ed.initial, ed.terminal)
+    ) == twoComplex.vertices
+    // for all veritces one can get all edges ending at it by going around by either left or right turns (not both)
+    val condition3 =
+      vertices.toList.foldLeft(true)(_ && twoComplex.transitiveRotations(_))
 
     condition1 && condition2 && condition3
   }
 
-  /** 
-   *Checks if the twoComplex is a surface with boundary
-   */
-  def isSurfaceWithBoundary : Boolean = {
+  /**
+    *Checks if the twoComplex is a surface with boundary
+    */
+  def isSurfaceWithBoundary: Boolean = {
 
     // checks if the edge e is in at least m and at most n faces
-    def checkEdge (e : Edge, m : Int, n : Int) : Boolean = {
+    def checkEdge(e: Edge, m: Int, n: Int): Boolean = {
       val facesContaniningEdge = faces.filter(_.boundary.contains(e))
       ((facesContaniningEdge.size >= m) && (facesContaniningEdge.size <= n))
     }
@@ -586,35 +680,41 @@ trait TwoComplex[P <: Polygon] { twoComplex =>
     val condition1 = twoComplex.edges.forall(e => edgeOccurences(e) <= 1)
 
     // checks if for each edge e, at least e or e.flip is in one of the faces
-    val condition2 = twoComplex.edges.forall(e => edgeOccurences(e) + edgeOccurences(e.flip) >= 1)
+    val condition2 = twoComplex.edges.forall(
+      e => edgeOccurences(e) + edgeOccurences(e.flip) >= 1
+    )
 
     // checks if for the vertex v, one can get all ending at it by going around by left and right turns
-    def check (v : Vertex) : Boolean = {
+    def check(v: Vertex): Boolean = {
       val edgesEndingAtVertex = edgesEndingAt(v) // edges around v
       if (edgesEndingAtVertex.nonEmpty) {
         val picked = edgesEndingAtVertex.head // pick an edge
         // take all edges by left and right turns
-        val allAroundPicked = (allEdgesToTheLeftOf(picked) ++ allEdgesToTheRightOf(picked)) 
+        val allAroundPicked = (allEdgesToTheLeftOf(picked) ++ allEdgesToTheRightOf(
+          picked
+        ))
         // check if they cover all edges around v and the picked edge is part of a face
-        (allAroundPicked == edgesEndingAtVertex)       
-       }
-      else true // if there are no edges ending at v then there is nothing to check 
-    } 
+        (allAroundPicked == edgesEndingAtVertex)
+      } else
+        true // if there are no edges ending at v then there is nothing to check
+    }
     // check this for all vertices
     val condition3 = vertices.toList.foldLeft(true)(_ && check(_))
-    
-    condition1 && condition2 && condition3
-  }  
 
-  /** 
-   *Given a set of vertices vs gives the TwoComplex[Polygon] got by adding vs 
-   *to the existing twoComplex. If vs is already inside gives the same 
-   *twoComplex 
-   */
-  def addVertices (vs : Set[Vertex]) : TwoComplex[P] ={
+    condition1 && condition2 && condition3
+  }
+
+  /**
+    *Given a set of vertices vs gives the TwoComplex[Polygon] got by adding vs
+    *to the existing twoComplex. If vs is already inside gives the same
+    *twoComplex
+    */
+  def addVertices(vs: Set[Vertex]): TwoComplex[P] = {
     if (twoComplex.vertices.intersect(vs).nonEmpty) {
-      System.err.println("[Warning] The following vertices already belong to the twocomplex" 
-        + twoComplex + "\n" + twoComplex.vertices.intersect(vs))
+      System.err.println(
+        "[Warning] The following vertices already belong to the twocomplex"
+          + twoComplex + "\n" + twoComplex.vertices.intersect(vs)
+      )
     }
 
     object newComplex extends TwoComplex[P] {
@@ -624,76 +724,83 @@ trait TwoComplex[P <: Polygon] { twoComplex =>
     }
     newComplex
   }
-  
-  /** 
-   *Given a set of edges eds gives the TwoComplex got by adding eds 
-   *and there flips to the existing twoComplex.
-   */
-  def addEdges (eds : Set[Edge]) : TwoComplex[P] ={
+
+  /**
+    *Given a set of edges eds gives the TwoComplex got by adding eds
+    *and there flips to the existing twoComplex.
+    */
+  def addEdges(eds: Set[Edge]): TwoComplex[P] = {
     if (twoComplex.edges.intersect(eds).nonEmpty) {
-      System.err.println("[Warning] The following edges already belong to the twocomplex" 
-        + twoComplex + "\n" + twoComplex.edges.intersect(eds))
+      System.err.println(
+        "[Warning] The following edges already belong to the twocomplex"
+          + twoComplex + "\n" + twoComplex.edges.intersect(eds)
+      )
     }
 
     object newComplex extends TwoComplex[P] {
       val faces: Set[P] = twoComplex.faces
       val edges: Set[Edge] = twoComplex.edges ++ eds ++ eds.map(_.flip)
-      val vertices: Set[Vertex] = 
+      val vertices: Set[Vertex] =
         twoComplex.vertices ++ eds.flatMap(ed => Set(ed.initial, ed.terminal))
     }
     newComplex
   }
 
-  /** 
-   *Given a set of faces fcs gives the TwoComplex got by adding fcs 
-   *to the existing twoComplex.
-   */
-  def addFaces (fcs : Set[Polygon]) : TwoComplex[Polygon] = {
-    val polys = faces.map(x => x : Polygon)
+  /**
+    *Given a set of faces fcs gives the TwoComplex got by adding fcs
+    *to the existing twoComplex.
+    */
+  def addFaces(fcs: Set[Polygon]): TwoComplex[Polygon] = {
+    val polys = faces.map(x => x: Polygon)
     if (polys.intersect(fcs).nonEmpty) {
-      System.err.println("[Warning] The following edges already belong to the twocomplex" 
-        + twoComplex + "\n" + polys.intersect(fcs))
+      System.err.println(
+        "[Warning] The following edges already belong to the twocomplex"
+          + twoComplex + "\n" + polys.intersect(fcs)
+      )
     }
 
     object newComplex extends TwoComplex[Polygon] {
       val faces: Set[Polygon] = twoComplex.faces ++ fcs
       val edges: Set[Edge] = twoComplex.edges ++ fcs.flatMap(_.edges)
-      val vertices: Set[Vertex] = 
+      val vertices: Set[Vertex] =
         twoComplex.vertices ++ fcs.flatMap(_.vertices)
     }
     newComplex
   }
 
   /**
-   * Gives the result of adding the given set of twocomplexes to the existing one.
-   */
-  def addTwoComplexes (complexes : Set[TwoComplex[Polygon]]) = {
+    * Gives the result of adding the given set of twocomplexes to the existing one.
+    */
+  def addTwoComplexes(complexes: Set[TwoComplex[Polygon]]) = {
     object newComplex extends TwoComplex[Polygon] {
       val faces: Set[Polygon] = twoComplex.faces ++ complexes.flatMap(_.faces)
       val edges: Set[Edge] = twoComplex.edges ++ complexes.flatMap(_.edges)
-      val vertices: Set[Vertex] = 
+      val vertices: Set[Vertex] =
         twoComplex.vertices ++ complexes.flatMap(_.vertices)
     }
     newComplex
   }
 
   /**
-   * Given a set of vertices gives the subcomplex on the vertices
-   */
-  def subComplex (vs : Set[Vertex]) : TwoComplex[P] = {
+    * Given a set of vertices gives the subcomplex on the vertices
+    */
+  def subComplex(vs: Set[Vertex]): TwoComplex[P] = {
     if (!vs.subsetOf(twoComplex.vertices)) {
-      System.err.println("[Warning] The following vertices don't belong to the twoComplex : " + "\n " +
-        vs.filter(!twoComplex.vertices.contains(_)))
-    } 
+      System.err.println(
+        "[Warning] The following vertices don't belong to the twoComplex : " + "\n " +
+          vs.filter(!twoComplex.vertices.contains(_))
+      )
+    }
 
     object newComplex extends TwoComplex[P] {
       val faces: Set[P] = twoComplex.faces.filter(_.vertices.subsetOf(vs))
-      val edges: Set[Edge] = twoComplex.edges.filter(ed => (Set(ed.initial, ed.terminal).subsetOf(vs)))
+      val edges: Set[Edge] = twoComplex.edges.filter(
+        ed => (Set(ed.initial, ed.terminal).subsetOf(vs))
+      )
       val vertices: Set[Vertex] = vs
     }
     newComplex
   }
-
 
   /**
     * Turns left in an EdgePath
@@ -704,60 +811,65 @@ trait TwoComplex[P <: Polygon] { twoComplex =>
   def turnLeft(e: Edge): Option[Edge] = succOpt(e)
 
   /**
-   * Turns right in an EdgePath
-   */
-  def turnRight(e: Edge): Option[Edge] = rotateRightOpt(e).flatMap(x => Some(x.flip))
-  /**
-   *Given e rotates left twice and flips it. This is same as rotating left once and then taking the successor. 
-   */
-  def slightLeft (e : Edge) : Option[Edge] = rotateLeftOpt(e).flatMap(succOpt) 
-  /**
-   *Given e takes two right rotations and flips it.
-   */
-  def slightRight (e : Edge) : Option[Edge] = rotateRightOpt(e).flatMap(rotateRightOpt).map(_.flip)
+    * Turns right in an EdgePath
+    */
+  def turnRight(e: Edge): Option[Edge] =
+    rotateRightOpt(e).flatMap(x => Some(x.flip))
 
   /**
-   * Forced version of turnLeft, for geodesics and edgepaths
-   */
+    *Given e rotates left twice and flips it. This is same as rotating left once and then taking the successor.
+    */
+  def slightLeft(e: Edge): Option[Edge] = rotateLeftOpt(e).flatMap(succOpt)
+
+  /**
+    *Given e takes two right rotations and flips it.
+    */
+  def slightRight(e: Edge): Option[Edge] =
+    rotateRightOpt(e).flatMap(rotateRightOpt).map(_.flip)
+
+  /**
+    * Forced version of turnLeft, for geodesics and edgepaths
+    */
   def L(e: Edge): Edge = {
-    require(turnLeft(e) != None , s"No left turn from edge $e")
+    require(turnLeft(e) != None, s"No left turn from edge $e")
     turnLeft(e).get
   }
+
   /**
-   * Forced version of turnRight, for geodesics and edgepaths
-   */
+    * Forced version of turnRight, for geodesics and edgepaths
+    */
   def R(e: Edge): Edge = {
     require(turnRight(e) != None, s"No right turn from edge $e")
     turnRight(e).get
   }
 
   /**
-   * Forced version of slightLeft, for geodesics and edgepaths
-   */
+    * Forced version of slightLeft, for geodesics and edgepaths
+    */
   def SL(e: Edge): Edge = {
     require(slightLeft(e) != None, s"No slight left from edge $e")
     slightLeft(e).get
   }
 
   /**
-   * Forced version of slightRight, for geodesics and edgepaths
-   */
+    * Forced version of slightRight, for geodesics and edgepaths
+    */
   def SR(e: Edge): Edge = {
     require(slightRight(e) != None, s"No slight right from edge $e")
     slightRight(e).get
   }
 
   /**
-   * Forced swivelLeft, for geodesics and edgepaths
-   */
+    * Forced swivelLeft, for geodesics and edgepaths
+    */
   def SwL(e: Edge): Edge = {
     require(turnRight(e.flip) != None, s"Can't swivel left from edge $e")
     turnRight(e.flip).get
   }
 
   /**
-   * Forced swivelRight, for geodesics and edgepaths
-   */
+    * Forced swivelRight, for geodesics and edgepaths
+    */
   def SwR(e: Edge): Edge = {
     require(turnLeft(e.flip) != None, s"Can't swivel right from edge $e")
     turnLeft(e.flip).get
@@ -766,108 +878,116 @@ trait TwoComplex[P <: Polygon] { twoComplex =>
   /**
     * Vector of edges related by a function opt to an edge, modified version of orbit
     */
-    def vectorOrbit (e : Edge, opt: (Edge => Option[Edge]), accum : Vector[Edge]) : Vector[Edge] = {
-        val nextEdge = opt(e)
-        // if ((nextEdge != None) && (!accum.contains(nextEdge))) {
-        //   vectorOrbit(nextEdge.get, opt, accum :+ nextEdge.get)
-        // }
-        // else accum
-        nextEdge match {
-          case None => accum
-          case Some(f) => {
-            if (accum.contains(f)) accum
-            else vectorOrbit(f, opt, accum :+ f)
-          }
-        }
+  def vectorOrbit(
+      e: Edge,
+      opt: (Edge => Option[Edge]),
+      accum: Vector[Edge]
+  ): Vector[Edge] = {
+    val nextEdge = opt(e)
+    // if ((nextEdge != None) && (!accum.contains(nextEdge))) {
+    //   vectorOrbit(nextEdge.get, opt, accum :+ nextEdge.get)
+    // }
+    // else accum
+    nextEdge match {
+      case None => accum
+      case Some(f) => {
+        if (accum.contains(f)) accum
+        else vectorOrbit(f, opt, accum :+ f)
       }
-
-    def vectorOrbitFin (e : Edge, opt: (Edge => Option[Edge]), accum : Vector[Edge], n : Int) : Vector[Edge] = {
-        val nextEdge = opt(e)
-        if ((nextEdge != None) && (!accum.contains(nextEdge)) && (n > 0)) {
-          println(s"nextEdge = $nextEdge")
-          println(s"accum = $accum")
-          vectorOrbitFin(nextEdge.get, opt, accum :+ nextEdge.get, n - 1)
-        }
-        else accum
-      }  
-  
-    /**
-     * Vector of flips of edges to the left of an edge
-     */
-
-     def vectorLeftTurns(e: Edge) = vectorOrbit(e, rotateLeftOpt(_), Vector[Edge](e)).map(_.flip)
-
-     /**
-       * Vector of flips of edges to the right of an edge
-       */
-
-    def vectorRightTurns(e: Edge) = vectorOrbit(e, rotateRightOpt(_), Vector[Edge](e)).map(_.flip)
-  
-  /**
-  * Vector of edges to the left of an edge
-  */
-
-  def vectorEdgesToTheLeftOf(e: Edge) = vectorOrbit(e, rotateLeftOpt(_), Vector[Edge]())
-
-  /**
-  * Vector of edges to the right of an edge
-  */
-
-  def vectorEdgesToTheRightOf(e: Edge) = vectorOrbit(e, rotateRightOpt(_), Vector[Edge]()) 
-
-  /**
-      * Gives the designated index (1 L, 2 SL, -1 R, -2 SR, higher values by turn distance) associated to a turn
-      *
-      * @param e1
-      * @param e2
-      * @return
-      */
-  def turnIndex(e1: Edge, e2: Edge): Int = {
-        assert(e1.terminal == e2.initial, s"$e2 cannot come after $e1 in a path")
-        if (Some(e2) == twoComplex.turnLeft(e1)) 1
-        else if (Some(e2) == twoComplex.slightLeft(e1)) 2
-        else if (Some(e2) == twoComplex.turnRight(e1)) -1
-        else if (Some(e2) == twoComplex.slightRight(e1)) -2
-        else{
-            val edgesLeft = twoComplex.vectorLeftTurns(e1)
-            val edgesRight = twoComplex.vectorRightTurns(e1)
-            if (edgesLeft.contains(e2)) (edgesLeft.indexOf(e2))
-            else (-edgesRight.indexOf(e2))
-            
-        }
     }
+  }
+
+  def vectorOrbitFin(
+      e: Edge,
+      opt: (Edge => Option[Edge]),
+      accum: Vector[Edge],
+      n: Int
+  ): Vector[Edge] = {
+    val nextEdge = opt(e)
+    if ((nextEdge != None) && (!accum.contains(nextEdge)) && (n > 0)) {
+      println(s"nextEdge = $nextEdge")
+      println(s"accum = $accum")
+      vectorOrbitFin(nextEdge.get, opt, accum :+ nextEdge.get, n - 1)
+    } else accum
+  }
 
   /**
-   * Given two edges e1 and e2 says what is the angle between them.
-   * Where angle is the number of turns to reach e2 from e1. 
-   * Left turns are considered positive and right turns are considered negative.
-   * For this method to work both e1 and e2 need to end at the same vertex  */
-  def angleBetween(e1 : Edge, e2 : Edge) : Int = {
-    require(e1.terminal == e2.terminal, s"$e1 and $e2 do not end at the same vertex")
+    * Vector of flips of edges to the left of an edge
+    */
+  def vectorLeftTurns(e: Edge) =
+    vectorOrbit(e, rotateLeftOpt(_), Vector[Edge](e)).map(_.flip)
+
+  /**
+    * Vector of flips of edges to the right of an edge
+    */
+  def vectorRightTurns(e: Edge) =
+    vectorOrbit(e, rotateRightOpt(_), Vector[Edge](e)).map(_.flip)
+
+  /**
+    * Vector of edges to the left of an edge
+    */
+  def vectorEdgesToTheLeftOf(e: Edge) =
+    vectorOrbit(e, rotateLeftOpt(_), Vector[Edge]())
+
+  /**
+    * Vector of edges to the right of an edge
+    */
+  def vectorEdgesToTheRightOf(e: Edge) =
+    vectorOrbit(e, rotateRightOpt(_), Vector[Edge]())
+
+  /**
+    * Gives the designated index (1 L, 2 SL, -1 R, -2 SR, higher values by turn distance) associated to a turn
+    *
+    * @param e1
+    * @param e2
+    * @return
+    */
+  def turnIndex(e1: Edge, e2: Edge): Int = {
+    assert(e1.terminal == e2.initial, s"$e2 cannot come after $e1 in a path")
+    if (Some(e2) == twoComplex.turnLeft(e1)) 1
+    else if (Some(e2) == twoComplex.slightLeft(e1)) 2
+    else if (Some(e2) == twoComplex.turnRight(e1)) -1
+    else if (Some(e2) == twoComplex.slightRight(e1)) -2
+    else {
+      val edgesLeft = twoComplex.vectorLeftTurns(e1)
+      val edgesRight = twoComplex.vectorRightTurns(e1)
+      if (edgesLeft.contains(e2))(edgesLeft.indexOf(e2))
+      else (-edgesRight.indexOf(e2))
+
+    }
+  }
+
+  /**
+    * Given two edges e1 and e2 says what is the angle between them.
+    * Where angle is the number of turns to reach e2 from e1.
+    * Left turns are considered positive and right turns are considered negative.
+    * For this method to work both e1 and e2 need to end at the same vertex  */
+  def angleBetween(e1: Edge, e2: Edge): Int = {
+    require(
+      e1.terminal == e2.terminal,
+      s"$e1 and $e2 do not end at the same vertex"
+    )
     (if (e1 == e2) 0
-    else turnIndex(e1, e2.flip))
-  }  
+     else turnIndex(e1, e2.flip))
+  }
 
   /**
-      * Gives the succeeding edge associated to a previous edge and a turning index
-      *
-      * @param e
-      * @param t
-      */
-    def turnEdge(e: Edge, t: Int): Edge = {
-        if(t>= 0) {
-          val v = twoComplex.vectorLeftTurns(e)
-          v((t)%v.size)
-        }
-        else {
-          val v = twoComplex.vectorRightTurns(e)
-          v((-t)%v.size)
-        }
-    }  
-
+    * Gives the succeeding edge associated to a previous edge and a turning index
+    *
+    * @param e
+    * @param t
+    */
+  def turnEdge(e: Edge, t: Int): Edge = {
+    if (t >= 0) {
+      val v = twoComplex.vectorLeftTurns(e)
+      v((t) % v.size)
+    } else {
+      val v = twoComplex.vectorRightTurns(e)
+      v((-t) % v.size)
+    }
+  }
 
 }
-
 
 /**
   * A two-complex with all vertices and edges contained in faces, hence determined by its faces.
@@ -882,7 +1002,6 @@ trait PureTwoComplex[P <: Polygon] extends TwoComplex[P] {
     faces.map(_.vertices).foldLeft(Set.empty[Vertex])(_ union _)
 }
 
-case class PureComplex[P <: Polygon](polys: Set[P]) extends PureTwoComplex[P]{
+case class PureComplex[P <: Polygon](polys: Set[P]) extends PureTwoComplex[P] {
   val faces: Set[P] = polys
 }
-
