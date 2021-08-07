@@ -1069,12 +1069,14 @@ case class ShortPathsfromSurfaceFinder(
   def segFilter(path: NormalPath[SkewPantsHexagon]): Boolean =
     segBound(path.edges.toList).exists(_ < enumLenBound)
 
+  val allClosedPaths = NormalPath
+    .enumerate[SkewPantsHexagon](surf, Some(maxSegments), segFilter(_))
+    .filter(_.isClosed)
+
   val uniqueclosedPaths
       : Map[NormalPath[SkewPantsHexagon], NormalPath[SkewPantsHexagon]] =
     NormalPath.uniqueUptoFlipAndCyclicPerm(
-      NormalPath
-        .enumerate[SkewPantsHexagon](surf, Some(maxSegments), segFilter(_))
-        .filter(_.isClosed)
+      allClosedPaths
     )
   lazy val plPaths: Map[NormalPath[SkewPantsHexagon], Option[PLPath]] =
     PLPath.enumMinimalClosedFamily(
