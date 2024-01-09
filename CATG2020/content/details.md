@@ -16,7 +16,7 @@ To register for the course, in addition to registering in the IISc system, you n
 
 ### Course Details
   
-* __Instructor:__ [Siddhartha Gadgil](http://math.iisc.ac.in/~gadgil)
+* __Instructor:__ [Siddhartha Gadgil](https://math.iisc.ac.in/~gadgil)
 * __E-mail:__ _siddhartha.gadgil@gmail.com_
 * __Office:__ N-15, Department of Mathematics, IISc.
 * __E-mail group:__ Information about the course, including meeting times, will be on the outlook group `CATG2020`.
